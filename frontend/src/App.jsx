@@ -1,5 +1,6 @@
+import Login from './pages/Login'
 function App() {
-  return <h1>HubEvent</h1>
+  return <Login />
 }
 
 export default App

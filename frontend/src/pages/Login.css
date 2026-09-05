@@ -1,0 +1,21 @@
+.auth-screen { display: flex; width: 100%; min-height: 100vh; }
+.auth-left { width: 43%; background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 44px; position: relative; overflow: hidden; }
+.auth-deco { position: absolute; border-radius: 50%; pointer-events: none; }
+.auth-deco.d1 { width: 320px; height: 320px; background: var(--em-dim); top: -80px; right: -80px; }
+.auth-deco.d2 { width: 180px; height: 180px; background: var(--blue-dim); bottom: -40px; left: -40px; }
+.auth-brand { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+.auth-brand-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--em); }
+.auth-brand-text { font-size: 16px; font-weight: 700; }
+.auth-brand-sub { font-size: 9px; color: var(--em); font-weight: 600; letter-spacing: .9px; text-transform: uppercase; }
+.auth-hero { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center; padding-top: 36px; }
+.auth-h1 { font-family: var(--disp); font-size: 40px; line-height: 1.1; margin-bottom: 16px; font-weight: 600; }
+.auth-h1 em { color: var(--em); font-style: italic; }
+.auth-sub { font-size: 14px; color: var(--text-2); line-height: 1.75; max-width: 290px; }
+.auth-right { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 48px; }
+.auth-card { width: 100%; max-width: 400px; }
+.auth-ey { font-size: 11px; font-weight: 600; color: var(--em); letter-spacing: .9px; text-transform: uppercase; margin-bottom: 9px; }
+.auth-card h1 { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+.auth-card .a-desc { font-size: 13px; color: var(--text-2); margin-bottom: 26px; }
+.forgot-lnk { display: block; text-align: right; font-size: 12px; color: var(--text-3); cursor: pointer; margin-top: -10px; margin-bottom: 14px; }
+.auth-switch { font-size: 13px; color: var(--text-2); text-align: center; margin-top: 18px; }
+.auth-switch a { color: var(--em); font-weight: 600; cursor: pointer; }

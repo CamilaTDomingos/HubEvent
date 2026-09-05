@@ -1,111 +1,29 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --bg:#f8f9fb; --bg-2:#f1f3f7; --bg-3:#e4e7ed;
+  --card:#ffffff; --border:rgba(0,0,0,0.07); --border-2:rgba(0,0,0,0.13);
+  --text:#111318; --text-2:#5c6170; --text-3:#9aa0ae;
+  --em:#16a37a; --em-2:#0e8f6a; --em-dim:#eef9f5; --em-dim2:rgba(22,163,122,0.10); --em-border:rgba(22,163,122,0.22);
+  --red:#e5484d; --red-dim:#fff5f5;
+  --blue:#3b6fe8; --blue-dim:#eff3ff;
+  --sh0:0 1px 2px rgba(0,0,0,0.04);
+  --sh3:0 12px 40px rgba(0,0,0,0.11),0 3px 10px rgba(0,0,0,0.05);
+  --r-sm:8px; --r:12px; --r-lg:16px;
+  --font:'Inter',sans-serif; --disp:'Lora',serif;
+  --tr:all 0.18s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.55; }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;border:none;transition:var(--tr);white-space:nowrap}
+.btn-primary{background:var(--em);color:#fff}
+.btn-primary:hover{background:var(--em-2)}
+.btn-lg{padding:12px 22px;font-size:14px;border-radius:var(--r)}
 
-body {
-  margin: 0;
-}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:6px;letter-spacing:.6px;text-transform:uppercase}
+.field input{width:100%;padding:10px 13px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--text);outline:none;transition:var(--tr)}
+.field input:focus{border-color:var(--em);box-shadow:0 0 0 3px var(--em-dim2);background:var(--card)}
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
+.divider{display:flex;align-items:center;gap:12px;color:var(--text-3);font-size:12px;margin:16px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
