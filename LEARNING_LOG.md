@@ -32,3 +32,29 @@ repositório.
 no GitHub.
 
 ---
+## 2026-08-31 — Conexão Frontend ↔ Supabase
+
+**O que fiz:**
+- Instalei @supabase/supabase-js no frontend
+- Peguei Project URL e Publishable Key no painel do Supabase (nomes novos 
+das antigas "URL" e "anon key")
+- Criei .env.local com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY
+- Criei src/lib/supabaseClient.js, o ponto único de conexão com o banco
+- Testei fazendo um SELECT na tabela evento direto do App.jsx, via console
+
+**Dificuldade encontrada:**
+- Vite só lê .env.local quando o servidor inicia — precisei reiniciar 
+com Ctrl+C e npm run dev de novo depois de criar o arquivo
+- Rodei npm run dev na pasta errada (raiz do projeto em vez de frontend) 
+e recebi erro ENOENT
+
+**O que aprendi:**
+- import.meta.env.VITE_X é como o Vite expõe variáveis de ambiente pro 
+código do navegador — só funciona com esse prefixo VITE_
+- A resposta de uma chamada assíncrona (como select do Supabase) não 
+aparece na tela por padrão — precisa de console.log e abrir o DevTools 
+(F12) pra ver
+- Um select bem-sucedido retornando array vazio confirma que RLS e 
+conexão estão OK; array vazio ≠ erro, só significa "sem dados ainda"
+
+---
