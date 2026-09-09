@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { Link } from 'react-router-dom'
 import './Login.css'
 import './Cadastro.css'
 
@@ -142,7 +143,7 @@ function Cadastro() {
             </button>
           </form>
 
-          <p className="auth-switch">Já tem conta? <a>Entrar →</a></p>
+          <p className="auth-switch">Já tem conta? <Link to="/login">Entrar →</Link></p>
         </div>
       </div>
     </div>

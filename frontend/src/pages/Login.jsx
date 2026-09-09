@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { Link } from 'react-router-dom'
 import './Login.css'
 
 function Login() {
@@ -83,7 +84,7 @@ function Login() {
             </button>
           </form>
 
-          <p className="auth-switch">Não tem conta? <a>Criar conta grátis</a></p>
+          <p className="auth-switch">Não tem conta? <Link to="/cadastro">Criar conta grátis</Link></p>
         </div>
       </div>
     </div>
