@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './Login.css'
 
 function Login() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState(null)
@@ -26,7 +27,7 @@ function Login() {
       return
     }
 
-    console.log('Login OK:', data)
+    navigate('/dashboard')
   }
 
   return (
