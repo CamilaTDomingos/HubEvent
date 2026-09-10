@@ -144,3 +144,78 @@ retornando null sem motivo aparente) — apagar tudo e reinstalar do zero
 por completo geralmente libera o arquivo.
 
 ---
+## 2026-09-09 — Sessão de autenticação e rota protegida
+
+**O que fiz:**
+- Criei AuthContext.jsx usando createContext/useContext para compartilhar 
+o estado "usuário logado" com qualquer componente da árvore
+- Usei supabase.auth.getSession() (checa sessão ao carregar) e 
+onAuthStateChange (reage a login/logout em tempo real)
+- Criei RotaProtegida.jsx, que redireciona pra /login se não houver 
+usuário logado
+- Criei Dashboard.jsx provisório e fiz o login redirecionar pra lá com 
+useNavigate
+
+**O que aprendi:**
+- Context API do React serve pra evitar "prop drilling" (passar dado por 
+várias camadas de componente manualmente) — qualquer tela dentro do 
+AuthProvider acessa o usuário logado via useAuth(), sem precisar receber 
+isso como prop
+- getSession() sozinho não é suficiente — sem o listener 
+onAuthStateChange, a aplicação não saberia quando o usuário desloga ou 
+loga em outra aba
+- Uma "rota protegida" no React não é uma proteção de segurança real 
+(isso já está garantido pelo RLS no banco) — é uma proteção de 
+experiência de uso, pra não mostrar tela vazia/quebrada pra quem não 
+está autenticado
+
+---
+## 2026-09-09 — Dashboard com dados reais + hook customizado
+
+**O que fiz:**
+- Criei o hook useEventos.js, que busca os eventos do usuário logado 
+via supabase.from('evento').select('*')
+- Montei o layout completo do Dashboard (Sidebar + topbar + hero banner 
++ grid de eventos), usando CSS extraído do protótipo
+- Testei inserindo um evento manualmente pelo Table Editor do Supabase, 
+e confirmei que ele apareceu corretamente no Dashboard
+
+**O que aprendi:**
+- Um "hook customizado" é só uma função que começa com "use" e agrupa 
+lógica reaproveitável (aqui, buscar eventos) — outras telas podem chamar 
+useEventos() sem duplicar a query
+- Não precisei filtrar organizador_id = usuario.id manualmente na query 
+— o RLS já filtra isso no banco antes mesmo do dado chegar no front. 
+Isso confirma na prática o motivo de configurar RLS corretamente antes 
+de conectar o front.
+- useEffect com array de dependência vazio ([]) roda a busca uma única 
+vez, quando o componente monta pela primeira vez
+
+---
+
+## 2026-09-09 — Modal de criar evento + CRUD completo
+
+**O que fiz:**
+- Criei ModalCriarEvento.jsx, controlado por props (aberto, aoFechar, 
+aoCriar) em vez de gerenciar sua própria visibilidade
+- Simplifiquei o modal do protótipo, removendo o "func-grid" (módulos 
+opcionais liga/desliga) porque essa informação não existe como coluna 
+na tabela evento e não é um RF Essencial do TCC1 — guardado como ideia 
+de melhoria futura
+- Atualizei useEventos.js para expor uma função recarregar (usando 
+useCallback), permitindo que o Dashboard atualize a lista sem dar F5 
+depois de criar um evento
+- Testei o fluxo completo: criar evento pelo modal → lista atualiza 
+automaticamente
+
+**O que aprendi:**
+- Um componente pode ser "controlado" pelo pai via props (aberto, 
+aoFechar, aoCriar) em vez de guardar seu próprio estado de visibilidade 
+— isso deixa quem usa o modal decidir quando abrir/fechar
+- useCallback evita que uma função seja recriada a cada renderização; 
+sem isso, um useEffect que depende dela entraria em loop infinito
+- Nem toda ideia do protótipo visual precisa virar feature imediatamente 
+— dá pra registrar como melhoria futura e seguir com o essencial primeiro, 
+sem travar o progresso
+
+---
