@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { useEventos } from '../hooks/useEventos'
 import Sidebar from '../components/Sidebar'
+import ModalCriarEvento from '../components/ModalCriarEvento'
 
 function Dashboard() {
   const { usuario } = useAuth()
-  const { eventos, carregando, erro } = useEventos()
+  const { eventos, carregando, erro, recarregar } = useEventos()
+  const [modalAberto, setModalAberto] = useState(false)
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -31,8 +34,9 @@ function Dashboard() {
               Do casamento ao chá de bebê — convidados, presentes, checklist e orçamento em um só lugar.
             </p>
             <div className="hero-actions">
-              <button className="btn btn-primary">Ver meus eventos</button>
-              <button className="btn btn-secondary">Criar evento</button>
+              <button className="btn btn-primary" onClick={() => setModalAberto(true)}>
+                Criar evento
+              </button>
             </div>
           </div>
 
@@ -73,6 +77,12 @@ function Dashboard() {
           )}
         </div>
       </div>
+
+      <ModalCriarEvento
+        aberto={modalAberto}
+        aoFechar={() => setModalAberto(false)}
+        aoCriar={recarregar}
+      />
     </div>
   )
 }

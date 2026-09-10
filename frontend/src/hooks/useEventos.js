@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 export function useEventos() {
@@ -6,23 +6,24 @@ export function useEventos() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
 
-  useEffect(() => {
-    async function buscarEventos() {
-      const { data, error } = await supabase
-        .from('evento')
-        .select('*')
-        .order('data_inicio', { ascending: true })
+  const buscarEventos = useCallback(async () => {
+    setCarregando(true)
+    const { data, error } = await supabase
+      .from('evento')
+      .select('*')
+      .order('data_inicio', { ascending: true })
 
-      if (error) {
-        setErro(error.message)
-      } else {
-        setEventos(data)
-      }
-      setCarregando(false)
+    if (error) {
+      setErro(error.message)
+    } else {
+      setEventos(data)
     }
-
-    buscarEventos()
+    setCarregando(false)
   }, [])
 
-  return { eventos, carregando, erro }
+  useEffect(() => {
+    buscarEventos()
+  }, [buscarEventos])
+
+  return { eventos, carregando, erro, recarregar: buscarEventos }
 }
