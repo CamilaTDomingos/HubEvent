@@ -6,6 +6,7 @@ import Cadastro from './pages/Cadastro'
 import Dashboard from './pages/Dashboard'
 import Eventos from './pages/Eventos'
 import EventoDetalhe from './pages/EventoDetalhe'
+import Rsvp from './pages/Rsvp'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/rsvp/:convidadoId" element={<Rsvp />} />
           <Route
             path="/dashboard"
             element={
