@@ -4,6 +4,8 @@ import RotaProtegida from './components/RotaProtegida'
 import Login from './pages/Login'
 import Cadastro from './pages/Cadastro'
 import Dashboard from './pages/Dashboard'
+import Eventos from './pages/Eventos'
+import EventoDetalhe from './pages/EventoDetalhe'
 
 function App() {
   return (
@@ -17,6 +19,22 @@ function App() {
             element={
               <RotaProtegida>
                 <Dashboard />
+              </RotaProtegida>
+            }
+          />
+          <Route
+            path="/eventos"
+            element={
+              <RotaProtegida>
+                <Eventos />
+              </RotaProtegida>
+            }
+          />
+          <Route
+            path="/eventos/:id"
+            element={
+              <RotaProtegida>
+                <EventoDetalhe />
               </RotaProtegida>
             }
           />
