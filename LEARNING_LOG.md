@@ -219,3 +219,37 @@ sem isso, um useEffect que depende dela entraria em loop infinito
 sem travar o progresso
 
 ---
+
+## 2026-09-09 — Backend Node + RSVP público (correção de segurança)
+
+**O que fiz:**
+- Identifiquei uma falha na RLS de `convidado`: a política pública de 
+SELECT/UPDATE liberava acesso a QUALQUER linha da tabela, não só ao 
+convidado do link específico — expondo dados de todos os eventos de 
+todos os usuários
+- Removi essas políticas públicas do banco
+- Criei o backend Node (Express), com cliente Supabase usando a 
+SERVICE_ROLE_KEY (que ignora RLS) só nesse ambiente, nunca no front
+- Criei os endpoints GET e POST /api/rsvp/:convidadoId, que buscam e 
+atualizam o convite de forma controlada pelo servidor
+- Criei a tela pública /rsvp/:convidadoId no React, que usa fetch() puro 
+para chamar o backend — não importa o cliente Supabase, nem depende do 
+AuthContext (funciona sem login)
+- Adicionei checagem de status_presenca para não permitir responder de 
+novo após já ter confirmado/recusado
+
+**O que aprendi:**
+- RLS com `USING (true)` libera a tabela inteira, não só um registro — 
+"acesso público" precisa ser desenhado com cuidado sobre o que 
+exatamente fica exposto
+- service_role key ignora RLS por completo; por isso só pode existir no 
+backend, nunca em código que roda no navegador
+- Uma tela pública não deve usar o cliente Supabase direto nem estar 
+dentro de RotaProtegida — ela é estruturalmente diferente de uma tela 
+autenticada, mesmo estando no mesmo projeto React
+- select('...', 'tabela:coluna_fk (campos)') do Supabase faz join 
+automático via foreign key numa única query
+- Corrigir uma decisão de arquitetura errada logo que percebida evita 
+que ela vire dívida técnica esquecida mais pra frente
+
+---
