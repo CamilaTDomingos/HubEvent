@@ -253,3 +253,38 @@ automático via foreign key numa única query
 que ela vire dívida técnica esquecida mais pra frente
 
 ---
+
+## 2026-09-09 — Módulo Financeiro + refinamentos de UX
+
+**O que fiz:**
+- Adicionei coluna orcamento_estimado na tabela evento (ALTER TABLE)
+- Criei useDespesas.js seguindo o mesmo padrão de useConvidados.js
+- Adicionei sistema de abas (Convidados/Financeiro) na tela de detalhe 
+do evento, controlado por estado local (useState), sem precisar de 
+rotas separadas
+- Implementei edição inline do orçamento (clique no valor vira um 
+formulário no lugar, sem modal)
+- Implementei lançamento de despesas com categoria pré-definida (select) 
+e validação contra valores negativos, em duas camadas: HTML (min="0") e 
+JS (if valor < 0)
+- Criei ModalConfirmacao.jsx, componente reutilizável para qualquer 
+ação destrutiva, substituindo window.confirm() nativo (que exibia 
+"localhost diz" de forma não customizável)
+- Adicionei exclusão de despesas e convidados usando esse modal
+
+**O que aprendi:**
+- window.confirm() é uma API nativa do navegador — não é estilizável, 
+sempre mostra a origem (domínio) da página. Modal customizado resolve 
+isso.
+- Um mesmo componente de modal pode ser genérico o suficiente pra 
+servir múltiplos contextos (excluir despesa OU convidado), guardando só 
+"o que fazer" num estado (ex: { tipo, id }) e decidindo a mensagem/ação 
+no momento de renderizar
+- Validação de dado sensível (valor financeiro) deve existir em mais de 
+uma camada: o HTML impede a digitação, o JS impede o envio, e o banco 
+(constraint CHECK) impede a gravação mesmo se as duas primeiras 
+camadas falharem
+- Abas dentro de uma mesma tela não precisam de rota própria — só 
+estado local decidindo o que renderizar
+
+---

@@ -5,6 +5,9 @@ import { useConvidados } from '../hooks/useConvidados'
 import { useDespesas } from '../hooks/useDespesas'
 import Sidebar from '../components/Sidebar'
 import ModalConfirmacao from '../components/ModalConfirmacao'
+import LinhaDespesa from '../components/LinhaDespesa'
+import GraficoDespesas from '../components/GraficoDespesas'
+import NumeroAnimado from '../components/NumeroAnimado'
 
 function EventoDetalhe() {
   const { id } = useParams()
@@ -20,6 +23,11 @@ function EventoDetalhe() {
   const [descDespesa, setDescDespesa] = useState('')
   const [valorDespesa, setValorDespesa] = useState('')
   const [categoriaDespesa, setCategoriaDespesa] = useState('')
+
+  // Novos estados para parcelamento
+  const [parcelar, setParcelar] = useState(false)
+  const [numParcelas, setNumParcelas] = useState(2)
+  const [primeiroVencimento, setPrimeiroVencimento] = useState('')
 
   const [editandoOrcamento, setEditandoOrcamento] = useState(false)
   const [novoOrcamento, setNovoOrcamento] = useState('')
@@ -63,22 +71,47 @@ function EventoDetalhe() {
   async function handleAdicionarDespesa(e) {
     e.preventDefault()
     const valor = Number(valorDespesa)
-
     if (!descDespesa || !valorDespesa || valor < 0) return
+    if (parcelar && (!primeiroVencimento || numParcelas < 2)) return
 
-    const { error } = await supabase.from('despesa').insert({
-      evento_id: id,
-      descricao: descDespesa,
-      valor_total: valor,
-      categoria: categoriaDespesa || null,
-    })
+    const { data: novaDespesa, error } = await supabase
+      .from('despesa')
+      .insert({
+        evento_id: id,
+        descricao: descDespesa,
+        valor_total: valor,
+        categoria: categoriaDespesa || null,
+        parcelado: parcelar,
+      })
+      .select()
+      .single()
 
-    if (!error) {
-      setDescDespesa('')
-      setValorDespesa('')
-      setCategoriaDespesa('')
-      recarregarDespesas()
+    if (error) return
+
+    if (parcelar) {
+      const valorParcela = Math.round((valor / numParcelas) * 100) / 100
+      const parcelas = []
+      const dataBase = new Date(primeiroVencimento)
+      for (let i = 0; i < numParcelas; i++) {
+        const vencimento = new Date(dataBase)
+        vencimento.setMonth(vencimento.getMonth() + i)
+        parcelas.push({
+          despesa_id: novaDespesa.id,
+          numero: i + 1,
+          valor: valorParcela,
+          vencimento: vencimento.toISOString().split('T')[0],
+        })
+      }
+      await supabase.from('parcela').insert(parcelas)
     }
+
+    setDescDespesa('')
+    setValorDespesa('')
+    setCategoriaDespesa('')
+    setParcelar(false)
+    setNumParcelas(2)
+    setPrimeiroVencimento('')
+    recarregarDespesas()
   }
 
   async function confirmarExclusao() {
@@ -250,7 +283,7 @@ function EventoDetalhe() {
                   ) : (
                     <>
                       <div className="stat-value">
-                        R$ {orcamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <NumeroAnimado valor={orcamento} prefixo="R$ " />
                       </div>
                       <div className="stat-label">
                         Orçamento total{' '}
@@ -266,13 +299,13 @@ function EventoDetalhe() {
                 </div>
                 <div className="stat-card">
                   <div className="stat-value" style={{ color: 'var(--red)' }}>
-                    R$ {totalGasto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    <NumeroAnimado valor={totalGasto} prefixo="R$ " />
                   </div>
                   <div className="stat-label">Gasto até agora</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-value" style={{ color: saldo >= 0 ? 'var(--em)' : 'var(--red)' }}>
-                    R$ {saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    <NumeroAnimado valor={saldo} prefixo="R$ " />
                   </div>
                   <div className="stat-label">Saldo restante</div>
                 </div>
@@ -286,6 +319,7 @@ function EventoDetalhe() {
                         height: '100%',
                         width: `${percentualUsado}%`,
                         background: percentualUsado >= 100 ? 'var(--red)' : 'var(--em)',
+                        transition: 'width 900ms ease',
                       }}
                     />
                   </div>
@@ -295,7 +329,12 @@ function EventoDetalhe() {
                 </div>
               )}
 
-              <form onSubmit={handleAdicionarDespesa} style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <div className="stat-card" style={{ marginBottom: 24 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Gastos por categoria</h4>
+                <GraficoDespesas despesas={despesas} />
+              </div>
+
+              <form onSubmit={handleAdicionarDespesa} style={{ display: 'flex', gap: '8px', marginBottom: '20px', alignItems: 'center' }}>
                 <input
                   type="text"
                   placeholder="Descrição (ex: Buffet)"
@@ -319,7 +358,7 @@ function EventoDetalhe() {
                   <option>Convites e Papelaria</option>
                   <option>Transporte</option>
                   <option>Outros</option>
-                </select> 
+                </select>
                 <input
                   type="number"
                   step="0.01"
@@ -330,6 +369,31 @@ function EventoDetalhe() {
                   style={{ flex: 1, padding: '9px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}
                   required
                 />
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <input type="checkbox" checked={parcelar} onChange={(e) => setParcelar(e.target.checked)} />
+                  Parcelar
+                </label>
+
+                {parcelar && (
+                  <>
+                    <input
+                      type="number"
+                      min="2"
+                      placeholder="Nº parcelas"
+                      value={numParcelas}
+                      onChange={(e) => setNumParcelas(Number(e.target.value))}
+                      style={{ width: 90, padding: '9px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}
+                    />
+                    <input
+                      type="date"
+                      value={primeiroVencimento}
+                      onChange={(e) => setPrimeiroVencimento(e.target.value)}
+                      style={{ padding: '9px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}
+                    />
+                  </>
+                )}
+
                 <button type="submit" className="btn btn-primary">+ Adicionar</button>
               </form>
 
@@ -342,24 +406,17 @@ function EventoDetalhe() {
                       <th>Descrição</th>
                       <th>Categoria</th>
                       <th>Valor</th>
+                      <th>Parcelamento</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     {despesas.map((d) => (
-                      <tr key={d.id}>
-                        <td>{d.descricao}</td>
-                        <td>{d.categoria || '—'}</td>
-                        <td>R$ {Number(d.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                        <td>
-                          <button
-                            onClick={() => setConfirmandoExclusao({ tipo: 'despesa', id: d.id })}
-                            style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 12 }}
-                          >
-                            Excluir
-                          </button>
-                        </td>
-                      </tr>
+                      <LinhaDespesa
+                        key={d.id}
+                        despesa={d}
+                        aoExcluir={(despesaId) => setConfirmandoExclusao({ tipo: 'despesa', id: despesaId })}
+                      />
                     ))}
                   </tbody>
                 </table>
