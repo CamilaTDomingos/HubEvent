@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Eventos from './pages/Eventos'
 import EventoDetalhe from './pages/EventoDetalhe'
 import Rsvp from './pages/Rsvp'
+import SiteEvento from './pages/SiteEvento'
 
 function App() {
   return (
@@ -37,6 +38,14 @@ function App() {
             element={
               <RotaProtegida>
                 <EventoDetalhe />
+              </RotaProtegida>
+            }
+          />
+          <Route
+            path="/eventos/:id/site"
+            element={
+              <RotaProtegida>
+                <SiteEvento />
               </RotaProtegida>
             }
           />

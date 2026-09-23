@@ -288,3 +288,61 @@ camadas falharem
 estado local decidindo o que renderizar
 
 ---
+
+## 2026-09-22 — Repaginação visual do Financeiro (gráfico + animações)
+
+**O que fiz:**
+- Criei GraficoDespesas.jsx: donut chart em SVG puro (sem biblioteca 
+externa), usando o truque de stroke-dasharray/strokeDashoffset para 
+desenhar fatias proporcionais aos gastos por categoria
+- Criei NumeroAnimado.jsx: contador que anima de 0 até o valor real 
+usando requestAnimationFrame e uma curva de easing (desaceleração)
+- Animei a barra de progresso do orçamento com transition no CSS
+- Isso implementa o RF20 (Gráficos de Pizza - Distribuição), que estava 
+documentado como Desejável no TCC1 e nunca tinha sido construído
+
+**O que aprendi:**
+- Um círculo SVG pode virar gráfico de pizza/donut manipulando 
+stroke-dasharray (quanto de traço vs. vazio) e strokeDashoffset (de onde 
+começa a desenhar) — não precisa de biblioteca de gráficos para casos 
+simples
+- requestAnimationFrame é a forma correta de animar via JS, sincronizada 
+com a taxa de atualização da tela — diferente de setInterval
+- Motion/animação deve responder a algo real acontecendo (dado 
+carregando, ação do usuário), não ser decoração espalhada em vários 
+elementos sem motivo — isso deixa a interface mais profissional sem 
+parecer genérica
+- const não permite reatribuição (+=); variáveis que acumulam valor ao 
+longo de um loop precisam ser declaradas com let
+
+---
+
+## 2026-09-22 — Construtor de Landing Page (RF05)
+
+**O que fiz:**
+- Decidimos guardar configurações flexíveis (cor do tema, recursos 
+ativos, mensagem) como JSON dentro da coluna conteudo (TEXT) já 
+existente, em vez de criar colunas separadas — reduz migrações futuras
+- Criei useLandingPage.js com lógica de "upsert manual": busca a 
+landing page do evento, e no salvar() decide entre INSERT (se não 
+existir ainda) ou UPDATE (se já existir)
+- Criei gerarSlug(), que transforma o título em URL amigável, tratando 
+acentos com normalize('NFD') antes de remover caracteres especiais
+- Montei SiteEvento.jsx com layout de duas colunas: painel de 
+configuração à esquerda, preview ao vivo à direita, que reage 
+instantaneamente a cada mudança (cor, texto, toggles)
+
+**O que aprendi:**
+- .maybeSingle() no Supabase retorna null sem erro quando não encontra 
+registro, diferente de .single() que gera erro — útil para dados que 
+podem ainda não existir (ex: evento novo sem landing page criada ainda)
+- Guardar JSON em uma coluna TEXT é uma escolha válida quando o dado é 
+estruturalmente flexível e não precisa ser filtrado/consultado 
+diretamente pelo banco (WHERE em campo dentro do JSON) — o trade-off é 
+menos rigidez de schema em troca de menos garantias do banco sobre o 
+formato interno
+- Preview "ao vivo" no React é só renderizar os mesmos estados 
+(useState) em dois lugares da tela ao mesmo tempo — não tem mágica, o 
+painel de controle e o preview compartilham as mesmas variáveis
+
+---

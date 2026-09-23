@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useConvidados } from '../hooks/useConvidados'
 import { useDespesas } from '../hooks/useDespesas'
@@ -179,6 +179,9 @@ function EventoDetalhe() {
           >
             Financeiro
           </button>
+          <Link to={`/eventos/${id}/site`} className="tab-btn">
+            Site do evento
+          </Link>
         </div>
 
         <div className="page-body">
