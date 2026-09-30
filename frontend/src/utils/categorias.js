@@ -17,7 +17,7 @@ export function tipoEvento(categoria) {
 // Cores da paleta original do projeto, fixas por categoria de despesa:
 // o mesmo tom aparece no gráfico e no extrato.
 export const CATEGORIAS_DESPESA = [
-  { nome: 'Local e Cerimônia', cor: '#16a37a' },
+  { nome: 'Local e Cerimônia', cor: '#1e6b7b' },
   { nome: 'Buffet e Bebidas', cor: '#3b6fe8' },
   { nome: 'Decoração', cor: '#e8a432' },
   { nome: 'Fotografia e Vídeo', cor: '#8b5cf6' },

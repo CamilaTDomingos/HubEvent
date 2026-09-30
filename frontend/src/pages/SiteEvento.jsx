@@ -9,6 +9,7 @@ import Icone from '../components/Icone'
 import './SiteEvento.css'
 
 const CORES = [
+  { hex: '#1e6b7b', nome: 'Petróleo' },
   { hex: '#16a37a', nome: 'Esmeralda' },
   { hex: '#6d47c9', nome: 'Violeta' },
   { hex: '#d94f6e', nome: 'Rosé' },

@@ -79,7 +79,7 @@
 .previa-legenda { text-align: center; margin-top: 16px; font-size: 12.5px; color: var(--text-3); }
 
 /* Página do convite */
-.ps { --tema: #16a37a; background: #fff; color: var(--text); }
+.ps { --tema: #1e6b7b; background: #fff; color: var(--text); }
 
 .ps-hero { padding: 22px; background: var(--tema); transition: background 0.4s ease; }
 .ps-moldura {

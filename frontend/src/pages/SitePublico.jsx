@@ -109,7 +109,7 @@ function SitePublico() {
         evento={evento}
         titulo={titulo}
         mensagem={conteudo?.mensagem}
-        cor={conteudo?.cor || '#16a37a'}
+        cor={conteudo?.cor || '#1e6b7b'}
         recursos={{ ...recursos, listaPresentes: mostrarPresentes }}
       >
         {mostrarPresentes && <ListaPresentesSite eventoId={evento.id} />}

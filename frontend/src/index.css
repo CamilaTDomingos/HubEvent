@@ -1,6 +1,6 @@
 /* ==========================================================================
    HubEvent — fundação visual
-   Paleta original do projeto (verde esmeralda sobre cinza muito claro),
+   Paleta do projeto (azul petróleo sobre cinza muito claro),
    Inter para a interface e Lora para títulos. A cor aparece como detalhe;
    a personalidade vem da tipografia, do espaço e de pequenos acabamentos.
    ========================================================================== */
@@ -9,7 +9,7 @@
   --bg: #f8f9fb; --bg-2: #f1f3f7; --bg-3: #e4e7ed;
   --card: #ffffff; --border: rgba(0, 0, 0, 0.07); --border-2: rgba(0, 0, 0, 0.13);
   --text: #111318; --text-2: #5c6170; --text-3: #9aa0ae;
-  --em: #16a37a; --em-2: #0e8f6a; --em-dim: #eef9f5; --em-dim2: rgba(22, 163, 122, 0.1); --em-border: rgba(22, 163, 122, 0.22);
+  --em: #1e6b7b; --em-2: #164f5c; --em-dim: #eaf3f5; --em-dim2: rgba(30, 107, 123, 0.1); --em-border: rgba(30, 107, 123, 0.24);
   --red: #e5484d; --red-dim: #fff5f5;
   --blue: #3b6fe8; --blue-dim: #eff3ff;
   --yellow: #e8a432; --yellow-dim: rgba(232, 164, 50, 0.1);
@@ -98,7 +98,7 @@ button { font: inherit; color: inherit; }
 .btn .icone { flex-shrink: 0; }
 
 .btn-primary { background: var(--em); color: #fff; }
-.btn-primary:not(:disabled):hover { background: var(--em-2); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(22, 163, 122, 0.22); }
+.btn-primary:not(:disabled):hover { background: var(--em-2); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30, 107, 123, 0.22); }
 .btn-primary:not(:disabled):active { transform: none; box-shadow: none; }
 
 .btn-secondary { background: var(--card); color: var(--text); border-color: var(--border-2); }
@@ -366,7 +366,7 @@ select.input,
   transition: background 0.25s var(--ease), color 0.25s var(--ease), transform 0.25s var(--ease);
 }
 .menu-item:hover { background: var(--em-dim); color: var(--em-2); }
-.menu-item.ativo { background: var(--em); color: #fff; box-shadow: 0 4px 12px rgba(22, 163, 122, 0.25); }
+.menu-item.ativo { background: var(--em); color: #fff; box-shadow: 0 4px 12px rgba(30, 107, 123, 0.25); }
 .menu-item:active { transform: scale(0.94); }
 
 .menu-rotulo {
