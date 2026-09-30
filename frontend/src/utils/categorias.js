@@ -36,3 +36,18 @@ export function iniciais(nome = '') {
   const partes = nome.trim().split(/\s+/)
   return ((partes[0]?.[0] || '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase()
 }
+
+// Categorias da lista de presentes. Usam só ícones: o status é quem carrega cor.
+export const CATEGORIAS_PRESENTE = [
+  { nome: 'Cozinha', icone: 'panela' },
+  { nome: 'Mesa posta', icone: 'presente' },
+  { nome: 'Cama e banho', icone: 'casa' },
+  { nome: 'Casa e decoração', icone: 'casa' },
+  { nome: 'Eletroportáteis', icone: 'presente' },
+  { nome: 'Experiências', icone: 'brilho' },
+  { nome: 'Outros', icone: 'presente' },
+]
+
+export function iconePresente(categoria) {
+  return CATEGORIAS_PRESENTE.find((c) => c.nome === categoria)?.icone || 'presente'
+}

@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useConvidados } from '../hooks/useConvidados'
 import { useDespesas } from '../hooks/useDespesas'
+import { usePresentes } from '../hooks/usePresentes'
 import LayoutApp from '../components/LayoutApp'
 import AbasEvento from '../components/AbasEvento'
 import AbaConvidados from '../components/AbaConvidados'
 import AbaFinanceiro from '../components/AbaFinanceiro'
+import AbaPresentes from '../components/AbaPresentes'
 import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
 import { tipoEvento } from '../utils/categorias'
@@ -38,6 +40,7 @@ function EventoDetalhe() {
 
   const convidados = useConvidados(id)
   const despesas = useDespesas(id)
+  const presentes = usePresentes(id)
 
   useEffect(() => {
     async function buscarEvento() {
@@ -82,6 +85,7 @@ function EventoDetalhe() {
         eventoId={id}
         totalConvidados={convidados.convidados.length}
         totalDespesas={despesas.despesas.length}
+        totalPresentes={presentes.presentes.length}
       />
 
       <div className="aba-conteudo" key={aba}>
@@ -101,6 +105,16 @@ function EventoDetalhe() {
             carregando={despesas.carregando}
             recarregar={despesas.recarregar}
             aoAtualizarOrcamento={(valor) => setEvento((atual) => ({ ...atual, orcamento_estimado: valor }))}
+          />
+        )}
+
+        {aba === 'presentes' && (
+          <AbaPresentes
+            presentes={presentes.presentes}
+            carregando={presentes.carregando}
+            cadastrar={presentes.cadastrar}
+            reservar={presentes.reservar}
+            remover={presentes.remover}
           />
         )}
       </div>
