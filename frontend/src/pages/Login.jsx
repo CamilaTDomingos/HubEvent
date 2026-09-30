@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Link, useNavigate } from 'react-router-dom'
-import './Login.css'
+import PainelAuth from '../components/PainelAuth'
+import './Auth.css'
 
 function Login() {
   const navigate = useNavigate()
@@ -15,7 +16,7 @@ function Login() {
     setErro(null)
     setCarregando(true)
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password: senha,
     })
@@ -31,61 +32,60 @@ function Login() {
   }
 
   return (
-    <div className="auth-screen">
-      <div className="auth-left">
-        <div className="auth-deco d1"></div>
-        <div className="auth-deco d2"></div>
-        <div className="auth-brand">
-          <div className="auth-brand-mark"></div>
-          <div>
-            <div className="auth-brand-text">HubEvent</div>
-            <div className="auth-brand-sub">Platform</div>
-          </div>
-        </div>
-        <div className="auth-hero">
-          <div className="auth-h1">Organize.<br />Celebre.<br /><em>Lembre.</em></div>
-          <p className="auth-sub">
-            Gerencie convidados, presentes, checklist e orçamento em um só lugar — com inteligência artificial.
-          </p>
-        </div>
-      </div>
+    <div className="auth">
+      <PainelAuth
+        titulo={
+          <>
+            <span className="linha" style={{ '--d': 1 }}>Organize.</span>
+            <span className="linha" style={{ '--d': 2 }}>Celebre.</span>
+            <span className="linha" style={{ '--d': 3 }}><em>Lembre.</em></span>
+          </>
+        }
+        texto="Convidados, presentes, checklist e orçamento do seu evento — tudo num lugar só."
+      />
 
-      <div className="auth-right">
-        <div className="auth-card">
-          <div className="auth-ey">Acesso seguro</div>
-          <h1>Bem-vindo de volta</h1>
-          <p className="a-desc">Entre na sua conta para continuar organizando seus eventos</p>
+      <div className="auth-lado">
+        <div className="auth-form">
+          <p className="eyebrow">Entrar</p>
+          <h2 className="display">Que bom te ver <em>de novo.</em></h2>
+          <p className="desc">Entre na sua conta para continuar organizando seus eventos.</p>
 
           <form onSubmit={handleLogin}>
             <div className="field">
-              <label>E-mail</label>
+              <label htmlFor="login-email">E-mail</label>
               <input
+                id="login-email"
                 type="email"
                 placeholder="seu@email.com"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="field">
-              <label>Senha</label>
+              <label htmlFor="login-senha">Senha</label>
               <input
+                id="login-senha"
                 type="password"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required
               />
             </div>
 
-            {erro && <p style={{ color: 'var(--red)', fontSize: '13px', marginBottom: '12px' }}>{erro}</p>}
+            {erro && <p className="erro-msg">{erro}</p>}
 
-            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={carregando}>
-              {carregando ? 'Entrando...' : 'Entrar na plataforma →'}
+            <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={carregando}>
+              {carregando ? 'Entrando…' : 'Entrar →'}
             </button>
           </form>
 
-          <p className="auth-switch">Não tem conta? <Link to="/cadastro">Criar conta grátis</Link></p>
+          <p className="auth-troca">
+            Ainda não tem conta? <Link to="/cadastro" className="link">Criar conta grátis</Link>
+          </p>
         </div>
       </div>
     </div>

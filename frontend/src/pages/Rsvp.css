@@ -1,0 +1,70 @@
+.rsvp {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px var(--gutter);
+  overflow: hidden;
+}
+
+.rsvp-deco { position: absolute; pointer-events: none; }
+.rsvp-deco-a { top: -90px; right: -90px; animation: gira 80s linear infinite; }
+.rsvp-deco-b { bottom: 8%; left: 6%; animation: gira 40s linear infinite reverse; }
+.rsvp-deco-c { top: 18%; left: 12%; }
+
+.rsvp-convite { position: relative; width: 100%; max-width: 680px; }
+.rsvp-ola { font-size: clamp(26px, 3vw, 34px); margin: 18px 0 10px; color: var(--ink-2); }
+.rsvp-evento { font-size: clamp(52px, 9vw, 112px); margin-bottom: 36px; overflow-wrap: anywhere; }
+
+.rsvp-detalhes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 48px;
+  padding: 22px 0;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  margin-bottom: 36px;
+}
+.rsvp-detalhes dd { font-family: var(--f-disp); font-size: 20px; margin-top: 6px; }
+.rsvp-detalhes dd::first-letter { text-transform: uppercase; }
+
+.rsvp-pergunta { font-family: var(--f-disp); font-style: italic; font-size: 24px; margin-bottom: 18px; }
+.rsvp-botoes { display: flex; flex-wrap: wrap; gap: 12px; }
+.rsvp-texto { color: var(--ink-2); font-size: 17px; }
+
+.rsvp-final { display: flex; align-items: center; gap: 20px; font-size: 18px; }
+.rsvp-final strong { font-weight: 600; }
+.rsvp-carimbo {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  background: var(--mint);
+  font-size: 34px;
+  box-shadow: 4px 4px 0 var(--ink);
+  animation: carimbo 0.7s var(--spring) both;
+}
+.rsvp-carimbo.nao { background: var(--paper-3); }
+
+.rsvp-marca { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--ink-3); }
+
+.confete { position: fixed; left: 50%; top: 60%; z-index: 100; pointer-events: none; }
+.confete span {
+  position: absolute;
+  border: 1px solid var(--ink);
+  animation: estoura 1.8s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+@keyframes estoura {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: translate(var(--x), calc(var(--y) + 520px)) rotate(var(--giro)); opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .rsvp-deco-a { width: 200px; height: 200px; top: -60px; right: -70px; }
+  .rsvp-deco-b, .rsvp-deco-c { display: none; }
+}

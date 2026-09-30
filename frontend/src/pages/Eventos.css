@@ -1,0 +1,83 @@
+.agenda-topo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-bottom: 32px;
+}
+.agenda-titulo { font-size: clamp(56px, 8vw, 112px); margin-top: 14px; }
+.agenda-conta {
+  font-family: var(--f-mono);
+  font-size: 0.2em;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: super;
+  margin-left: 0.2em;
+  color: var(--tomato-ink);
+}
+
+.agenda-acoes { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+.busca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: min(300px, 100%);
+  padding: 6px 2px;
+  border-bottom: 1.5px solid var(--line-2);
+  color: var(--ink-3);
+  transition: border-color 0.2s, color 0.2s;
+}
+.busca:focus-within { border-bottom-color: var(--ink); color: var(--ink); }
+.busca input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--f-disp);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink);
+}
+.busca input::placeholder { color: var(--ink-3); }
+
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 40px; }
+.filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  border: 1.5px solid var(--line-2);
+  border-radius: 40px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.filtro:hover { border-color: var(--ink); }
+.filtro.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.mes { margin-bottom: 56px; }
+.mes-titulo {
+  font-family: var(--f-disp);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(26px, 3vw, 34px);
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.mes-titulo::first-letter { text-transform: uppercase; }
+.mes-passado .mes-titulo { color: var(--ink-3); }
+
+.agenda-vazia {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 56px 0;
+  border-top: 1.5px solid var(--ink);
+}
+.agenda-vazia .display { font-size: clamp(30px, 4vw, 46px); }
