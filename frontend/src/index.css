@@ -328,25 +328,83 @@ select.input,
 }
 .marca:hover .marca-simbolo { transform: rotate(-8deg); }
 
-.mast-nav { display: flex; gap: 4px; flex: 1; }
-.mast-link {
-  padding: 7px 14px;
-  border-radius: 20px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text-2);
-  text-decoration: none;
-  transition: background 0.2s, color 0.2s;
-}
-.mast-link:hover { background: var(--bg-2); color: var(--text); }
-.mast-link.ativo { background: var(--em-dim); color: var(--em-2); }
+.mast-espaco { flex: 1; }
 
 .mast-user { display: flex; align-items: center; gap: 10px; }
 .mast-user-nome { font-size: 13.5px; font-weight: 500; }
 
 @media (max-width: 640px) {
   .mast-user-nome, .marca-texto { display: none; }
-  .mast-link { padding: 7px 11px; }
+}
+
+/* Menu lateral flutuante (pílula) */
+.menu-lateral {
+  position: fixed;
+  z-index: 40;
+  left: clamp(16px, 2vw, 28px);
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  box-shadow: var(--sh1);
+  animation: aparece 0.4s ease both;
+}
+.menu-item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--text-2);
+  text-decoration: none;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease), transform 0.25s var(--ease);
+}
+.menu-item:hover { background: var(--em-dim); color: var(--em-2); }
+.menu-item.ativo { background: var(--em); color: #fff; box-shadow: 0 4px 12px rgba(22, 163, 122, 0.25); }
+.menu-item:active { transform: scale(0.94); }
+
+.menu-rotulo {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  translate: -4px -50%;
+  padding: 6px 11px;
+  border-radius: var(--r-sm);
+  background: var(--text);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s, translate 0.25s var(--ease);
+}
+.menu-item:hover .menu-rotulo,
+.menu-item:focus-visible .menu-rotulo { opacity: 1; translate: 0 -50%; }
+
+/* Reserva espaço para o menu quando a tela não é larga o bastante */
+@media (min-width: 641px) and (max-width: 1320px) {
+  .page, .mast-inner { padding-left: calc(var(--gutter) + 84px); }
+}
+
+@media (max-width: 640px) {
+  .menu-lateral {
+    top: auto;
+    bottom: 16px;
+    left: 50%;
+    translate: -50% 0;
+    flex-direction: row;
+    padding: 8px;
+    box-shadow: var(--sh3);
+  }
+  .menu-item { width: 44px; height: 44px; }
+  .menu-rotulo { display: none; }
 }
 
 .voltar {
