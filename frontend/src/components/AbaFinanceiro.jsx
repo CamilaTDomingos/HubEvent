@@ -4,6 +4,7 @@ import ModalConfirmacao from './ModalConfirmacao'
 import LinhaDespesa from './LinhaDespesa'
 import GraficoDespesas from './GraficoDespesas'
 import NumeroAnimado from './NumeroAnimado'
+import Icone from './Icone'
 import { CATEGORIAS_DESPESA } from '../utils/categorias'
 import { moeda } from '../utils/datas'
 
@@ -105,73 +106,65 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
   return (
     <div className="fin">
       <section className="fin-topo">
-        <div className="fin-saldo">
-          <p className="eyebrow">{estourou ? 'Acima do orçamento' : 'Saldo disponível'}</p>
-          <p className={`fin-grande display ${estourou ? 'neg' : ''}`}>
-            <NumeroAnimado valor={saldo} prefixo="R$ " />
-          </p>
-
-          {editandoOrcamento ? (
-            <form className="fin-orc-form" onSubmit={salvarOrcamento}>
-              <label className="label" htmlFor="orcamento">Orçamento total (R$)</label>
-              <div className="fin-orc-linha">
-                <input
-                  id="orcamento"
-                  className="input"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  autoFocus
-                  value={novoOrcamento}
-                  onChange={(e) => setNovoOrcamento(e.target.value)}
-                />
-                <button type="submit" className="btn btn-primary">Salvar</button>
-                <button type="button" className="btn btn-ghost" onClick={() => setEditandoOrcamento(false)}>Cancelar</button>
-              </div>
-            </form>
-          ) : (
-            <p className="fin-frase">
-              Gastos de <strong>{moeda(totalGasto)}</strong>{' '}
-              {orcamento > 0 ? (
-                <>
-                  de um orçamento de{' '}
-                  <button className="fin-orc" onClick={iniciarEdicaoOrcamento} title="Editar orçamento">
-                    {moeda(orcamento)} <span aria-hidden="true">✎</span>
-                  </button>
-                </>
+        <div className="painel fin-resumo">
+          <div className="fin-numeros">
+            <div className="fin-num">
+              <span className="label">Orçamento</span>
+              {editandoOrcamento ? (
+                <form className="fin-orc-form" onSubmit={salvarOrcamento}>
+                  <input
+                    className="input"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    autoFocus
+                    aria-label="Orçamento total em reais"
+                    value={novoOrcamento}
+                    onChange={(e) => setNovoOrcamento(e.target.value)}
+                  />
+                  <button type="submit" className="btn-icone ok" title="Salvar" aria-label="Salvar orçamento"><Icone nome="check" tamanho={17} /></button>
+                  <button type="button" className="btn-icone" title="Cancelar" aria-label="Cancelar" onClick={() => setEditandoOrcamento(false)}><Icone nome="mais" tamanho={17} style={{ rotate: '45deg' }} /></button>
+                </form>
               ) : (
-                <>
-                  e nenhum orçamento definido.{' '}
-                  <button className="fin-orc" onClick={iniciarEdicaoOrcamento}>Definir orçamento ✎</button>
-                </>
+                <button className="fin-orc" onClick={iniciarEdicaoOrcamento} title="Editar orçamento">
+                  <strong className="titulo num">{orcamento > 0 ? moeda(orcamento) : 'Definir'}</strong>
+                  <Icone nome="editar" tamanho={14} />
+                </button>
               )}
-            </p>
-          )}
+            </div>
+            <div className="fin-num">
+              <span className="label">Gasto até agora</span>
+              <strong className="titulo num"><NumeroAnimado valor={totalGasto} prefixo="R$ " /></strong>
+            </div>
+            <div className="fin-num">
+              <span className="label">{estourou ? 'Acima do orçamento' : 'Saldo disponível'}</span>
+              <strong className={`titulo num ${estourou ? 'neg' : 'pos'}`}><NumeroAnimado valor={Math.abs(saldo)} prefixo={saldo < 0 ? '− R$ ' : 'R$ '} /></strong>
+            </div>
+          </div>
 
-          {orcamento > 0 && (
+          {orcamento > 0 ? (
             <div className="medidor">
               <div className="medidor-trilho">
-                <span className="medidor-marca" style={{ left: '25%' }} />
-                <span className="medidor-marca" style={{ left: '50%' }} />
-                <span className="medidor-marca" style={{ left: '75%' }} />
-                <div className={`medidor-fill ${estourou ? 'neg' : ''}`} style={{ width: `${percentualUsado}%` }} />
+                <div className={`medidor-fill ${estourou ? 'neg' : percentualReal >= 85 ? 'alerta' : ''}`} style={{ width: `${percentualUsado}%` }} />
               </div>
-              <div className="medidor-legenda mono">
-                <span>{percentualReal.toFixed(0)}% usado</span>
-                {estourou && <span className="estourou">estourou em {moeda(-saldo)}</span>}
+              <div className="medidor-legenda">
+                <span><strong className="num">{percentualReal.toFixed(0)}%</strong> do orçamento utilizado</span>
+                {estourou && <span className="estourou">Excedido em {moeda(-saldo)}</span>}
               </div>
             </div>
+          ) : (
+            <p className="fin-dica">Defina um orçamento para acompanhar quanto ainda pode ser gasto.</p>
           )}
         </div>
 
-        <div className="fin-grafico">
-          <p className="eyebrow">Para onde vai o dinheiro</p>
+        <div className="painel fin-grafico">
+          <h3 className="titulo">Por categoria</h3>
           <GraficoDespesas despesas={despesas} />
         </div>
       </section>
 
       <form className="lancar" onSubmit={handleAdicionarDespesa}>
-        <p className="eyebrow lancar-titulo">Lançar despesa</p>
+        <h3 className="titulo lancar-titulo">Nova despesa</h3>
         <div className="lancar-campos">
           <input
             className="input lancar-desc"
@@ -207,9 +200,9 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
           <label className="switch">
             <input type="checkbox" checked={parcelar} onChange={(e) => setParcelar(e.target.checked)} />
             <span className="switch-track" />
-            Parcelar
+            <span className="switch-texto">Parcelar</span>
           </label>
-          <button type="submit" className="btn btn-primary">+ Lançar</button>
+          <button type="submit" className="btn btn-primary"><Icone nome="mais" tamanho={16} /> Adicionar</button>
         </div>
 
         <div className={`lancar-parcelas ${parcelar ? 'aberto' : ''}`}>
@@ -235,8 +228,8 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
                 tabIndex={parcelar ? 0 : -1}
               />
               {valorDespesa > 0 && numParcelas >= 2 && (
-                <span className="mono muted">
-                  = {numParcelas}× de {moeda(Math.round((Number(valorDespesa) / numParcelas) * 100) / 100)}
+                <span className="muted">
+                  {numParcelas}× de {moeda(Math.round((Number(valorDespesa) / numParcelas) * 100) / 100)}
                 </span>
               )}
             </div>
@@ -244,18 +237,21 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
         </div>
       </form>
 
-      <section className="extrato">
-        <div className="lista-topo">
-          <h3>Extrato</h3>
-          <span className="mono muted">
+      <section className="painel extrato">
+        <div className="painel-cab">
+          <h3 className="titulo">Despesas</h3>
+          <span className="muted">
             {despesas.length} {despesas.length === 1 ? 'lançamento' : 'lançamentos'}
           </span>
         </div>
 
         {carregando ? (
-          <p className="muted">Carregando…</p>
+          <p className="muted painel-vazio">Carregando…</p>
         ) : despesas.length === 0 ? (
-          <p className="lista-vazia display">Nenhum gasto <em>lançado.</em></p>
+          <div className="painel-vazio">
+            <Icone nome="carteira" tamanho={26} />
+            <p>Nenhuma despesa lançada ainda.</p>
+          </div>
         ) : (
           <ul className="extrato-lista">
             {despesas.map((d, i) => (

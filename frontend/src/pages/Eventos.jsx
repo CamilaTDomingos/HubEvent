@@ -4,7 +4,7 @@ import LayoutApp from '../components/LayoutApp'
 import ModalCriarEvento from '../components/ModalCriarEvento'
 import EventoLinha from '../components/EventoLinha'
 import Carregando from '../components/Carregando'
-import Forma from '../components/Forma'
+import Icone from '../components/Icone'
 import { tipoEvento } from '../utils/categorias'
 import { diasAte, mesAno } from '../utils/datas'
 import './Eventos.css'
@@ -41,48 +41,42 @@ function Eventos() {
 
   return (
     <LayoutApp>
-      <header className="agenda-topo">
+      <header className="cab">
         <div className="rv">
           <p className="eyebrow">Agenda</p>
-          <h1 className="display agenda-titulo">
-            Seus eventos
-            {!carregando && <sup className="agenda-conta">{eventos.length}</sup>}
+          <h1 className="titulo">
+            Meus eventos {!carregando && <span className="cab-conta">{eventos.length}</span>}
           </h1>
         </div>
 
-        <div className="agenda-acoes rv" style={{ '--d': 1 }}>
+        <div className="cab-acoes rv" style={{ '--d': 1 }}>
           <label className="busca">
             <span className="sr-only">Buscar evento</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" />
-              <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <input placeholder="procurar evento…" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <Icone nome="busca" tamanho={16} />
+            <input placeholder="Buscar evento…" value={busca} onChange={(e) => setBusca(e.target.value)} />
           </label>
           <button className="btn btn-primary" onClick={() => setModalAberto(true)}>
-            + Novo evento
+            <Icone nome="mais" tamanho={16} /> Novo evento
           </button>
         </div>
       </header>
 
       {tiposPresentes.length > 1 && (
         <div className="filtros rv" style={{ '--d': 2 }} role="group" aria-label="Filtrar por tipo">
-          <button className={`filtro ${!filtroTipo ? 'sel' : ''}`} onClick={() => setFiltroTipo(null)}>
+          <button className={`tipo-chip ${!filtroTipo ? 'sel' : ''}`} aria-pressed={!filtroTipo} onClick={() => setFiltroTipo(null)}>
             Todos
           </button>
-          {tiposPresentes.map((t) => {
-            const tipo = tipoEvento(t)
-            return (
-              <button
-                key={t}
-                className={`filtro ${filtroTipo === t ? 'sel' : ''}`}
-                onClick={() => setFiltroTipo(filtroTipo === t ? null : t)}
-              >
-                <Forma tipo={tipo.forma} cor={tipo.cor} tamanho={14} contorno />
-                {t}
-              </button>
-            )
-          })}
+          {tiposPresentes.map((t) => (
+            <button
+              key={t}
+              className={`tipo-chip ${filtroTipo === t ? 'sel' : ''}`}
+              aria-pressed={filtroTipo === t}
+              onClick={() => setFiltroTipo(filtroTipo === t ? null : t)}
+            >
+              <Icone nome={tipoEvento(t).icone} tamanho={15} />
+              {t}
+            </button>
+          ))}
         </div>
       )}
 
@@ -90,23 +84,19 @@ function Eventos() {
         <Carregando texto="Abrindo a agenda…" />
       ) : eventosFiltrados.length === 0 ? (
         <div className="agenda-vazia rv">
-          <Forma tipo="blob" cor="var(--paper-3)" tamanho={90} contorno />
-          <p className="display">
-            {eventos.length === 0 ? (
-              <>Nenhum evento <em>por aqui.</em></>
-            ) : (
-              <>Nada encontrado{busca && <> para <em>“{busca}”</em></>}.</>
-            )}
+          <span className="vazio-icone"><Icone nome={eventos.length === 0 ? 'calendario' : 'busca'} tamanho={24} /></span>
+          <p className="titulo">
+            {eventos.length === 0 ? 'Nenhum evento por aqui ainda' : <>Nada encontrado{busca && <> para “{busca}”</>}</>}
           </p>
           {eventos.length === 0 && (
-            <button className="btn btn-outline" onClick={() => setModalAberto(true)}>Criar evento</button>
+            <button className="btn btn-secondary" onClick={() => setModalAberto(true)}>Criar evento</button>
           )}
         </div>
       ) : (
         <>
           {grupos.map((grupo) => (
             <section key={grupo.chave} className="mes">
-              <h2 className="mes-titulo">{grupo.chave}</h2>
+              <h2 className="mes-titulo">{grupo.chave}<span>{grupo.eventos.length}</span></h2>
               <ul className="ev-lista">
                 {grupo.eventos.map((evento) => (
                   <EventoLinha key={evento.id} evento={evento} indice={indice++} />
@@ -117,7 +107,7 @@ function Eventos() {
 
           {passados.length > 0 && (
             <section className="mes mes-passado">
-              <h2 className="mes-titulo">Já aconteceram</h2>
+              <h2 className="mes-titulo">Já aconteceram<span>{passados.length}</span></h2>
               <ul className="ev-lista">
                 {passados.map((evento) => (
                   <EventoLinha key={evento.id} evento={evento} indice={indice++} />

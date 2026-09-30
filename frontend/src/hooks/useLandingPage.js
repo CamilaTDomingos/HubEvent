@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 
 const CONTEUDO_PADRAO = {
   mensagem: 'Seja bem-vindo! Confirme sua presença abaixo.',
-  cor: '#e0492b',
+  cor: '#16a37a',
   recursos: {
     confirmarPresenca: true,
     listaPresentes: true,

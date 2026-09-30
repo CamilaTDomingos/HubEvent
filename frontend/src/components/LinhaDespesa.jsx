@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useParcelas } from '../hooks/useParcelas'
 import { corDespesa } from '../utils/categorias'
 import { moeda, dataMedia } from '../utils/datas'
+import Icone from './Icone'
 
 function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
   const [expandido, setExpandido] = useState(false)
@@ -29,31 +30,31 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
         <span className="desp-cor" style={{ background: corDespesa(despesa.categoria) }} aria-hidden="true" />
         <div className="desp-desc">
           <strong>{despesa.descricao}</strong>
-          <span className="mono muted">{despesa.categoria || 'Sem categoria'}</span>
+          <span>{despesa.categoria || 'Sem categoria'}</span>
         </div>
         <div className="desp-forma">
           {temParcelas ? (
-            <button className="link mono" aria-expanded={expandido} onClick={() => setExpandido(!expandido)}>
-              {expandido ? 'ocultar parcelas ↑' : 'parcelado ↓'}
+            <button className={`desp-parcelado ${expandido ? 'aberto' : ''}`} aria-expanded={expandido} onClick={() => setExpandido(!expandido)}>
+              Parcelado <Icone nome="chevron" tamanho={14} />
             </button>
           ) : (
-            <span className="mono muted">à vista</span>
+            <span className="muted">À vista</span>
           )}
         </div>
         <span className="desp-valor num">{moeda(despesa.valor_total)}</span>
-        <button className="link mono link-danger desp-excluir" onClick={() => aoExcluir(despesa.id)}>
-          excluir
+        <button className="btn-icone perigo desp-excluir" onClick={() => aoExcluir(despesa.id)} title="Excluir" aria-label={`Excluir ${despesa.descricao}`}>
+          <Icone nome="lixeira" tamanho={16} />
         </button>
       </div>
 
       {expandido && (
         <div className="parcelas">
           {carregando && parcelas.length === 0 ? (
-            <p className="mono muted">Carregando parcelas…</p>
+            <p className="muted">Carregando parcelas…</p>
           ) : (
             <>
               <div className="parcelas-progresso">
-                <span className="mono">{pagas} de {parcelas.length} pagas</span>
+                <span>{pagas} de {parcelas.length} parcelas pagas</span>
                 <span className="parcelas-barra">
                   <span style={{ width: `${parcelas.length ? (pagas / parcelas.length) * 100 : 0}%` }} />
                 </span>
@@ -62,10 +63,10 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
                 {parcelas.map((p) => (
                   <label key={p.id} className={`parcela ${p.pago ? 'paga' : ''}`}>
                     <input type="checkbox" checked={p.pago} onChange={() => togglePago(p)} />
-                    <span className="parcela-check" aria-hidden="true">{p.pago ? '✓' : p.numero}</span>
+                    <span className="parcela-check" aria-hidden="true">{p.pago ? <Icone nome="check" tamanho={13} traco={2.2} /> : p.numero}</span>
                     <span className="parcela-info">
                       <strong className="num">{moeda(p.valor)}</strong>
-                      <span className="mono">vence {dataMedia(p.vencimento)}</span>
+                      <span>{p.pago ? 'Pago' : `Vence ${dataMedia(p.vencimento)}`}</span>
                     </span>
                   </label>
                 ))}

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Link } from 'react-router-dom'
 import PainelAuth from '../components/PainelAuth'
-import Forma from '../components/Forma'
+import Icone from '../components/Icone'
 import './Auth.css'
 
 function Cadastro() {
@@ -60,9 +60,8 @@ function Cadastro() {
     <PainelAuth
       titulo={
         <>
-          <span className="linha" style={{ '--d': 1 }}>Seu próximo</span>
-          <span className="linha" style={{ '--d': 2 }}>evento começa</span>
-          <span className="linha" style={{ '--d': 3 }}><em>aqui.</em></span>
+          Comece seu<br />
+          primeiro <em>evento.</em>
         </>
       }
       texto="Crie sua conta em menos de dois minutos e tenha toda a estrutura para organizar do seu jeito."
@@ -75,13 +74,13 @@ function Cadastro() {
         {painel}
         <div className="auth-lado">
           <div className="auth-form auth-ok">
-            <Forma tipo="estrela" cor="var(--sun)" tamanho={72} contorno />
+            <span className="auth-ok-icone"><Icone nome="check" tamanho={24} traco={2} /></span>
             <p className="eyebrow">Quase lá</p>
-            <h2 className="display">Confira seu <em>e-mail.</em></h2>
+            <h2 className="titulo">Confirme seu <em>e-mail</em></h2>
             <p className="desc">
               Enviamos um link de confirmação para <strong>{email}</strong>. Abra sua caixa de entrada para ativar a conta.
             </p>
-            <Link to="/login" className="btn btn-outline">Ir para o login</Link>
+            <Link to="/login" className="btn btn-secondary">Ir para o login</Link>
           </div>
         </div>
       </div>
@@ -95,7 +94,7 @@ function Cadastro() {
       <div className="auth-lado">
         <div className="auth-form">
           <p className="eyebrow">Cadastro gratuito</p>
-          <h2 className="display">Vamos <em>começar.</em></h2>
+          <h2 className="titulo">Criar sua <em>conta</em></h2>
           <p className="desc">Preencha seus dados e comece a organizar agora.</p>
 
           <form onSubmit={handleCadastro}>
@@ -141,12 +140,12 @@ function Cadastro() {
             {erro && <p className="erro-msg">{erro}</p>}
 
             <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={carregando}>
-              {carregando ? 'Criando conta…' : 'Criar conta grátis →'}
+              {carregando ? 'Criando conta…' : 'Criar conta grátis'}
             </button>
           </form>
 
           <p className="auth-troca">
-            Já tem conta? <Link to="/login" className="link">Entrar</Link>
+            Já tem conta? <Link to="/login">Entrar</Link>
           </p>
         </div>
       </div>

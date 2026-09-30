@@ -36,9 +36,9 @@ function Login() {
       <PainelAuth
         titulo={
           <>
-            <span className="linha" style={{ '--d': 1 }}>Organize.</span>
-            <span className="linha" style={{ '--d': 2 }}>Celebre.</span>
-            <span className="linha" style={{ '--d': 3 }}><em>Lembre.</em></span>
+            Organize.<br />
+            Celebre.<br />
+            <em>Lembre.</em>
           </>
         }
         texto="Convidados, presentes, checklist e orçamento do seu evento — tudo num lugar só."
@@ -47,7 +47,7 @@ function Login() {
       <div className="auth-lado">
         <div className="auth-form">
           <p className="eyebrow">Entrar</p>
-          <h2 className="display">Que bom te ver <em>de novo.</em></h2>
+          <h2 className="titulo">Bem-vindo <em>de volta</em></h2>
           <p className="desc">Entre na sua conta para continuar organizando seus eventos.</p>
 
           <form onSubmit={handleLogin}>
@@ -79,12 +79,12 @@ function Login() {
             {erro && <p className="erro-msg">{erro}</p>}
 
             <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={carregando}>
-              {carregando ? 'Entrando…' : 'Entrar →'}
+              {carregando ? 'Entrando…' : 'Entrar na plataforma'}
             </button>
           </form>
 
           <p className="auth-troca">
-            Ainda não tem conta? <Link to="/cadastro" className="link">Criar conta grátis</Link>
+            Ainda não tem conta? <Link to="/cadastro">Criar conta grátis</Link>
           </p>
         </div>
       </div>

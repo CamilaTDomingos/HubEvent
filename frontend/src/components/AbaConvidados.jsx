@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import ModalConfirmacao from './ModalConfirmacao'
 import NumeroAnimado from './NumeroAnimado'
-import { iniciais, tomAvatar } from '../utils/categorias'
+import Icone from './Icone'
+import { iniciais } from '../utils/categorias'
 
 const STATUS = {
-  CONFIRMADO: { label: 'Confirmado', plural: 'confirmados' },
-  PENDENTE: { label: 'Pendente', plural: 'pendentes' },
-  RECUSADO: { label: 'Recusou', plural: 'recusaram' },
+  CONFIRMADO: { label: 'Confirmado', plural: 'Confirmados', badge: 'badge-ok' },
+  PENDENTE: { label: 'Pendente', plural: 'Pendentes', badge: 'badge-pend' },
+  RECUSADO: { label: 'Recusou', plural: 'Recusaram', badge: 'badge-no' },
 }
 
 function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
@@ -23,6 +24,7 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
     RECUSADO: convidados.filter((c) => c.status_presenca === 'RECUSADO').length,
   }
   const total = convidados.length
+  const percentual = total ? Math.round((contagem.CONFIRMADO / total) * 100) : 0
   const lista = filtro ? convidados.filter((c) => c.status_presenca === filtro) : convidados
 
   async function handleAdicionarConvidado(e) {
@@ -63,20 +65,16 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
   return (
     <div className="conv">
       <aside className="conv-lateral">
-        <div className="conv-resumo">
-          <span className="conv-grande display">
-            <NumeroAnimado valor={contagem.CONFIRMADO} casas={0} />
-          </span>
-          <p className="conv-de">
-            de <strong>{total}</strong> {total === 1 ? 'convidado confirmou' : 'convidados confirmaram'}
-          </p>
-        </div>
+        <section className="painel rsvp-resumo">
+          <p className="eyebrow">Confirmações</p>
+          <div className="rsvp-numero">
+            <strong className="titulo num"><NumeroAnimado valor={contagem.CONFIRMADO} casas={0} /></strong>
+            <span className="rsvp-de">de {total} {total === 1 ? 'convidado' : 'convidados'}</span>
+            <span className="rsvp-pct">{percentual}%</span>
+          </div>
 
-        <div className="barra-rsvp" aria-hidden="true">
-          {total === 0 ? (
-            <span className="barra-seg vazio" style={{ flexGrow: 1 }} />
-          ) : (
-            Object.keys(STATUS).map((s) =>
+          <div className="barra-rsvp" aria-hidden="true">
+            {Object.keys(STATUS).map((s) =>
               contagem[s] > 0 ? (
                 <span
                   key={s}
@@ -84,85 +82,79 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
                   style={{ flexGrow: contagem[s] }}
                 />
               ) : null
-            )
-          )}
-        </div>
+            )}
+          </div>
 
-        <div className="legenda-rsvp" role="group" aria-label="Filtrar por status">
-          {Object.entries(STATUS).map(([s, info]) => (
-            <button
-              key={s}
-              className={`legenda-item st-${s.toLowerCase()} ${filtro === s ? 'sel' : ''}`}
-              aria-pressed={filtro === s}
-              onClick={() => setFiltro(filtro === s ? null : s)}
-            >
-              <span className="ponto" />
-              <strong className="num">{contagem[s]}</strong> {info.plural}
-            </button>
-          ))}
-        </div>
+          <div className="filtro-status" role="group" aria-label="Filtrar por status">
+            {Object.entries(STATUS).map(([s, info]) => (
+              <button
+                key={s}
+                className={`filtro-item st-${s.toLowerCase()} ${filtro === s ? 'sel' : ''}`}
+                aria-pressed={filtro === s}
+                onClick={() => setFiltro(filtro === s ? null : s)}
+              >
+                <span className="ponto" />
+                {info.plural}
+                <strong className="num">{contagem[s]}</strong>
+              </button>
+            ))}
+          </div>
+        </section>
 
         <form className="convidar" onSubmit={handleAdicionarConvidado}>
-          <p className="eyebrow">Convidar alguém</p>
-          <input
-            className="input"
-            type="text"
-            placeholder="Nome do convidado"
-            aria-label="Nome do convidado"
-            value={nomeConvidado}
-            onChange={(e) => setNomeConvidado(e.target.value)}
-            required
-          />
-          <input
-            className="input"
-            type="email"
-            placeholder="E-mail (opcional)"
-            aria-label="E-mail do convidado"
-            value={emailConvidado}
-            onChange={(e) => setEmailConvidado(e.target.value)}
-          />
-          <button type="submit" className="btn btn-primary btn-block">+ Adicionar à lista</button>
+          <h3 className="titulo">Adicionar convidado</h3>
+          <div className="field">
+            <label htmlFor="conv-nome">Nome</label>
+            <input id="conv-nome" type="text" placeholder="Nome do convidado" value={nomeConvidado} onChange={(e) => setNomeConvidado(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor="conv-email">E-mail <span className="muted">(opcional)</span></label>
+            <input id="conv-email" type="email" placeholder="email@exemplo.com" value={emailConvidado} onChange={(e) => setEmailConvidado(e.target.value)} />
+          </div>
+          <button type="submit" className="btn btn-primary btn-block"><Icone nome="mais" tamanho={16} /> Adicionar</button>
         </form>
       </aside>
 
-      <section className="conv-principal">
-        <div className="lista-topo">
-          <h3>{filtro ? `Só ${STATUS[filtro].plural}` : 'A lista'}</h3>
-          {filtro && (
-            <button className="link mono" onClick={() => setFiltro(null)}>mostrar todos ✕</button>
+      <section className="painel conv-principal">
+        <div className="painel-cab">
+          <h3 className="titulo">{filtro ? STATUS[filtro].plural : 'Lista de convidados'}</h3>
+          {filtro ? (
+            <button className="link" onClick={() => setFiltro(null)}>Mostrar todos</button>
+          ) : (
+            <span className="muted">{total} {total === 1 ? 'pessoa' : 'pessoas'}</span>
           )}
         </div>
 
         {carregando ? (
-          <p className="muted">Carregando…</p>
+          <p className="muted painel-vazio">Carregando…</p>
         ) : lista.length === 0 ? (
-          <p className="lista-vazia display">
-            {total === 0 ? <>Ninguém na lista <em>ainda.</em></> : <>Ninguém <em>por aqui.</em></>}
-          </p>
+          <div className="painel-vazio">
+            <Icone nome="usuarios" tamanho={26} />
+            <p>{total === 0 ? 'Ninguém na lista ainda. Adicione o primeiro convidado ao lado.' : 'Ninguém com esse status.'}</p>
+          </div>
         ) : (
           <ul className="conv-lista">
             {lista.map((c, i) => (
               <li key={c.id} className="conv-linha" style={{ '--i': i }}>
-                <span className="avatar" style={{ background: tomAvatar(c.nome) }} aria-hidden="true">
-                  {iniciais(c.nome)}
-                </span>
+                <span className="avatar" aria-hidden="true">{iniciais(c.nome)}</span>
                 <div className="conv-nome">
                   <strong>{c.nome}</strong>
-                  <span className="mono muted">{c.email || 'sem e-mail'}</span>
+                  <span>{c.email || 'Sem e-mail'}</span>
                 </div>
-                <span className={`status st-${c.status_presenca.toLowerCase()}`}>
-                  <span className="ponto" />
-                  {STATUS[c.status_presenca]?.label}
-                </span>
+                <span className={`badge ${STATUS[c.status_presenca]?.badge}`}>{STATUS[c.status_presenca]?.label}</span>
                 <div className="conv-acoes">
-                  <button className={`link mono ${copiado === c.id ? 'copiado' : ''}`} onClick={() => copiarLink(c.id)}>
-                    {copiado === c.id ? 'copiado ✓' : 'copiar convite'}
-                  </button>
-                  <a className="link mono" href={`/rsvp/${c.id}`} target="_blank" rel="noreferrer">
-                    abrir ↗
+                  {copiado === c.id ? (
+                    <span className="copiado"><Icone nome="check" tamanho={15} /> Link copiado</span>
+                  ) : (
+                    <button className="btn-icone" onClick={() => copiarLink(c.id)} title="Copiar link do convite" aria-label={`Copiar link do convite de ${c.nome}`}>
+                      <Icone nome="copiar" tamanho={16} />
+                    </button>
+                  )}
+                  <a className="btn-icone" href={`/rsvp/${c.id}`} target="_blank" rel="noreferrer" title="Abrir convite" aria-label={`Abrir convite de ${c.nome}`}>
+                    <Icone nome="abrir" tamanho={16} />
                   </a>
-                  <button className="link mono link-danger" onClick={() => setConfirmandoExclusao(c.id)}>
-                    remover
+                  <button className="btn-icone perigo" onClick={() => setConfirmandoExclusao(c.id)} title="Remover" aria-label={`Remover ${c.nome}`}>
+                    <Icone nome="lixeira" tamanho={16} />
                   </button>
                 </div>
               </li>

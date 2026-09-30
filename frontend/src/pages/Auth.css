@@ -1,79 +1,72 @@
-.auth { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); min-height: 100vh; }
+.auth { display: grid; grid-template-columns: minmax(0, 43fr) minmax(0, 57fr); min-height: 100vh; }
 
-/* Painel-pôster escuro: o único momento de fundo escuro do produto */
 .auth-painel {
-  --mx: 0;
-  --my: 0;
   position: relative;
   overflow: hidden;
-  background: var(--ink);
-  color: var(--paper);
-  padding: clamp(28px, 4vw, 52px);
   display: flex;
   flex-direction: column;
+  padding: clamp(28px, 4vw, 48px);
+  background: var(--card);
+  border-right: 1px solid var(--border);
 }
+.auth-deco { position: absolute; border-radius: 50%; pointer-events: none; }
+.auth-deco.d1 { width: 340px; height: 340px; background: var(--em-dim); top: -110px; right: -110px; }
+.auth-deco.d2 { width: 200px; height: 200px; background: var(--blue-dim); bottom: -60px; left: -60px; }
 
-.auth-forma {
-  position: absolute;
-  pointer-events: none;
-  transform: translate(calc(var(--mx) * var(--prof) * 1px), calc(var(--my) * var(--prof) * 1px));
-  transition: transform 0.6s var(--ease);
-  animation: sobe 1s var(--ease) both;
-  animation-delay: calc(var(--d) * 90ms + 200ms);
-}
-.auth-forma .forma { animation: flutua 9s ease-in-out infinite alternate; }
-.auth-forma:nth-child(2n) .forma { animation-duration: 12s; animation-direction: alternate-reverse; }
+.auth-marca { position: relative; }
 
-@keyframes flutua {
-  from { transform: rotate(-8deg) translateY(0); }
-  to { transform: rotate(10deg) translateY(-14px); }
-}
+.auth-manchete { position: relative; margin: auto 0; padding: 48px 0 36px; }
+.auth-manchete h1 { font-size: clamp(36px, 3.8vw, 48px); line-height: 1.12; animation: surge 0.6s var(--ease) both; }
+.auth-manchete p { margin-top: 18px; max-width: 330px; color: var(--text-2); font-size: 15px; animation: surge 0.6s var(--ease) both 0.08s; }
 
-.auth-marca {
+.auth-amostra {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-family: var(--f-disp);
-  font-style: italic;
-  font-size: 24px;
-  font-weight: 500;
+  max-width: 360px;
+  padding: 18px 20px;
+  box-shadow: var(--sh3);
+  border-radius: var(--r-lg);
+  animation: surge 0.7s var(--ease) both 0.2s;
 }
+.amostra-topo { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.amostra-topo div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.amostra-topo strong { font-size: 14px; font-weight: 600; }
+.amostra-topo div span { font-size: 12px; color: var(--text-3); }
+.amostra-selo { background: var(--em-dim); color: var(--em); width: 36px; height: 36px; }
+.amostra-linha { display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 12px; font-size: 12px; color: var(--text-2); padding: 6px 0; border-top: 1px solid var(--border); }
+.amostra-barra { height: 6px; border-radius: 6px; background: var(--bg-2); overflow: hidden; }
+.amostra-barra i { display: block; height: 100%; border-radius: 6px; background: var(--em); }
 
-.auth-manchete { position: relative; margin-top: auto; margin-bottom: auto; padding: 48px 0; max-width: 560px; }
-.auth-manchete h1 { font-size: clamp(56px, 8.4vw, 124px); color: var(--paper); }
-.auth-manchete h1 em { color: var(--tomato); }
-.auth-manchete h1 .linha { display: block; animation: sobe 0.8s var(--ease) both; animation-delay: calc(var(--d) * 120ms); }
-.auth-manchete p { margin-top: 28px; max-width: 360px; font-size: 16px; line-height: 1.6; color: rgba(244, 239, 230, 0.72); }
+.auth-lado { display: flex; align-items: center; justify-content: center; padding: clamp(32px, 6vw, 64px) var(--gutter); }
+.auth-form { width: 100%; max-width: 390px; animation: surge 0.6s var(--ease) both 0.1s; }
+.auth-form .eyebrow { color: var(--em); }
+.auth-form h2 { font-size: 30px; margin: 10px 0 6px; }
+.auth-form .desc { color: var(--text-2); font-size: 14px; margin-bottom: 28px; }
+.auth-form .btn-primary { margin-top: 6px; }
 
-.auth-rodape { position: relative; color: rgba(244, 239, 230, 0.5); font-size: 11px; letter-spacing: 0.08em; }
+.auth-troca { margin-top: 22px; font-size: 13.5px; color: var(--text-2); text-align: center; }
+.auth-troca a { color: var(--em); font-weight: 600; text-decoration: none; }
+.auth-troca a:hover { text-decoration: underline; }
 
-.auth-lado {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(32px, 6vw, 72px) var(--gutter);
+.chk-row { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 16px; }
+.chk-row input { width: 15px; height: 15px; accent-color: var(--em); margin-top: 2px; flex-shrink: 0; }
+.chk-row label { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+.chk-row a { color: var(--em); font-weight: 500; }
+
+.auth-ok-icone {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--em-dim);
+  color: var(--em);
+  margin-bottom: 22px;
+  animation: popup 0.4s var(--ease) both;
 }
-.auth-form { width: 100%; max-width: 400px; animation: sobe 0.7s var(--ease) both 0.15s; }
-.auth-form h2 { font-size: clamp(40px, 4.4vw, 54px); margin: 10px 0 10px; }
-.auth-form .desc { color: var(--ink-2); margin-bottom: 34px; }
-.auth-form .btn-primary { margin-top: 8px; }
-
-.auth-troca { margin-top: 26px; font-size: 14px; color: var(--ink-2); }
-.auth-troca a { color: var(--ink); }
-
-.chk-row { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 18px; }
-.chk-row input { width: 16px; height: 16px; accent-color: var(--ink); margin-top: 2px; flex-shrink: 0; }
-.chk-row label { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
-.chk-row a { color: var(--ink); font-weight: 600; }
-
-.auth-ok { text-align: left; }
-.auth-ok .forma { margin-bottom: 24px; animation: carimbo 0.7s var(--spring) both; }
 
 @media (max-width: 860px) {
   .auth { grid-template-columns: 1fr; }
-  .auth-painel { min-height: 300px; }
-  .auth-manchete { padding: 36px 0 12px; }
-  .auth-manchete h1 { font-size: clamp(48px, 13vw, 76px); }
-  .auth-manchete p, .auth-rodape { display: none; }
+  .auth-painel { border-right: none; border-bottom: 1px solid var(--border); }
+  .auth-manchete { padding: 32px 0 8px; }
+  .auth-manchete p, .auth-amostra { display: none; }
 }

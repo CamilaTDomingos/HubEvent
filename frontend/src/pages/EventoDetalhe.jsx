@@ -7,33 +7,26 @@ import LayoutApp from '../components/LayoutApp'
 import AbasEvento from '../components/AbasEvento'
 import AbaConvidados from '../components/AbaConvidados'
 import AbaFinanceiro from '../components/AbaFinanceiro'
-import Forma from '../components/Forma'
+import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
 import { tipoEvento } from '../utils/categorias'
 import { diasAte, dataLonga, hora } from '../utils/datas'
 import './EventoDetalhe.css'
 
-function Carimbo({ dataInicio }) {
+function Contagem({ dataInicio }) {
   const dias = diasAte(dataInicio)
-  let topo = 'faltam'
-  let meio = dias
-  let base = dias === 1 ? 'dia' : 'dias'
-
-  if (dias === 0) {
-    topo = 'é'
-    meio = 'hoje'
-    base = 'bora!'
-  } else if (dias < 0) {
-    topo = 'foi há'
-    meio = Math.abs(dias)
-    base = Math.abs(dias) === 1 ? 'dia' : 'dias'
+  if (dias < 0) {
+    return (
+      <div className="contagem passou">
+        <strong className="titulo num">{Math.abs(dias)}</strong>
+        <span>{Math.abs(dias) === 1 ? 'dia atrás' : 'dias atrás'}</span>
+      </div>
+    )
   }
-
   return (
-    <div className={`carimbo ${dias < 0 ? 'passou' : ''}`} aria-label={`${topo} ${meio} ${base}`}>
-      <span className="mono">{topo}</span>
-      <strong className="display">{meio}</strong>
-      <span className="mono">{base}</span>
+    <div className="contagem">
+      <strong className="titulo num">{dias === 0 ? 'Hoje' : dias}</strong>
+      <span>{dias === 0 ? 'é o grande dia' : dias === 1 ? 'dia para o evento' : 'dias para o evento'}</span>
     </div>
   )
 }
@@ -67,22 +60,20 @@ function EventoDetalhe() {
 
   return (
     <LayoutApp>
-      <Link to="/eventos" className="voltar">← Agenda</Link>
+      <Link to="/eventos" className="voltar"><Icone nome="voltar" tamanho={15} /> Meus eventos</Link>
 
-      <header className="ev-topo">
+      <header className="ev-topo rv">
+        <span className="selo-tipo ev-topo-selo"><Icone nome={tipo.icone} tamanho={22} /></span>
         <div className="ev-topo-texto">
-          <p className="eyebrow ev-topo-tipo rv">
-            <Forma tipo={tipo.forma} cor={tipo.cor} tamanho={18} contorno />
-            {evento.categoria || 'Evento'}
-          </p>
-          <h1 className="display ev-topo-nome rv" style={{ '--d': 1 }}>{evento.nome}</h1>
-          <p className="ev-topo-meta rv" style={{ '--d': 2 }}>
-            <span>{dataLonga(evento.data_inicio)}</span>
-            {horario && <span>{horario}</span>}
-            {evento.local && <span>{evento.local}</span>}
-          </p>
+          <p className="eyebrow">{evento.categoria || 'Evento'}</p>
+          <h1 className="titulo">{evento.nome}</h1>
+          <ul className="meta-icones">
+            <li><Icone nome="calendario" tamanho={15} /><span className="capitalizar">{dataLonga(evento.data_inicio)}</span></li>
+            {horario && <li><Icone nome="relogio" tamanho={15} />{horario}</li>}
+            {evento.local && <li><Icone nome="local" tamanho={15} />{evento.local}</li>}
+          </ul>
         </div>
-        <Carimbo dataInicio={evento.data_inicio} />
+        <Contagem dataInicio={evento.data_inicio} />
       </header>
 
       <AbasEvento

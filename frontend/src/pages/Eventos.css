@@ -1,83 +1,66 @@
-.agenda-topo {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 28px;
-  margin-bottom: 32px;
+.cab-conta {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  margin-left: 6px;
+  vertical-align: 6px;
+  border-radius: 20px;
+  background: var(--bg-2);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
 }
-.agenda-titulo { font-size: clamp(56px, 8vw, 112px); margin-top: 14px; }
-.agenda-conta {
-  font-family: var(--f-mono);
-  font-size: 0.2em;
-  font-weight: 500;
-  letter-spacing: 0;
-  vertical-align: super;
-  margin-left: 0.2em;
-  color: var(--tomato-ink);
-}
-
-.agenda-acoes { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 
 .busca {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: min(300px, 100%);
-  padding: 6px 2px;
-  border-bottom: 1.5px solid var(--line-2);
-  color: var(--ink-3);
-  transition: border-color 0.2s, color 0.2s;
+  gap: 8px;
+  width: 260px;
+  max-width: 100%;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  color: var(--text-3);
+  transition: border-color 0.2s, box-shadow 0.2s, width 0.3s var(--ease);
 }
-.busca:focus-within { border-bottom-color: var(--ink); color: var(--ink); }
-.busca input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: none;
-  outline: none;
-  font-family: var(--f-disp);
-  font-style: italic;
-  font-size: 22px;
-  color: var(--ink);
-}
-.busca input::placeholder { color: var(--ink-3); }
+.busca:focus-within { border-color: var(--em); box-shadow: 0 0 0 3px var(--em-dim2); color: var(--em); width: 300px; }
+.busca input { flex: 1; min-width: 0; border: none; background: none; outline: none; font-family: var(--font); font-size: 13.5px; color: var(--text); }
+.busca input::placeholder { color: var(--text-3); }
 
-.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 40px; }
-.filtro {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 13px;
-  font-size: 13px;
-  font-weight: 600;
-  background: transparent;
-  border: 1.5px solid var(--line-2);
-  border-radius: 40px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-.filtro:hover { border-color: var(--ink); }
-.filtro.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: -8px 0 36px; }
+.filtros .tipo-chip { background: var(--card); }
+.filtros .tipo-chip.sel { background: var(--em-dim); }
 
-.mes { margin-bottom: 56px; }
+.mes { margin-bottom: 36px; }
+.mes .ev-lista { margin: 0 -16px; }
 .mes-titulo {
-  font-family: var(--f-disp);
-  font-style: italic;
-  font-weight: 400;
-  font-size: clamp(26px, 3vw, 34px);
-  letter-spacing: -0.02em;
-  margin-bottom: 12px;
-}
-.mes-titulo::first-letter { text-transform: uppercase; }
-.mes-passado .mes-titulo { color: var(--ink-3); }
-
-.agenda-vazia {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 56px 0;
-  border-top: 1.5px solid var(--ink);
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-2);
 }
-.agenda-vazia .display { font-size: clamp(30px, 4vw, 46px); }
+.mes-titulo span { font-weight: 500; color: var(--text-3); letter-spacing: 0; }
+.mes-passado .mes-titulo { color: var(--text-3); }
+.mes-passado .ev-linha { opacity: 0.7; transition: opacity 0.2s, background 0.25s, box-shadow 0.25s; }
+.mes-passado .ev-linha:hover { opacity: 1; }
+
+.agenda-vazia { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 64px 0; }
+.agenda-vazia .titulo { font-size: 22px; }
+.agenda-vazia .vazio-icone { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--em-dim); color: var(--em); }
+
+@media (max-width: 640px) {
+  .cab-acoes { width: 100%; }
+  .busca, .busca:focus-within { width: 100%; flex: 1; }
+  .mes .ev-lista { margin: 0 -8px; }
+}

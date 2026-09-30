@@ -5,15 +5,16 @@ import { useLandingPage } from '../hooks/useLandingPage'
 import LayoutApp from '../components/LayoutApp'
 import PreviewSite from '../components/PreviewSite'
 import Carregando from '../components/Carregando'
+import Icone from '../components/Icone'
 import './SiteEvento.css'
 
 const CORES = [
-  { hex: '#e0492b', nome: 'Tomate' },
-  { hex: '#6d4ee0', nome: 'Violeta' },
-  { hex: '#1f8a5b', nome: 'Folha' },
-  { hex: '#c2185b', nome: 'Framboesa' },
-  { hex: '#1d4ed8', nome: 'Anil' },
-  { hex: '#1c1a17', nome: 'Nanquim' },
+  { hex: '#16a37a', nome: 'Esmeralda' },
+  { hex: '#6d47c9', nome: 'Violeta' },
+  { hex: '#d94f6e', nome: 'Rosé' },
+  { hex: '#e86a2a', nome: 'Terracota' },
+  { hex: '#3b6fe8', nome: 'Azul' },
+  { hex: '#111318', nome: 'Grafite' },
 ]
 
 const RECURSOS_LABELS = {
@@ -101,20 +102,22 @@ function SiteEvento() {
 
   return (
     <LayoutApp>
-      <Link to={`/eventos/${id}`} className="voltar">← {evento.nome}</Link>
+      <Link to={`/eventos/${id}`} className="voltar"><Icone nome="voltar" tamanho={15} /> {evento.nome}</Link>
+
+      <header className="cab site-topo rv">
+        <div>
+          <p className="eyebrow">Site do evento</p>
+          <h1 className="titulo">Monte a página <em>do convite</em></h1>
+        </div>
+        <span className={`site-status ${ativa ? 'no-ar' : ''}`}>
+          <span className="ponto" /> {ativa ? 'Publicado' : 'Rascunho'}
+        </span>
+      </header>
 
       <div className="site">
-        <div className="site-controles">
-          <header className="site-topo rv">
-            <p className="eyebrow">Site do evento</p>
-            <h1 className="display">O convite, <em>online.</em></h1>
-            <span className={`site-status ${ativa ? 'no-ar' : ''}`}>
-              <span className="ponto" /> {ativa ? 'No ar' : 'Rascunho'}
-            </span>
-          </header>
-
+        <div className="site-controles painel">
           <section className="passo rv" style={{ '--d': 1 }}>
-            <h2 className="passo-titulo"><span>01</span> Texto</h2>
+            <h2 className="passo-titulo"><span>1</span> Texto</h2>
             <div className="field">
               <label htmlFor="site-titulo">Título</label>
               <input id="site-titulo" type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
@@ -126,7 +129,7 @@ function SiteEvento() {
           </section>
 
           <section className="passo rv" style={{ '--d': 2 }}>
-            <h2 className="passo-titulo"><span>02</span> Cor</h2>
+            <h2 className="passo-titulo"><span>2</span> Cor</h2>
             <div className="cores" role="radiogroup" aria-label="Cor do tema">
               {CORES.map((c) => (
                 <button
@@ -140,20 +143,20 @@ function SiteEvento() {
                   style={{ background: c.hex }}
                   onClick={() => setCor(c.hex)}
                 >
-                  {cor === c.hex && <span aria-hidden="true">✓</span>}
+                  {cor === c.hex && <Icone nome="check" tamanho={15} traco={2.4} />}
                 </button>
               ))}
             </div>
           </section>
 
           <section className="passo rv" style={{ '--d': 3 }}>
-            <h2 className="passo-titulo"><span>03</span> O que mostrar</h2>
+            <h2 className="passo-titulo"><span>3</span> O que mostrar</h2>
             <div className="recursos">
               {Object.entries(RECURSOS_LABELS).map(([chave, label]) => (
                 <label key={chave} className="switch recurso">
                   <input type="checkbox" checked={recursos[chave]} onChange={() => toggleRecurso(chave)} />
                   <span className="switch-track" />
-                  {label}
+                  <span className="switch-texto">{label}</span>
                 </label>
               ))}
             </div>
@@ -163,7 +166,11 @@ function SiteEvento() {
             <button className="btn btn-primary btn-lg btn-block" onClick={handlePublicar} disabled={salvando}>
               {salvando ? 'Publicando…' : ativa ? 'Atualizar site' : 'Publicar site'}
             </button>
-            <p className="mono muted publicar-url">hubevent.app/{slugPreview}</p>
+            {sucesso ? (
+              <p className="publicado" role="status"><Icone nome="check" tamanho={15} /> Site publicado com sucesso</p>
+            ) : (
+              <p className="publicar-url">hubevent.app/{slugPreview}</p>
+            )}
           </div>
         </div>
 
@@ -171,19 +178,13 @@ function SiteEvento() {
           <div className="moldura">
             <div className="moldura-barra">
               <span className="moldura-bolas" aria-hidden="true"><i /><i /><i /></span>
-              <span className="mono">hubevent.app/{slugPreview}</span>
+              <span className="moldura-url">hubevent.app/{slugPreview}</span>
             </div>
             <div className="moldura-tela">
               <PreviewSite evento={evento} titulo={titulo} mensagem={mensagem} cor={cor} recursos={recursos} />
             </div>
           </div>
-          {sucesso && (
-            <div className="selo-publicado" role="status">
-              <span className="mono">publicado</span>
-              <strong className="display">no ar!</strong>
-            </div>
-          )}
-          <p className="previa-legenda mono muted">prévia ao vivo — o que você muda aparece aqui</p>
+          <p className="previa-legenda">Prévia ao vivo · as alterações aparecem na hora</p>
         </div>
       </div>
     </LayoutApp>

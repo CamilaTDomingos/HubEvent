@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { TIPOS_EVENTO } from '../utils/categorias'
-import Forma from './Forma'
+import Icone from './Icone'
 
 function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
   const { usuario } = useAuth()
@@ -57,18 +57,20 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && aoFechar()}>
       <form className="popup" onSubmit={handleCriar} role="dialog" aria-modal="true" aria-labelledby="novo-evento-titulo">
-        <p className="eyebrow">Novo evento</p>
-        <h2 id="novo-evento-titulo" className="sr-only">Criar novo evento</h2>
+        <h2 id="novo-evento-titulo" className="popup-title titulo">Novo <em>evento</em></h2>
+        <p className="popup-sub">Comece pelo essencial — o resto você completa depois.</p>
 
-        <input
-          className="novo-ev-nome"
-          type="text"
-          placeholder="Como vai se chamar?"
-          aria-label="Nome do evento"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          autoFocus
-        />
+        <div className="field">
+          <label htmlFor="novo-ev-nome">Nome do evento</label>
+          <input
+            id="novo-ev-nome"
+            type="text"
+            placeholder="Ex: Casamento Ana & Bruno"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            autoFocus
+          />
+        </div>
 
         <fieldset className="field tipos">
           <legend className="label">Tipo de evento</legend>
@@ -82,7 +84,7 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
                   checked={categoria === nomeTipo}
                   onChange={() => setCategoria(nomeTipo)}
                 />
-                <Forma tipo={tipo.forma} cor={tipo.cor} tamanho={16} contorno />
+                <Icone nome={tipo.icone} tamanho={15} />
                 {nomeTipo}
               </label>
             ))}
@@ -116,7 +118,7 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
         <div className="popup-actions">
           <button type="button" className="btn btn-ghost" onClick={aoFechar}>Cancelar</button>
           <button type="submit" className="btn btn-primary" disabled={salvando}>
-            {salvando ? 'Criando…' : 'Criar evento →'}
+            {salvando ? 'Criando…' : 'Criar evento'}
           </button>
         </div>
       </form>

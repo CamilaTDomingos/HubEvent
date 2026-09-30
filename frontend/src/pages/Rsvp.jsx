@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import Forma from '../components/Forma'
-import Confete, { sortearConfete } from '../components/Confete'
+import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
 import { tipoEvento } from '../utils/categorias'
 import { dataLonga, hora } from '../utils/datas'
@@ -13,7 +12,7 @@ function Rsvp() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
   const [enviando, setEnviando] = useState(false)
-  const [confete, setConfete] = useState(null)
+  const [acabouDeResponder, setAcabouDeResponder] = useState(false)
 
   useEffect(() => {
     async function buscarConvite() {
@@ -41,7 +40,7 @@ function Rsvp() {
       })
       if (!res.ok) throw new Error('Não foi possível registrar sua resposta.')
       setConvite((atual) => ({ ...atual, status_presenca: resposta }))
-      if (resposta === 'CONFIRMADO') setConfete(sortearConfete())
+      setAcabouDeResponder(true)
     } catch (err) {
       setErro(err.message)
     } finally {
@@ -54,10 +53,10 @@ function Rsvp() {
   if (erro && !convite) {
     return (
       <div className="rsvp">
-        <div className="rsvp-convite">
-          <Forma tipo="blob" cor="var(--paper-3)" tamanho={80} contorno />
-          <h1 className="display rsvp-evento">Ops.</h1>
-          <p className="rsvp-texto">{erro} Confira se o link está completo.</p>
+        <div className="rsvp-cartao painel">
+          <span className="rsvp-icone"><Icone nome="brilho" tamanho={22} /></span>
+          <h1 className="titulo rsvp-evento">Convite não encontrado</h1>
+          <p className="rsvp-texto">{erro} Confira se o link está completo ou peça um novo ao anfitrião.</p>
         </div>
       </div>
     )
@@ -69,58 +68,58 @@ function Rsvp() {
 
   return (
     <div className="rsvp">
-      <Forma tipo={tipo.forma} cor={tipo.cor} tamanho={340} contorno className="rsvp-deco rsvp-deco-a" />
-      <Forma tipo="estrela" cor="var(--sun)" tamanho={120} contorno className="rsvp-deco rsvp-deco-b" />
-      <Forma tipo="circulo" cor="var(--sky)" tamanho={70} contorno className="rsvp-deco rsvp-deco-c" />
+      <main className="rsvp-cartao painel rv">
+        <div className="rsvp-interno">
+          <span className="rsvp-icone"><Icone nome={tipo.icone} tamanho={22} /></span>
+          <p className="eyebrow">Você está convidado(a)</p>
+          <p className="rsvp-ola">Olá, {convite.nome}</p>
+          <h1 className="titulo rsvp-evento">{evento.nome}</h1>
 
-      <main className="rsvp-convite">
-        <p className="eyebrow rv">Você está convidado(a)</p>
-        <p className="rsvp-ola display rv" style={{ '--d': 1 }}>Olá, <em>{convite.nome}.</em></p>
-        <h1 className="display rsvp-evento rv" style={{ '--d': 2 }}>{evento.nome}</h1>
+          <div className="ornamento" aria-hidden="true">✦</div>
 
-        <dl className="rsvp-detalhes rv" style={{ '--d': 3 }}>
-          <div>
-            <dt className="eyebrow">Quando</dt>
-            <dd>{dataLonga(evento.data_inicio)}{horario && `, às ${horario}`}</dd>
-          </div>
-          {evento.local && (
-            <div>
-              <dt className="eyebrow">Onde</dt>
-              <dd>{evento.local}</dd>
-            </div>
-          )}
-        </dl>
+          <ul className="rsvp-detalhes">
+            <li>
+              <Icone nome="calendario" tamanho={17} />
+              <span className="capitalizar">{dataLonga(evento.data_inicio)}</span>
+            </li>
+            {horario && (
+              <li><Icone nome="relogio" tamanho={17} /><span>{horario}</span></li>
+            )}
+            {evento.local && (
+              <li><Icone nome="local" tamanho={17} /><span>{evento.local}</span></li>
+            )}
+          </ul>
 
-        <div className="rsvp-resposta rv" style={{ '--d': 4 }}>
-          {convite.status_presenca === 'PENDENTE' ? (
-            <>
-              <p className="rsvp-pergunta">Podemos contar com você?</p>
-              <div className="rsvp-botoes">
-                <button className="btn btn-primary btn-lg" disabled={enviando} onClick={() => responder('CONFIRMADO')}>
-                  Confirmar presença
-                </button>
-                <button className="btn btn-ghost btn-lg" disabled={enviando} onClick={() => responder('RECUSADO')}>
-                  Não poderei ir
-                </button>
+          <div className="rsvp-resposta">
+            {convite.status_presenca === 'PENDENTE' ? (
+              <>
+                <p className="rsvp-pergunta">Podemos contar com você?</p>
+                <div className="rsvp-botoes">
+                  <button className="btn btn-primary btn-lg" disabled={enviando} onClick={() => responder('CONFIRMADO')}>
+                    <Icone nome="check" tamanho={16} /> Confirmar presença
+                  </button>
+                  <button className="btn btn-secondary btn-lg" disabled={enviando} onClick={() => responder('RECUSADO')}>
+                    Não poderei ir
+                  </button>
+                </div>
+                {erro && <p className="erro-msg">{erro}</p>}
+              </>
+            ) : convite.status_presenca === 'CONFIRMADO' ? (
+              <div className={`rsvp-final ok ${acabouDeResponder ? 'agora' : ''}`}>
+                <span className="rsvp-final-icone"><Icone nome="check" tamanho={22} traco={2} /></span>
+                <p><strong>Presença confirmada.</strong> Obrigado — nos vemos lá!</p>
               </div>
-              {erro && <p className="erro-msg">{erro}</p>}
-            </>
-          ) : convite.status_presenca === 'CONFIRMADO' ? (
-            <div className="rsvp-final ok">
-              <span className="rsvp-carimbo">✓</span>
-              <p><strong>Presença confirmada.</strong> Obrigado — até lá!</p>
-            </div>
-          ) : (
-            <div className="rsvp-final">
-              <span className="rsvp-carimbo nao">✕</span>
-              <p><strong>Resposta registrada.</strong> Que pena! Sentiremos sua falta.</p>
-            </div>
-          )}
+            ) : (
+              <div className={`rsvp-final ${acabouDeResponder ? 'agora' : ''}`}>
+                <span className="rsvp-final-icone"><Icone nome="mais" tamanho={22} style={{ rotate: '45deg' }} /></span>
+                <p><strong>Resposta registrada.</strong> Que pena! Sentiremos sua falta.</p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
-      {confete && <Confete pedacos={confete} />}
-      <p className="rsvp-marca mono">enviado com HubEvent</p>
+      <p className="rsvp-marca">Enviado com <strong>HubEvent</strong></p>
     </div>
   )
 }

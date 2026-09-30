@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import Icone from './Icone'
 
 // Abas com um indicador que desliza até a aba ativa.
 function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas }) {
@@ -19,8 +20,8 @@ function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas })
   }, [aba, totalConvidados, totalDespesas])
 
   const abas = [
-    { chave: 'convidados', label: 'Convidados', conta: totalConvidados },
-    { chave: 'financeiro', label: 'Financeiro', conta: totalDespesas },
+    { chave: 'convidados', label: 'Convidados', icone: 'usuarios', conta: totalConvidados },
+    { chave: 'financeiro', label: 'Financeiro', icone: 'carteira', conta: totalDespesas },
   ]
 
   return (
@@ -33,12 +34,15 @@ function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas })
           className="aba"
           onClick={() => aoTrocar(a.chave)}
         >
+          <Icone nome={a.icone} tamanho={16} />
           {a.label}
-          <sup>{a.conta}</sup>
+          <span className="aba-conta">{a.conta}</span>
         </button>
       ))}
       <Link to={`/eventos/${eventoId}/site`} className="aba aba-link">
-        Site do evento <span aria-hidden="true">↗</span>
+        <Icone nome="globo" tamanho={16} />
+        Site do evento
+        <Icone nome="abrir" tamanho={13} className="aba-seta" />
       </Link>
       <span className="abas-indicador" ref={indicador} aria-hidden="true" />
     </div>

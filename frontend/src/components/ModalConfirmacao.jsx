@@ -4,7 +4,7 @@ function ModalConfirmacao({ aberto, titulo, mensagem, aoConfirmar, aoCancelar, t
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && aoCancelar()}>
       <div className="popup popup-sm" role="alertdialog" aria-modal="true" aria-labelledby="confirmacao-titulo">
-        <h2 id="confirmacao-titulo" className="popup-title display">{titulo}</h2>
+        <h2 id="confirmacao-titulo" className="popup-title titulo">{titulo}</h2>
         <p className="popup-sub">{mensagem}</p>
 
         <div className="popup-actions">
