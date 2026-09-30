@@ -2,14 +2,17 @@ import Icone from './Icone'
 import { iconePresente } from '../utils/categorias'
 import { moeda } from '../utils/datas'
 import { esgotado } from '../hooks/usePresentes'
+import './Presentes.css'
 
-function CartaoPresente({ presente, indice, aoReservar, aoVerDetalhes }) {
+// Cartão compartilhado pelo painel do casal e pelo site do evento;
+// cada lugar decide as ações do rodapé.
+function CartaoPresente({ presente, indice, aoAbrir, children }) {
   const reservado = esgotado(presente)
-  const restantes = presente.quantidade - presente.reservados
+  const restantes = presente.quantidade - presente.reservas.length
 
   return (
     <li className={`pres-cartao painel ${reservado ? 'reservado' : ''}`} style={{ '--i': indice }}>
-      <button className="pres-midia" onClick={() => aoVerDetalhes(presente)} tabIndex={-1} aria-hidden="true">
+      <button className="pres-midia" onClick={() => aoAbrir(presente)} tabIndex={-1} aria-hidden="true">
         {presente.imagem ? (
           <img src={presente.imagem} alt="" loading="lazy" />
         ) : (
@@ -36,16 +39,7 @@ function CartaoPresente({ presente, indice, aoReservar, aoVerDetalhes }) {
           )}
         </p>
 
-        <div className="pres-acoes">
-          {reservado ? (
-            <span className="pres-reservado"><Icone nome="check" tamanho={15} /> Reservado</span>
-          ) : (
-            <button className="btn btn-primary btn-sm" onClick={() => aoReservar(presente)}>
-              <Icone nome="presente" tamanho={15} /> Reservar presente
-            </button>
-          )}
-          <button className="btn btn-ghost btn-sm" onClick={() => aoVerDetalhes(presente)}>Ver detalhes</button>
-        </div>
+        <div className="pres-acoes">{children}</div>
       </div>
     </li>
   )

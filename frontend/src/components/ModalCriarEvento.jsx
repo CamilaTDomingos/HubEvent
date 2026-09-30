@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { TIPOS_EVENTO } from '../utils/categorias'
+import { MODULOS_OBRIGATORIOS, MODULOS_OPCIONAIS, salvarModulos } from '../utils/modulos'
 import Icone from './Icone'
 
 function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
@@ -12,6 +13,7 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
   const [data, setData] = useState('')
   const [hora, setHora] = useState('')
   const [local, setLocal] = useState('')
+  const [opcionais, setOpcionais] = useState({ presentes: false, site: false })
   const [erro, setErro] = useState(null)
   const [salvando, setSalvando] = useState(false)
 
@@ -30,14 +32,14 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
 
     const dataInicio = hora ? `${data}T${hora}:00` : `${data}T00:00:00`
 
-    const { error } = await supabase.from('evento').insert({
+    const { data: criado, error } = await supabase.from('evento').insert({
       organizador_id: usuario.id,
       nome,
       categoria,
       local,
       data_inicio: dataInicio,
       data_fim: dataInicio,
-    })
+    }).select('id').single()
 
     setSalvando(false)
 
@@ -46,10 +48,13 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
       return
     }
 
+    salvarModulos(criado.id, opcionais)
+
     setNome('')
     setLocal('')
     setData('')
     setHora('')
+    setOpcionais({ presentes: false, site: false })
     aoCriar()
     aoFechar()
   }
@@ -112,6 +117,42 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
             onChange={(e) => setLocal(e.target.value)}
           />
         </div>
+
+        <fieldset className="field modulos">
+          <legend className="label">Módulos do evento</legend>
+          <ul className="modulos-fixos" aria-label="Sempre incluídos">
+            {MODULOS_OBRIGATORIOS.map((m) => (
+              <li key={m.chave} title={m.descricao}>
+                <Icone nome={m.icone} tamanho={15} />
+                {m.nome}
+                <Icone nome="check" tamanho={13} className="modulo-check" />
+              </li>
+            ))}
+          </ul>
+          <p className="modulos-nota">Sempre incluídos. Ative também, se quiser:</p>
+          <div className="modulos-opcionais">
+            {MODULOS_OPCIONAIS.map((m) => (
+              <label key={m.chave} className={`modulo ${opcionais[m.chave] ? 'sel' : ''}`}>
+                <span className="modulo-icone"><Icone nome={m.icone} tamanho={17} /></span>
+                <span className="modulo-texto">
+                  <strong>{m.nome}</strong>
+                  <span>{m.descricao}</span>
+                </span>
+                <span className="switch">
+                  <input
+                    type="checkbox"
+                    checked={opcionais[m.chave]}
+                    onChange={(e) => setOpcionais((atual) => ({ ...atual, [m.chave]: e.target.checked }))}
+                  />
+                  <span className="switch-track" />
+                </span>
+              </label>
+            ))}
+          </div>
+          {opcionais.presentes && !opcionais.site && (
+            <p className="modulos-aviso">Os convidados escolhem os presentes pelo site. Sem ele, a lista fica visível só para você.</p>
+          )}
+        </fieldset>
 
         {erro && <p className="erro-msg">{erro}</p>}
 

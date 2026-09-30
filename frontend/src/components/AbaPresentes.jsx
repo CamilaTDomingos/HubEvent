@@ -1,80 +1,84 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import CartaoPresente from './CartaoPresente'
 import ModalCadastrarPresente from './ModalCadastrarPresente'
 import ModalDetalhesPresente from './ModalDetalhesPresente'
 import ModalConfirmacao from './ModalConfirmacao'
 import Icone from './Icone'
+import EsqueletoPresentes from './EsqueletoPresentes'
 import { esgotado } from '../hooks/usePresentes'
 
-function Esqueleto() {
-  return (
-    <ul className="pres-grade" aria-hidden="true">
-      {[0, 1, 2].map((i) => (
-        <li key={i} className="pres-cartao painel pres-esqueleto">
-          <div className="pres-midia" />
-          <div className="pres-corpo">
-            <span className="esq esq-curto" />
-            <span className="esq esq-longo" />
-            <span className="esq esq-medio" />
-          </div>
-        </li>
-      ))}
-    </ul>
-  )
-}
+function ModalRecebimento({ aberto, atual, aoSalvar, aoFechar }) {
+  const [chave, setChave] = useState(atual?.chave || '')
+  const [nome, setNome] = useState(atual?.nome || '')
+  const [cidade, setCidade] = useState(atual?.cidade || '')
+  if (!aberto) return null
 
-function ModalReservar({ presente, aoConfirmar, aoCancelar }) {
-  const [nome, setNome] = useState('')
-  if (!presente) return null
-
-  function confirmar(e) {
+  function salvar(e) {
     e.preventDefault()
-    aoConfirmar(presente, nome.trim())
+    if (!chave.trim() || !nome.trim()) return
+    aoSalvar({ chave: chave.trim(), nome: nome.trim(), cidade: cidade.trim() })
+    aoFechar()
   }
 
   return (
-    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && aoCancelar()}>
-      <form className="popup popup-sm" onSubmit={confirmar} role="dialog" aria-modal="true" aria-labelledby="reservar-titulo">
-        <h2 id="reservar-titulo" className="popup-title titulo">Reservar presente</h2>
-        <p className="popup-sub">
-          Você vai reservar <strong>{presente.nome}</strong>. Assim ninguém escolhe o mesmo item.
-        </p>
+    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && aoFechar()}>
+      <form className="popup popup-sm" onSubmit={salvar} role="dialog" aria-modal="true" aria-labelledby="receb-titulo">
+        <h2 id="receb-titulo" className="popup-title titulo">Receber por <em>Pix</em></h2>
+        <p className="popup-sub">Convidados que preferirem presentear em dinheiro pagam o valor do presente direto na sua conta.</p>
         <div className="field">
-          <label htmlFor="reservar-nome">Seu nome <span className="muted">(opcional)</span></label>
-          <input id="reservar-nome" type="text" placeholder="Para os anfitriões saberem" value={nome} onChange={(e) => setNome(e.target.value)} autoFocus />
+          <label htmlFor="receb-chave">Chave Pix</label>
+          <input id="receb-chave" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" value={chave} onChange={(e) => setChave(e.target.value)} required autoFocus />
+          <p className="pres-ajuda">Telefone no formato +5511999999999; CPF ou CNPJ só com números.</p>
+        </div>
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="receb-nome">Nome do titular</label>
+            <input id="receb-nome" type="text" value={nome} onChange={(e) => setNome(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor="receb-cidade">Cidade</label>
+            <input id="receb-cidade" type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} />
+          </div>
         </div>
         <div className="popup-actions">
-          <button type="button" className="btn btn-ghost" onClick={aoCancelar}>Cancelar</button>
-          <button type="submit" className="btn btn-primary"><Icone nome="check" tamanho={15} /> Confirmar reserva</button>
+          <button type="button" className="btn btn-ghost" onClick={aoFechar}>Cancelar</button>
+          <button type="submit" className="btn btn-primary">Salvar</button>
         </div>
       </form>
     </div>
   )
 }
 
-function AbaPresentes({ presentes, carregando, cadastrar, reservar, remover }) {
+function RodapeOrganizador({ presente, aoAbrir }) {
+  const { reservas, quantidade } = presente
+  let resumo
+  if (reservas.length === 0) resumo = <span className="pres-status muted">Ninguém escolheu ainda</span>
+  else if (quantidade === 1) resumo = <span className="pres-status"><Icone nome="check" tamanho={14} /> {reservas[0].nome}</span>
+  else resumo = <span className="pres-status"><Icone nome="usuarios" tamanho={14} /> {reservas.length} {reservas.length === 1 ? 'reserva' : 'reservas'}</span>
+
+  return (
+    <>
+      {resumo}
+      <button className="btn btn-ghost btn-sm" onClick={() => aoAbrir(presente)}>Ver detalhes</button>
+    </>
+  )
+}
+
+function AbaPresentes({ eventoId, presentes, carregando, erro, cadastrar, remover, recebimento, salvarRecebimento, siteUrl, siteAtivo }) {
   const [cadastrando, setCadastrando] = useState(false)
   const [detalheId, setDetalheId] = useState(null)
-  const [reservando, setReservando] = useState(null)
   const [removendo, setRemovendo] = useState(null)
+  const [editandoPix, setEditandoPix] = useState(false)
 
   // Progresso em unidades: um item com quantidade 3 conta como 3 presentes.
   const total = presentes.reduce((soma, p) => soma + p.quantidade, 0)
-  const reservados = presentes.reduce((soma, p) => soma + Math.min(p.reservados, p.quantidade), 0)
+  const reservados = presentes.reduce((soma, p) => soma + Math.min(p.reservas.length, p.quantidade), 0)
   const disponiveis = total - reservados
   const percentual = total ? (reservados / total) * 100 : 0
   const todosReservados = presentes.length > 0 && presentes.every(esgotado)
   const detalhe = presentes.find((p) => p.id === detalheId) || null
-
-  function abrirReserva(presente) {
-    setDetalheId(null)
-    setReservando(presente)
-  }
-
-  function confirmarReserva(presente, nome) {
-    reservar(presente.id, nome)
-    setReservando(null)
-  }
+  const abrir = (presente) => setDetalheId(presente.id)
 
   function confirmarRemocao() {
     if (removendo) remover(removendo.id)
@@ -86,12 +90,35 @@ function AbaPresentes({ presentes, carregando, cadastrar, reservar, remover }) {
       <header className="pres-cab">
         <div>
           <h2 className="titulo">Lista de presentes</h2>
-          <p className="pres-sub">Escolha um presente para celebrar esse momento especial.</p>
+          <p className="pres-sub">Cadastre os presentes que seus convidados vão ver no site do evento.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setCadastrando(true)}>
-          <Icone nome="mais" tamanho={16} /> Cadastrar presente
-        </button>
+        <div className="pres-cab-acoes">
+          {siteUrl && (
+            <a className="btn btn-secondary" href={siteUrl} target="_blank" rel="noopener noreferrer">
+              <Icone nome="abrir" tamanho={15} /> Ver no site
+            </a>
+          )}
+          <button className="btn btn-primary" onClick={() => setCadastrando(true)}>
+            <Icone nome="mais" tamanho={16} /> Cadastrar presente
+          </button>
+        </div>
       </header>
+
+      {!siteUrl && (
+        <p className="pres-aviso">
+          <Icone nome="globo" tamanho={16} />
+          {siteAtivo ? (
+            <span>
+              Os convidados escolhem os presentes pelo site do evento, que ainda não foi publicado.{' '}
+              <Link className="link" to={`/eventos/${eventoId}/site`}>Publicar site</Link>
+            </span>
+          ) : (
+            <span>O módulo Site do evento está desativado, então os convidados ainda não conseguem ver esta lista.</span>
+          )}
+        </p>
+      )}
+
+      {erro && <p className="erro-msg">{erro}</p>}
 
       {carregando ? (
         <>
@@ -99,76 +126,92 @@ function AbaPresentes({ presentes, carregando, cadastrar, reservar, remover }) {
             <span className="esq esq-medio" />
             <span className="esq esq-barra" />
           </div>
-          <Esqueleto />
+          <EsqueletoPresentes />
           <span className="sr-only" role="status">Carregando presentes…</span>
         </>
-      ) : presentes.length === 0 ? (
-        <div className="painel pres-vazio">
-          <span className="pres-vazio-selo"><Icone nome="presente" tamanho={24} /></span>
-          <h3 className="titulo">Sua lista ainda está em branco</h3>
-          <p>Cadastre o primeiro presente e compartilhe com quem vai celebrar com vocês.</p>
-          <button className="btn btn-primary" onClick={() => setCadastrando(true)}>
-            <Icone nome="mais" tamanho={16} /> Cadastrar primeiro presente
-          </button>
-        </div>
       ) : (
         <>
-          <section className="painel pres-progresso" aria-label="Progresso da lista">
-            <div className="pres-progresso-texto">
-              <p>
-                <strong className="titulo num">{reservados}</strong> de <span className="num">{total}</span>{' '}
-                {total === 1 ? 'presente reservado' : 'presentes reservados'}
-              </p>
-              <span className="pres-disponiveis">
-                <span className="ponto" /> {disponiveis} {disponiveis === 1 ? 'disponível' : 'disponíveis'}
-              </span>
-            </div>
-            <div className="medidor-trilho">
-              <div className="medidor-fill" style={{ width: `${percentual}%` }} />
-            </div>
-          </section>
+          <div className="pres-resumo">
+            <section className="painel pres-progresso" aria-label="Progresso da lista">
+              <div className="pres-progresso-texto">
+                <p>
+                  <strong className="titulo num">{reservados}</strong> de <span className="num">{total}</span>{' '}
+                  {total === 1 ? 'presente reservado' : 'presentes reservados'}
+                </p>
+                <span className="pres-disponiveis">
+                  <span className="ponto" /> {disponiveis} {disponiveis === 1 ? 'disponível' : 'disponíveis'}
+                </span>
+              </div>
+              <div className="medidor-trilho">
+                <div className="medidor-fill" style={{ width: `${percentual}%` }} />
+              </div>
+            </section>
 
-          {todosReservados && (
-            <div className="pres-completo">
-              <Icone nome="brilho" tamanho={18} />
-              <p>
-                <strong>Todos os presentes foram reservados.</strong> Obrigado a cada pessoa que escolheu um item —
-                você pode cadastrar novos presentes quando quiser.
-              </p>
+            <section className={`painel pres-pix ${recebimento ? '' : 'pendente'}`} aria-label="Recebimento por Pix">
+              <span className="label">Recebimento por Pix</span>
+              {recebimento ? (
+                <>
+                  <p className="pres-pix-chave">{recebimento.chave}</p>
+                  <button className="link" onClick={() => setEditandoPix(true)}>Alterar</button>
+                </>
+              ) : (
+                <>
+                  <p className="pres-pix-dica">Sem chave, os convidados só podem comprar na loja.</p>
+                  <button className="link" onClick={() => setEditandoPix(true)}>Configurar Pix <Icone nome="seta" tamanho={13} /></button>
+                </>
+              )}
+            </section>
+          </div>
+
+          {presentes.length === 0 ? (
+            <div className="painel pres-vazio">
+              <span className="pres-vazio-selo"><Icone nome="presente" tamanho={24} /></span>
+              <h3 className="titulo">Sua lista ainda está em branco</h3>
+              <p>Cadastre o primeiro presente e compartilhe com quem vai celebrar com vocês.</p>
+              <button className="btn btn-primary" onClick={() => setCadastrando(true)}>
+                <Icone nome="mais" tamanho={16} /> Cadastrar primeiro presente
+              </button>
             </div>
+          ) : (
+            <>
+              {todosReservados && (
+                <div className="pres-completo">
+                  <Icone nome="brilho" tamanho={18} />
+                  <p>
+                    <strong>Todos os presentes foram reservados.</strong> Você pode cadastrar novos itens quando quiser.
+                  </p>
+                </div>
+              )}
+
+              <ul className="pres-grade">
+                {presentes.map((p, i) => (
+                  <CartaoPresente key={p.id} presente={p} indice={i} aoAbrir={abrir}>
+                    <RodapeOrganizador presente={p} aoAbrir={abrir} />
+                  </CartaoPresente>
+                ))}
+              </ul>
+            </>
           )}
-
-          <ul className="pres-grade">
-            {presentes.map((p, i) => (
-              <CartaoPresente
-                key={p.id}
-                presente={p}
-                indice={i}
-                aoReservar={abrirReserva}
-                aoVerDetalhes={(presente) => setDetalheId(presente.id)}
-              />
-            ))}
-          </ul>
         </>
       )}
 
       <ModalCadastrarPresente aberto={cadastrando} aoFechar={() => setCadastrando(false)} aoCadastrar={cadastrar} />
 
+      <ModalRecebimento
+        key={editandoPix ? 'aberto' : 'fechado'}
+        aberto={editandoPix}
+        atual={recebimento}
+        aoSalvar={salvarRecebimento}
+        aoFechar={() => setEditandoPix(false)}
+      />
+
       <ModalDetalhesPresente
         presente={detalhe}
         aoFechar={() => setDetalheId(null)}
-        aoReservar={abrirReserva}
         aoRemover={(presente) => {
           setDetalheId(null)
           setRemovendo(presente)
         }}
-      />
-
-      <ModalReservar
-        key={reservando?.id}
-        presente={reservando}
-        aoConfirmar={confirmarReserva}
-        aoCancelar={() => setReservando(null)}
       />
 
       <ModalConfirmacao

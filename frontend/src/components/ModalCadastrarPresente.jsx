@@ -1,8 +1,17 @@
 import { useState } from 'react'
 import { CATEGORIAS_PRESENTE } from '../utils/categorias'
+import { comprimirImagem } from '../utils/imagem'
 import Icone from './Icone'
 
-const TAMANHO_MAX_IMAGEM = 2 * 1024 * 1024
+const TAMANHO_MAX_IMAGEM = 10 * 1024 * 1024
+
+function linkValido(texto) {
+  try {
+    return ['http:', 'https:'].includes(new URL(texto).protocol)
+  } catch {
+    return false
+  }
+}
 
 function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
   const [nome, setNome] = useState('')
@@ -11,6 +20,8 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
   const [categoria, setCategoria] = useState('')
   const [quantidade, setQuantidade] = useState(1)
   const [imagem, setImagem] = useState(null)
+  const [link, setLink] = useState('')
+  const [processandoImagem, setProcessandoImagem] = useState(false)
   const [erro, setErro] = useState(null)
 
   if (!aberto) return null
@@ -22,6 +33,7 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
     setCategoria('')
     setQuantidade(1)
     setImagem(null)
+    setLink('')
     setErro(null)
   }
 
@@ -30,7 +42,7 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
     aoFechar()
   }
 
-  function escolherImagem(e) {
+  async function escolherImagem(e) {
     const arquivo = e.target.files?.[0]
     e.target.value = ''
     if (!arquivo) return
@@ -39,13 +51,18 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
       return
     }
     if (arquivo.size > TAMANHO_MAX_IMAGEM) {
-      setErro('A imagem deve ter no máximo 2 MB.')
+      setErro('A imagem deve ter no máximo 10 MB.')
       return
     }
     setErro(null)
-    const leitor = new FileReader()
-    leitor.onload = () => setImagem(leitor.result)
-    leitor.readAsDataURL(arquivo)
+    setProcessandoImagem(true)
+    try {
+      setImagem(await comprimirImagem(arquivo))
+    } catch (err) {
+      setErro(err.message)
+    } finally {
+      setProcessandoImagem(false)
+    }
   }
 
   function handleCadastrar(e) {
@@ -65,15 +82,24 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
       setErro('A quantidade deve ser de pelo menos 1.')
       return
     }
+    if (link.trim() && !linkValido(link.trim())) {
+      setErro('O link da loja deve começar com https://')
+      return
+    }
 
-    aoCadastrar({
+    const salvou = aoCadastrar({
       nome: nome.trim(),
       valor: valorNum,
       descricao: descricao.trim() || null,
       categoria: categoria || null,
       quantidade: qtd,
       imagem,
+      link: link.trim() || null,
     })
+    if (salvou === false) {
+      setErro('Não foi possível salvar. O armazenamento do navegador está cheio — tente sem foto ou com uma menor.')
+      return
+    }
     fechar()
   }
 
@@ -81,7 +107,7 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && fechar()}>
       <form className="popup" onSubmit={handleCadastrar} role="dialog" aria-modal="true" aria-labelledby="novo-presente-titulo">
         <h2 id="novo-presente-titulo" className="popup-title titulo">Novo <em>presente</em></h2>
-        <p className="popup-sub">Ele aparece na lista assim que for cadastrado.</p>
+        <p className="popup-sub">Ele aparece no site do evento assim que for cadastrado.</p>
 
         <div className="field">
           <label htmlFor="pres-nome">Nome do presente</label>
@@ -143,7 +169,20 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
         </div>
 
         <div className="field">
-          <span className="label">Imagem <span className="muted">(opcional)</span></span>
+          <label htmlFor="pres-link">Link da loja <span className="muted">(opcional)</span></label>
+          <input
+            id="pres-link"
+            type="url"
+            inputMode="url"
+            placeholder="https://"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+          />
+          <p className="pres-ajuda">Se houver, o convidado pode comprar direto na loja. Sem link, ele presenteia por Pix ou cartão.</p>
+        </div>
+
+        <div className="field">
+          <span className="label">Foto <span className="muted">(opcional)</span></span>
           {imagem ? (
             <div className="pres-upload-preview">
               <img src={imagem} alt="Prévia da imagem do presente" />
@@ -155,7 +194,7 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
             <label className="pres-upload">
               <input type="file" accept="image/*" onChange={escolherImagem} />
               <Icone nome="imagem" tamanho={18} />
-              <span>Escolher imagem <span className="muted">· até 2 MB</span></span>
+              <span>{processandoImagem ? 'Preparando foto…' : <>Escolher foto <span className="muted">· JPG ou PNG</span></>}</span>
             </label>
           )}
         </div>
@@ -164,7 +203,7 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
 
         <div className="popup-actions">
           <button type="button" className="btn btn-ghost" onClick={fechar}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Cadastrar presente</button>
+          <button type="submit" className="btn btn-primary" disabled={processandoImagem}>Cadastrar presente</button>
         </div>
       </form>
     </div>

@@ -2,8 +2,9 @@ import Icone from './Icone'
 import { tipoEvento } from '../utils/categorias'
 import { dataLonga, hora, diasAte } from '../utils/datas'
 
-// Renderiza a página pública do evento a partir das escolhas do construtor.
-function PreviewSite({ evento, titulo, mensagem, cor, recursos }) {
+// Renderiza a página do evento a partir das escolhas do construtor: como
+// prévia no construtor e, com `publico`, como o site que o convidado abre.
+function PreviewSite({ evento, titulo, mensagem, cor, recursos, publico = false, children }) {
   const tipo = tipoEvento(evento.categoria)
   const dias = diasAte(evento.data_inicio)
   const horario = hora(evento.data_inicio)
@@ -38,10 +39,18 @@ function PreviewSite({ evento, titulo, mensagem, cor, recursos }) {
 
       {(recursos.confirmarPresenca || recursos.listaPresentes) && (
         <section className="ps-bloco ps-acoes">
-          {recursos.confirmarPresenca && <span className="ps-btn">Confirmar presença</span>}
-          {recursos.listaPresentes && (
-            <span className="ps-btn ps-btn-contorno"><Icone nome="presente" tamanho={15} /> Lista de presentes</span>
-          )}
+          {recursos.confirmarPresenca &&
+            (publico ? (
+              <p className="ps-nota">Confirme sua presença pelo link que você recebeu no convite.</p>
+            ) : (
+              <span className="ps-btn">Confirmar presença</span>
+            ))}
+          {recursos.listaPresentes &&
+            (publico ? (
+              <a className="ps-btn ps-btn-contorno" href="#presentes"><Icone nome="presente" tamanho={15} /> Lista de presentes</a>
+            ) : (
+              <span className="ps-btn ps-btn-contorno"><Icone nome="presente" tamanho={15} /> Lista de presentes</span>
+            ))}
         </section>
       )}
 
@@ -71,6 +80,8 @@ function PreviewSite({ evento, titulo, mensagem, cor, recursos }) {
           {evento.local && <p className="ps-local-mapa">{evento.local}</p>}
         </section>
       )}
+
+      {children}
 
       <footer className="ps-rodape">Feito com HubEvent</footer>
     </div>

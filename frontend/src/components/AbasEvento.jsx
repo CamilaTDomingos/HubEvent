@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Icone from './Icone'
 
 // Abas com um indicador que desliza até a aba ativa.
-function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas, totalPresentes }) {
+function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas, totalPresentes, modulos }) {
   const trilho = useRef(null)
   const indicador = useRef(null)
 
@@ -22,8 +22,8 @@ function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas, t
   const abas = [
     { chave: 'convidados', label: 'Convidados', icone: 'usuarios', conta: totalConvidados },
     { chave: 'financeiro', label: 'Financeiro', icone: 'carteira', conta: totalDespesas },
-    { chave: 'presentes', label: <><span className="aba-longo">Lista de presentes</span><span className="aba-curto">Presentes</span></>, icone: 'presente', conta: totalPresentes },
-  ]
+    modulos.presentes && { chave: 'presentes', label: <><span className="aba-longo">Lista de presentes</span><span className="aba-curto">Presentes</span></>, icone: 'presente', conta: totalPresentes },
+  ].filter(Boolean)
 
   return (
     <div className="abas" ref={trilho} role="tablist">
@@ -40,11 +40,13 @@ function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas, t
           <span className="aba-conta">{a.conta}</span>
         </button>
       ))}
-      <Link to={`/eventos/${eventoId}/site`} className="aba aba-link">
-        <Icone nome="globo" tamanho={16} />
-        Site do evento
-        <Icone nome="abrir" tamanho={13} className="aba-seta" />
-      </Link>
+      {modulos.site && (
+        <Link to={`/eventos/${eventoId}/site`} className="aba aba-link">
+          <Icone nome="globo" tamanho={16} />
+          Site do evento
+          <Icone nome="abrir" tamanho={13} className="aba-seta" />
+        </Link>
+      )}
       <span className="abas-indicador" ref={indicador} aria-hidden="true" />
     </div>
   )

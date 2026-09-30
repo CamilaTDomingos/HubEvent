@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useConvidados } from '../hooks/useConvidados'
 import { useDespesas } from '../hooks/useDespesas'
 import { usePresentes } from '../hooks/usePresentes'
+import { useLandingPage } from '../hooks/useLandingPage'
 import LayoutApp from '../components/LayoutApp'
 import AbasEvento from '../components/AbasEvento'
 import AbaConvidados from '../components/AbaConvidados'
@@ -13,6 +14,7 @@ import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
 import { tipoEvento } from '../utils/categorias'
 import { diasAte, dataLonga, hora } from '../utils/datas'
+import { lerModulos } from '../utils/modulos'
 import './EventoDetalhe.css'
 
 function Contagem({ dataInicio }) {
@@ -41,6 +43,9 @@ function EventoDetalhe() {
   const convidados = useConvidados(id)
   const despesas = useDespesas(id)
   const presentes = usePresentes(id)
+  const { landingPage } = useLandingPage(id)
+  const modulos = lerModulos(id)
+  const siteUrl = modulos.site && landingPage?.ativa ? `/site/${landingPage.slug}` : null
 
   useEffect(() => {
     async function buscarEvento() {
@@ -86,6 +91,7 @@ function EventoDetalhe() {
         totalConvidados={convidados.convidados.length}
         totalDespesas={despesas.despesas.length}
         totalPresentes={presentes.presentes.length}
+        modulos={modulos}
       />
 
       <div className="aba-conteudo" key={aba}>
@@ -108,13 +114,18 @@ function EventoDetalhe() {
           />
         )}
 
-        {aba === 'presentes' && (
+        {aba === 'presentes' && modulos.presentes && (
           <AbaPresentes
+            eventoId={id}
             presentes={presentes.presentes}
             carregando={presentes.carregando}
+            erro={presentes.erro}
             cadastrar={presentes.cadastrar}
-            reservar={presentes.reservar}
             remover={presentes.remover}
+            recebimento={presentes.recebimento}
+            salvarRecebimento={presentes.salvarRecebimento}
+            siteUrl={siteUrl}
+            siteAtivo={modulos.site}
           />
         )}
       </div>

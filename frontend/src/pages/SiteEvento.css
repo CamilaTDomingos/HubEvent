@@ -141,3 +141,5 @@
   .site { grid-template-columns: 1fr; }
   .site-previa { position: static; }
 }
+
+.publicar-abrir { display: flex; justify-content: center; margin-top: 8px; }

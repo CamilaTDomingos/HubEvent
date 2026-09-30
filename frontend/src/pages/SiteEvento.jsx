@@ -171,6 +171,11 @@ function SiteEvento() {
             ) : (
               <p className="publicar-url">hubevent.app/{slugPreview}</p>
             )}
+            {ativa && landingPage?.slug && (
+              <a className="link publicar-abrir" href={`/site/${landingPage.slug}`} target="_blank" rel="noopener noreferrer">
+                Abrir o site publicado <Icone nome="abrir" tamanho={13} />
+              </a>
+            )}
           </div>
         </div>
 

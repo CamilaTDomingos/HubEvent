@@ -1,0 +1,169 @@
+/* Lista de presentes — compartilhado pelo painel do casal e pelo site do evento */
+
+.pres-cab { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+.pres-cab h2 { font-size: 24px; }
+.pres-sub { margin-top: 4px; font-size: 14px; color: var(--text-2); }
+
+.pres-progresso { display: flex; flex-direction: column; gap: 12px; padding: 18px 22px; margin-bottom: 28px; }
+.pres-progresso-texto { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; color: var(--text-2); }
+.pres-progresso-texto strong { font-size: 22px; color: var(--em-2); margin-right: 2px; }
+.pres-disponiveis { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; }
+.pres-disponiveis .ponto { background: var(--em); }
+
+.pres-completo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  margin: -12px 0 28px;
+  border: 1px solid var(--em-border);
+  border-radius: var(--r);
+  background: var(--em-dim);
+  font-size: 13.5px;
+  color: var(--text-2);
+  animation: surge 0.4s var(--ease) both;
+}
+.pres-completo .icone { color: var(--em); flex-shrink: 0; margin-top: 2px; }
+.pres-completo strong { color: var(--em-2); font-weight: 600; }
+
+.pres-grade { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: clamp(16px, 2vw, 20px); }
+
+.pres-cartao {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: surge 0.4s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+  transition: box-shadow 0.25s var(--ease), border-color 0.25s, transform 0.25s var(--ease);
+}
+.pres-cartao:not(.pres-esqueleto):hover { box-shadow: var(--sh1); border-color: var(--border-2); transform: translateY(-2px); }
+
+.pres-midia {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 1;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-3);
+  cursor: pointer;
+  overflow: hidden;
+}
+.pres-midia img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s var(--ease); }
+.pres-midia .icone { transition: color 0.25s, transform 0.35s var(--ease); }
+.pres-cartao:hover .pres-midia img { transform: scale(1.03); }
+.pres-cartao:hover .pres-midia .icone { color: var(--em); transform: translateY(-2px); }
+
+.pres-corpo { display: flex; flex-direction: column; flex: 1; padding: 16px 18px 18px; }
+.pres-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.pres-topo .eyebrow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pres-nome { font-size: 15px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.pres-valor { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 6px 0 16px; }
+.pres-valor .titulo { font-size: 19px; }
+.pres-qtd { font-size: 12.5px; color: var(--text-3); }
+
+.pres-acoes { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: auto; min-width: 0; }
+.pres-acoes .btn-ghost { margin-left: auto; padding-left: 8px; padding-right: 8px; margin-right: -8px; }
+
+/* Reservado: o cartão recua, sem sumir */
+.pres-cartao.reservado .pres-midia { filter: grayscale(0.6); opacity: 0.75; }
+.pres-cartao.reservado .pres-nome, .pres-cartao.reservado .pres-valor .titulo { color: var(--text-2); }
+
+.badge-neutro { background: var(--bg-2); color: var(--text-2); }
+
+/* Esqueleto */
+.pres-esqueleto { pointer-events: none; }
+.pres-esqueleto .pres-midia { cursor: default; }
+.pres-esqueleto .pres-corpo { gap: 10px; }
+.esq { display: block; height: 10px; border-radius: 6px; background: var(--bg-2); animation: pulsa 1.4s ease-in-out infinite; }
+.esq-curto { width: 35%; }
+.esq-medio { width: 55%; height: 14px; }
+.esq-longo { width: 80%; height: 14px; }
+.esq-barra { width: 100%; height: 8px; }
+@keyframes pulsa { 50% { opacity: 0.5; } }
+
+/* Vazio */
+.pres-vazio { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 56px 24px; text-align: center; }
+.pres-vazio-selo { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 4px; border-radius: 50%; background: var(--em-dim); color: var(--em); }
+.pres-vazio h3 { font-size: 20px; }
+.pres-vazio p { max-width: 360px; margin-bottom: 10px; font-size: 14px; color: var(--text-2); }
+
+/* Cadastro: envio de imagem */
+.pres-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px dashed var(--border-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  font-size: 13.5px;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.pres-upload input { position: absolute; opacity: 0; pointer-events: none; width: 1px; }
+.pres-upload .icone { color: var(--text-3); transition: color 0.2s; }
+.pres-upload:hover { border-color: var(--em-border); color: var(--text); }
+.pres-upload:hover .icone { color: var(--em); }
+.pres-upload:has(input:focus-visible) { outline: 2px solid var(--em); outline-offset: 2px; }
+.pres-upload-preview { display: flex; align-items: center; gap: 12px; }
+.pres-upload-preview img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--border); }
+
+/* Detalhes */
+.pres-detalhe-midia {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 1;
+  margin-bottom: 20px;
+  border-radius: var(--r);
+  background: var(--bg-2);
+  color: var(--text-3);
+  overflow: hidden;
+}
+.pres-detalhe-midia img { width: 100%; height: 100%; object-fit: cover; }
+.pres-detalhe .popup-title { overflow-wrap: anywhere; }
+.pres-detalhe-valor { font-size: 20px; color: var(--em-2); }
+.pres-detalhe-desc { margin-top: 12px; font-size: 14px; color: var(--text-2); }
+.pres-detalhe-dados { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.pres-detalhe-dados dt { font-size: 12px; color: var(--text-3); }
+.pres-detalhe-dados dd { font-size: 14px; font-weight: 500; }
+.pres-detalhe-acoes .pres-remover { margin-right: auto; color: var(--text-3); }
+.pres-detalhe-acoes .pres-remover:hover { background: var(--red-dim); color: var(--red); }
+
+.pres-cab-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.pres-aviso { display: flex; align-items: flex-start; gap: 10px; margin: -4px 0 20px; font-size: 13.5px; color: var(--text-2); }
+.pres-aviso .icone { color: var(--text-3); flex-shrink: 0; margin-top: 3px; }
+.pres-ajuda { margin-top: 6px; font-size: 12px; color: var(--text-3); }
+
+.pres-resumo { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: clamp(16px, 2vw, 20px); margin-bottom: 28px; }
+.pres-resumo .pres-progresso { margin-bottom: 0; justify-content: center; }
+.pres-pix { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px 20px; }
+.pres-pix .label { margin: 0; }
+.pres-pix-chave { font-size: 14px; font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pres-pix-dica { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+.pres-pix.pendente { border-style: dashed; border-color: var(--border-2); box-shadow: none; background: transparent; }
+
+.pres-status { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; font-weight: 500; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pres-status .icone { color: var(--em); flex-shrink: 0; }
+.pres-status.muted { font-weight: 400; color: var(--text-3); }
+
+.pres-detalhe-link { margin-top: 10px; }
+.pres-reservas { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.pres-reservas ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.pres-reservas li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.pres-reservas li .avatar { width: 28px; height: 28px; font-size: 11.5px; }
+.pres-reservas li .muted { margin-left: auto; font-size: 12.5px; }
+.pres-reservas-vazio { font-size: 13.5px; color: var(--text-3); }
+
+@media (max-width: 640px) {
+  .pres-cab-acoes, .pres-cab-acoes .btn { width: 100%; }
+  .pres-resumo { grid-template-columns: 1fr; }
+  .pres-progresso { padding: 16px; }
+  .pres-grade { grid-template-columns: 1fr; }
+  .pres-midia { aspect-ratio: 5 / 2; }
+  .pres-corpo { padding: 14px 16px 16px; }
+  .pres-valor { margin-bottom: 12px; }
+}

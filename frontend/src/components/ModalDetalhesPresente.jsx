@@ -1,9 +1,9 @@
 import Icone from './Icone'
-import { esgotado } from '../hooks/usePresentes'
+import { esgotado, FORMAS_PRESENTE } from '../hooks/usePresentes'
 import { iconePresente } from '../utils/categorias'
 import { moeda } from '../utils/datas'
 
-function ModalDetalhesPresente({ presente, aoFechar, aoReservar, aoRemover }) {
+function ModalDetalhesPresente({ presente, aoFechar, aoRemover }) {
   if (!presente) return null
 
   const reservado = esgotado(presente)
@@ -31,34 +31,36 @@ function ModalDetalhesPresente({ presente, aoFechar, aoReservar, aoRemover }) {
         </p>
 
         {presente.descricao && <p className="pres-detalhe-desc">{presente.descricao}</p>}
+        {presente.link && (
+          <a className="link pres-detalhe-link" href={presente.link} target="_blank" rel="noopener noreferrer">
+            Ver na loja <Icone nome="abrir" tamanho={13} />
+          </a>
+        )}
 
-        <dl className="pres-detalhe-dados">
-          <div>
-            <dt>Quantidade</dt>
-            <dd className="num">{presente.quantidade}</dd>
-          </div>
-          <div>
-            <dt>Reservados</dt>
-            <dd className="num">{presente.reservados} de {presente.quantidade}</dd>
-          </div>
-          {presente.reservadoPor && (
-            <div>
-              <dt>{presente.quantidade > 1 ? 'Última reserva' : 'Reservado por'}</dt>
-              <dd>{presente.reservadoPor}</dd>
-            </div>
+        <div className="pres-reservas">
+          <p className="label">
+            Reservas <span className="num">· {presente.reservas.length} de {presente.quantidade}</span>
+          </p>
+          {presente.reservas.length === 0 ? (
+            <p className="pres-reservas-vazio">Nenhum convidado escolheu este presente ainda.</p>
+          ) : (
+            <ul>
+              {presente.reservas.map((r, i) => (
+                <li key={i}>
+                  <span className="avatar">{r.nome.trim()[0]?.toUpperCase()}</span>
+                  <strong>{r.nome}</strong>
+                  <span className="muted">{FORMAS_PRESENTE[r.forma]}</span>
+                </li>
+              ))}
+            </ul>
           )}
-        </dl>
+        </div>
 
         <div className="popup-actions pres-detalhe-acoes">
           <button className="btn btn-ghost pres-remover" onClick={() => aoRemover(presente)}>
             <Icone nome="lixeira" tamanho={15} /> Remover
           </button>
-          <button className="btn btn-ghost" onClick={aoFechar}>Fechar</button>
-          {!reservado && (
-            <button className="btn btn-primary" onClick={() => aoReservar(presente)}>
-              <Icone nome="presente" tamanho={15} /> Reservar presente
-            </button>
-          )}
+          <button className="btn btn-secondary" onClick={aoFechar}>Fechar</button>
         </div>
       </div>
     </div>
