@@ -65,8 +65,9 @@ function RodapeOrganizador({ presente, aoAbrir }) {
   )
 }
 
-function AbaPresentes({ eventoId, presentes, carregando, erro, cadastrar, remover, recebimento, salvarRecebimento, siteUrl, siteAtivo }) {
+function AbaPresentes({ eventoId, presentes, carregando, erro, cadastrar, editar, remover, recebimento, salvarRecebimento, siteUrl, siteAtivo }) {
   const [cadastrando, setCadastrando] = useState(false)
+  const [editandoId, setEditandoId] = useState(null)
   const [detalheId, setDetalheId] = useState(null)
   const [removendo, setRemovendo] = useState(null)
   const [editandoPix, setEditandoPix] = useState(false)
@@ -78,6 +79,7 @@ function AbaPresentes({ eventoId, presentes, carregando, erro, cadastrar, remove
   const percentual = total ? (reservados / total) * 100 : 0
   const todosReservados = presentes.length > 0 && presentes.every(esgotado)
   const detalhe = presentes.find((p) => p.id === detalheId) || null
+  const editando = presentes.find((p) => p.id === editandoId) || null
   const abrir = (presente) => setDetalheId(presente.id)
 
   function confirmarRemocao() {
@@ -195,7 +197,16 @@ function AbaPresentes({ eventoId, presentes, carregando, erro, cadastrar, remove
         </>
       )}
 
-      <ModalCadastrarPresente aberto={cadastrando} aoFechar={() => setCadastrando(false)} aoCadastrar={cadastrar} />
+      <ModalCadastrarPresente
+        key={editando?.id || 'novo'}
+        aberto={cadastrando || !!editando}
+        presente={editando}
+        aoFechar={() => {
+          setCadastrando(false)
+          setEditandoId(null)
+        }}
+        aoSalvar={editando ? (dados) => editar(editando.id, dados) : cadastrar}
+      />
 
       <ModalRecebimento
         key={editandoPix ? 'aberto' : 'fechado'}
@@ -208,6 +219,10 @@ function AbaPresentes({ eventoId, presentes, carregando, erro, cadastrar, remove
       <ModalDetalhesPresente
         presente={detalhe}
         aoFechar={() => setDetalheId(null)}
+        aoEditar={(presente) => {
+          setDetalheId(null)
+          setEditandoId(presente.id)
+        }}
         aoRemover={(presente) => {
           setDetalheId(null)
           setRemovendo(presente)

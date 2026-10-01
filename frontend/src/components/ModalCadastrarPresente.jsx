@@ -13,14 +13,22 @@ function linkValido(texto) {
   }
 }
 
-function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
-  const [nome, setNome] = useState('')
-  const [valor, setValor] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [categoria, setCategoria] = useState('')
-  const [quantidade, setQuantidade] = useState(1)
-  const [imagem, setImagem] = useState(null)
-  const [link, setLink] = useState('')
+// Fotos do iPhone (HEIC) não abrem no navegador do Windows/Android e às vezes
+// chegam sem tipo; avisamos com clareza em vez de falhar em silêncio.
+function ehHeic(arquivo) {
+  return /hei[cf]/i.test(arquivo.type) || /\.hei[cf]$/i.test(arquivo.name)
+}
+
+// Sem `presente`, cadastra um novo; com ele, edita o existente.
+function ModalCadastrarPresente({ aberto, presente = null, aoFechar, aoSalvar }) {
+  const editando = !!presente
+  const [nome, setNome] = useState(presente?.nome || '')
+  const [valor, setValor] = useState(presente?.valor ?? '')
+  const [descricao, setDescricao] = useState(presente?.descricao || '')
+  const [categoria, setCategoria] = useState(presente?.categoria || '')
+  const [quantidade, setQuantidade] = useState(presente?.quantidade || 1)
+  const [imagem, setImagem] = useState(presente?.imagem || null)
+  const [link, setLink] = useState(presente?.link || '')
   const [processandoImagem, setProcessandoImagem] = useState(false)
   const [erro, setErro] = useState(null)
 
@@ -46,8 +54,12 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
     const arquivo = e.target.files?.[0]
     e.target.value = ''
     if (!arquivo) return
+    if (ehHeic(arquivo)) {
+      setErro('Fotos em HEIC (padrão do iPhone) não abrem no navegador. Envie em JPG ou PNG — no iPhone, Ajustes › Câmera › Formatos › Mais Compatível.')
+      return
+    }
     if (!arquivo.type.startsWith('image/')) {
-      setErro('Escolha um arquivo de imagem.')
+      setErro('Escolha uma foto em JPG, PNG ou WebP.')
       return
     }
     if (arquivo.size > TAMANHO_MAX_IMAGEM) {
@@ -82,12 +94,16 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
       setErro('A quantidade deve ser de pelo menos 1.')
       return
     }
+    if (editando && qtd < presente.reservas.length) {
+      setErro(`Já há ${presente.reservas.length} reservas para este presente; a quantidade não pode ser menor.`)
+      return
+    }
     if (link.trim() && !linkValido(link.trim())) {
       setErro('O link da loja deve começar com https://')
       return
     }
 
-    const salvou = aoCadastrar({
+    const salvou = aoSalvar({
       nome: nome.trim(),
       valor: valorNum,
       descricao: descricao.trim() || null,
@@ -106,8 +122,12 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && fechar()}>
       <form className="popup" onSubmit={handleCadastrar} role="dialog" aria-modal="true" aria-labelledby="novo-presente-titulo">
-        <h2 id="novo-presente-titulo" className="popup-title titulo">Novo <em>presente</em></h2>
-        <p className="popup-sub">Ele aparece no site do evento assim que for cadastrado.</p>
+        <h2 id="novo-presente-titulo" className="popup-title titulo">
+          {editando ? <>Editar <em>presente</em></> : <>Novo <em>presente</em></>}
+        </h2>
+        <p className="popup-sub">
+          {editando ? 'As mudanças aparecem no site do evento na hora.' : 'Ele aparece no site do evento assim que for cadastrado.'}
+        </p>
 
         <div className="field">
           <label htmlFor="pres-nome">Nome do presente</label>
@@ -186,6 +206,10 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
           {imagem ? (
             <div className="pres-upload-preview">
               <img src={imagem} alt="Prévia da imagem do presente" />
+              <label className="btn btn-secondary btn-sm pres-trocar">
+                <input type="file" accept="image/*" onChange={escolherImagem} />
+                <Icone nome="imagem" tamanho={14} /> {processandoImagem ? 'Preparando…' : 'Trocar foto'}
+              </label>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setImagem(null)}>
                 <Icone nome="lixeira" tamanho={14} /> Remover
               </button>
@@ -194,7 +218,7 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
             <label className="pres-upload">
               <input type="file" accept="image/*" onChange={escolherImagem} />
               <Icone nome="imagem" tamanho={18} />
-              <span>{processandoImagem ? 'Preparando foto…' : <>Escolher foto <span className="muted">· JPG ou PNG</span></>}</span>
+              <span>{processandoImagem ? 'Preparando foto…' : <>Escolher foto <span className="muted">· JPG, PNG ou WebP</span></>}</span>
             </label>
           )}
         </div>
@@ -203,7 +227,7 @@ function ModalCadastrarPresente({ aberto, aoFechar, aoCadastrar }) {
 
         <div className="popup-actions">
           <button type="button" className="btn btn-ghost" onClick={fechar}>Cancelar</button>
-          <button type="submit" className="btn btn-primary" disabled={processandoImagem}>Cadastrar presente</button>
+          <button type="submit" className="btn btn-primary" disabled={processandoImagem}>{editando ? 'Salvar alterações' : 'Cadastrar presente'}</button>
         </div>
       </form>
     </div>

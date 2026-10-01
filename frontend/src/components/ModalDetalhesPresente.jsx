@@ -3,7 +3,7 @@ import { esgotado, FORMAS_PRESENTE } from '../hooks/usePresentes'
 import { iconePresente } from '../utils/categorias'
 import { moeda } from '../utils/datas'
 
-function ModalDetalhesPresente({ presente, aoFechar, aoRemover }) {
+function ModalDetalhesPresente({ presente, aoFechar, aoEditar, aoRemover }) {
   if (!presente) return null
 
   const reservado = esgotado(presente)
@@ -15,7 +15,10 @@ function ModalDetalhesPresente({ presente, aoFechar, aoRemover }) {
           {presente.imagem ? (
             <img src={presente.imagem} alt={presente.nome} />
           ) : (
-            <Icone nome={iconePresente(presente.categoria)} tamanho={40} traco={1.2} />
+            <button type="button" className="pres-detalhe-addfoto" onClick={() => aoEditar(presente)}>
+              <Icone nome={iconePresente(presente.categoria)} tamanho={40} traco={1.2} />
+              <span><Icone nome="imagem" tamanho={14} /> Adicionar foto</span>
+            </button>
           )}
         </div>
 
@@ -60,7 +63,10 @@ function ModalDetalhesPresente({ presente, aoFechar, aoRemover }) {
           <button className="btn btn-ghost pres-remover" onClick={() => aoRemover(presente)}>
             <Icone nome="lixeira" tamanho={15} /> Remover
           </button>
-          <button className="btn btn-secondary" onClick={aoFechar}>Fechar</button>
+          <button className="btn btn-ghost" onClick={aoFechar}>Fechar</button>
+          <button className="btn btn-secondary" onClick={() => aoEditar(presente)}>
+            <Icone nome="editar" tamanho={15} /> Editar
+          </button>
         </div>
       </div>
     </div>

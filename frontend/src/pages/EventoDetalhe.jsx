@@ -121,6 +121,7 @@ function EventoDetalhe() {
             carregando={presentes.carregando}
             erro={presentes.erro}
             cadastrar={presentes.cadastrar}
+            editar={presentes.editar}
             remover={presentes.remover}
             recebimento={presentes.recebimento}
             salvarRecebimento={presentes.salvarRecebimento}

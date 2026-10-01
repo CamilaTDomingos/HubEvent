@@ -106,6 +106,13 @@ export function usePresentes(eventoId) {
     [eventoId, salvar]
   )
 
+  // Reservas não passam pelo formulário, então nunca são sobrescritas aqui.
+  const editar = useCallback(
+    (presenteId, dados) =>
+      salvar(itensDoEvento(eventoId).map((p) => (p.id === presenteId ? { ...p, ...dados, reservas: p.reservas } : p))),
+    [eventoId, salvar]
+  )
+
   const remover = useCallback(
     (presenteId) => salvar(itensDoEvento(eventoId).filter((p) => p.id !== presenteId)),
     [eventoId, salvar]
@@ -118,5 +125,5 @@ export function usePresentes(eventoId) {
     [eventoId]
   )
 
-  return { presentes, carregando, erro, recarregar: buscarPresentes, cadastrar, reservar, remover, recebimento, salvarRecebimento }
+  return { presentes, carregando, erro, recarregar: buscarPresentes, cadastrar, editar, reservar, remover, recebimento, salvarRecebimento }
 }

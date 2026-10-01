@@ -92,6 +92,7 @@
 
 /* Cadastro: envio de imagem */
 .pres-upload {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -109,7 +110,10 @@
 .pres-upload:hover { border-color: var(--em-border); color: var(--text); }
 .pres-upload:hover .icone { color: var(--em); }
 .pres-upload:has(input:focus-visible) { outline: 2px solid var(--em); outline-offset: 2px; }
-.pres-upload-preview { display: flex; align-items: center; gap: 12px; }
+.pres-upload-preview { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.pres-trocar { position: relative; cursor: pointer; }
+.pres-trocar input { position: absolute; opacity: 0; pointer-events: none; width: 1px; }
+.pres-trocar:has(input:focus-visible) { outline: 2px solid var(--em); outline-offset: 2px; }
 .pres-upload-preview img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--border); }
 
 /* Detalhes */
@@ -167,3 +171,19 @@
   .pres-corpo { padding: 14px 16px 16px; }
   .pres-valor { margin-bottom: 12px; }
 }
+
+.pres-detalhe-addfoto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.pres-detalhe-addfoto span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--em); }
+.pres-detalhe-addfoto:hover span { color: var(--em-2); }
