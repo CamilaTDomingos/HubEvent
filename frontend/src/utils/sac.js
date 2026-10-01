@@ -18,14 +18,6 @@ export const CONTATOS = [
     href: 'https://wa.me/5511900000000',
     icone: 'conversa',
   },
-  {
-    chave: 'central',
-    titulo: 'Central de atendimento',
-    descricao: 'Segunda a sexta, das 9h às 18h.',
-    valor: '0800 000 0000', // TODO: telefone real da central
-    href: 'tel:08000000000',
-    icone: 'telefone',
-  },
 ]
 
 // Perguntas frequentes. Para editar, basta alterar os textos desta lista.
