@@ -9,6 +9,7 @@ import EventoDetalhe from './pages/EventoDetalhe'
 import Rsvp from './pages/Rsvp'
 import SiteEvento from './pages/SiteEvento'
 import SitePublico from './pages/SitePublico'
+import Sac from './pages/Sac'
 
 function App() {
   return (
@@ -48,6 +49,14 @@ function App() {
             element={
               <RotaProtegida>
                 <SiteEvento />
+              </RotaProtegida>
+            }
+          />
+          <Route
+            path="/sac"
+            element={
+              <RotaProtegida>
+                <Sac />
               </RotaProtegida>
             }
           />

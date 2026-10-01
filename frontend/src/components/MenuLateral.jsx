@@ -4,6 +4,7 @@ import Icone from './Icone'
 const links = [
   { label: 'Início', path: '/dashboard', icone: 'casa' },
   { label: 'Meus eventos', path: '/eventos', icone: 'calendario' },
+  { label: 'SAC', path: '/sac', icone: 'ajuda' },
 ]
 
 // Menu flutuante em pílula: ícones com rótulo que aparece ao passar o mouse.
