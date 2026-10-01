@@ -53,3 +53,12 @@
 
 .rsvp-marca { font-size: 12px; color: var(--text-3); }
 .rsvp-marca strong { font-weight: 600; color: var(--text-2); }
+
+/* Confete ao confirmar presença */
+.confete { position: fixed; left: 50%; top: 60%; z-index: 100; pointer-events: none; }
+.confete span { position: absolute; animation: estoura 1.8s cubic-bezier(0.15, 0.7, 0.3, 1) both; }
+@keyframes estoura {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: translate(var(--x), calc(var(--y) + 520px)) rotate(var(--giro)); opacity: 0; }
+}

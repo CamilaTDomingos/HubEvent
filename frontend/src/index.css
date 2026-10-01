@@ -6,7 +6,7 @@
    ========================================================================== */
 
 :root {
-  --bg: #eef1f5; --bg-2: #e8ebf0; --bg-3: #dfe3ea;
+  --bg: #f4efe6; --bg-2: #e8ebf0; --bg-3: #dfe3ea;
   --card: #ffffff; --border: rgba(0, 0, 0, 0.07); --border-2: rgba(0, 0, 0, 0.13);
   --text: #111318; --text-2: #5c6170; --text-3: #9aa0ae;
   --em: #1e6b7b; --em-2: #164f5c; --em-dim: #eaf3f5; --em-dim2: rgba(30, 107, 123, 0.1); --em-border: rgba(30, 107, 123, 0.24);

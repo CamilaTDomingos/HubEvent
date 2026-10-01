@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
+import Confete, { sortearConfete } from '../components/Confete'
 import { tipoEvento } from '../utils/categorias'
 import { dataLonga, hora } from '../utils/datas'
 import './Rsvp.css'
@@ -13,6 +14,7 @@ function Rsvp() {
   const [erro, setErro] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [acabouDeResponder, setAcabouDeResponder] = useState(false)
+  const [confete, setConfete] = useState(null)
 
   useEffect(() => {
     async function buscarConvite() {
@@ -41,6 +43,7 @@ function Rsvp() {
       if (!res.ok) throw new Error('Não foi possível registrar sua resposta.')
       setConvite((atual) => ({ ...atual, status_presenca: resposta }))
       setAcabouDeResponder(true)
+      if (resposta === 'CONFIRMADO') setConfete(sortearConfete())
     } catch (err) {
       setErro(err.message)
     } finally {
@@ -68,6 +71,7 @@ function Rsvp() {
 
   return (
     <div className="rsvp">
+      {confete && <Confete pedacos={confete} />}
       <main className="rsvp-cartao painel rv">
         <div className="rsvp-interno">
           <span className="rsvp-icone"><Icone nome={tipo.icone} tamanho={22} /></span>
