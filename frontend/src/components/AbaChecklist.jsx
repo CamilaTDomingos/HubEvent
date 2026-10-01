@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import ModalConfirmacao from './ModalConfirmacao'
+import ModalTarefa from './ModalTarefa'
 import NumeroAnimado from './NumeroAnimado'
 import Icone from './Icone'
 import { diasAte, dataMedia, rotuloContagem } from '../utils/datas'
@@ -15,8 +16,7 @@ const FILTROS = {
 }
 
 function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
-  const [titulo, setTitulo] = useState('')
-  const [prazo, setPrazo] = useState('')
+  const [criando, setCriando] = useState(false)
   const [filtro, setFiltro] = useState(null)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(null)
 
@@ -24,23 +24,9 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
   const total = tarefas.length
   const percentual = total ? Math.round((contagem.CONCLUIDAS / total) * 100) : 0
   const lista = filtro ? tarefas.filter(FILTROS[filtro].teste) : tarefas
-
-  async function handleAdicionarTarefa(e) {
-    e.preventDefault()
-    if (!titulo.trim()) return
-
-    const { error } = await supabase.from('tarefa').insert({
-      evento_id: eventoId,
-      titulo: titulo.trim(),
-      prazo: prazo || null,
-    })
-
-    if (!error) {
-      setTitulo('')
-      setPrazo('')
-      recarregar()
-    }
-  }
+  // Uma tarefa nova entra como pendente, então só faz sentido oferecer a
+  // linha de adicionar onde ela vai aparecer.
+  const mostraLinhaNova = !filtro || filtro === 'PENDENTES'
 
   async function alternar(tarefa) {
     const { error } = await supabase
@@ -88,18 +74,9 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
           </div>
         </section>
 
-        <form className="convidar" onSubmit={handleAdicionarTarefa}>
-          <h3 className="titulo">Nova tarefa</h3>
-          <div className="field">
-            <label htmlFor="tarefa-titulo">Tarefa</label>
-            <input id="tarefa-titulo" type="text" placeholder="Ex.: Fechar o buffet" value={titulo} onChange={(e) => setTitulo(e.target.value)} required />
-          </div>
-          <div className="field">
-            <label htmlFor="tarefa-prazo">Prazo <span className="muted">(opcional)</span></label>
-            <input id="tarefa-prazo" type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} />
-          </div>
-          <button type="submit" className="btn btn-primary btn-block"><Icone nome="mais" tamanho={16} /> Adicionar</button>
-        </form>
+        <button className="btn btn-primary btn-block" onClick={() => setCriando(true)}>
+          <Icone nome="mais" tamanho={16} /> Nova tarefa
+        </button>
       </aside>
 
       <section className="painel conv-principal">
@@ -114,13 +91,15 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
 
         {carregando ? (
           <p className="muted painel-vazio">Carregando…</p>
-        ) : lista.length === 0 ? (
-          <div className="painel-vazio">
-            <Icone nome="check" tamanho={26} />
-            <p>{total === 0 ? 'Nenhuma tarefa ainda. Adicione a primeira ao lado.' : 'Nenhuma tarefa nesse filtro.'}</p>
-          </div>
+        ) : total === 0 ? (
+          <button className="painel-vazio ck-vazio" onClick={() => setCriando(true)}>
+            <span className="ck-vazio-icone"><Icone nome="mais" tamanho={22} /></span>
+            <strong>Adicionar nova tarefa</strong>
+            <span>Monte o checklist do que precisa estar pronto até o dia.</span>
+          </button>
         ) : (
           <ul className="conv-lista">
+            {lista.length === 0 && <li className="painel-vazio">Nenhuma tarefa nesse filtro.</li>}
             {lista.map((t, i) => (
               <li key={t.id} className={`ck-linha ${concluida(t) ? 'feita' : ''}`} style={{ '--i': i }}>
                 <label className="ck-marca">
@@ -145,6 +124,14 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
                 </div>
               </li>
             ))}
+            {mostraLinhaNova && (
+              <li>
+                <button className="ck-linha ck-nova" onClick={() => setCriando(true)}>
+                  <span className="ck-caixa"><Icone nome="mais" tamanho={14} traco={2} /></span>
+                  Adicionar tarefa
+                </button>
+              </li>
+            )}
           </ul>
         )}
       </section>
@@ -157,6 +144,8 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
         aoConfirmar={confirmarExclusao}
         aoCancelar={() => setConfirmandoExclusao(null)}
       />
+
+      <ModalTarefa aberto={criando} eventoId={eventoId} aoFechar={() => setCriando(false)} aoSalvar={recarregar} />
     </div>
   )
 }

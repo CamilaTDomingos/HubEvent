@@ -191,6 +191,45 @@
 .ck-linha:hover { background: #fbfcfd; }
 .ck-linha:hover .conv-acoes, .ck-linha:focus-within .conv-acoes { opacity: 1; }
 .ck-linha.feita .conv-nome strong { color: var(--text-3); text-decoration: line-through; font-weight: 500; }
+.ck-nova {
+  width: 100%;
+  grid-template-columns: 34px minmax(0, 1fr);
+  justify-items: start;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-3);
+  text-align: left;
+}
+.ck-nova .ck-caixa { justify-self: center; border-style: dashed; color: var(--text-3); }
+.ck-nova:hover { color: var(--em); }
+.ck-nova:hover .ck-caixa { border-color: var(--em); color: var(--em); }
+
+.ck-vazio {
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 64px 24px;
+  transition: background 0.2s, color 0.2s;
+}
+.ck-vazio strong { font-size: 15px; font-weight: 600; color: var(--text); }
+.ck-vazio-icone {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border-2);
+  color: var(--text-3);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.ck-vazio:hover { background: #fbfcfd; }
+.ck-vazio:hover strong { color: var(--em); }
+.ck-vazio:hover .ck-vazio-icone { border-color: var(--em); border-style: solid; color: var(--em); background: var(--em-dim); }
+
 .ck-atrasada { color: var(--red) !important; }
 
 .ck-marca { display: grid; place-items: center; cursor: pointer; }
