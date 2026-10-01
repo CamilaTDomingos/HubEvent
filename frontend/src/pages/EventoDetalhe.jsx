@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { useTarefas } from '../hooks/useTarefas'
 import { useConvidados } from '../hooks/useConvidados'
 import { useDespesas } from '../hooks/useDespesas'
 import { usePresentes } from '../hooks/usePresentes'
 import { useLandingPage } from '../hooks/useLandingPage'
 import LayoutApp from '../components/LayoutApp'
 import AbasEvento from '../components/AbasEvento'
+import AbaChecklist from '../components/AbaChecklist'
 import AbaConvidados from '../components/AbaConvidados'
 import AbaFinanceiro from '../components/AbaFinanceiro'
 import AbaPresentes from '../components/AbaPresentes'
@@ -37,9 +39,10 @@ function Contagem({ dataInicio }) {
 
 function EventoDetalhe() {
   const { id } = useParams()
-  const [aba, setAba] = useState('convidados')
+  const [aba, setAba] = useState('checklist')
   const [evento, setEvento] = useState(null)
 
+  const tarefas = useTarefas(id)
   const convidados = useConvidados(id)
   const despesas = useDespesas(id)
   const presentes = usePresentes(id)
@@ -88,6 +91,7 @@ function EventoDetalhe() {
         aba={aba}
         aoTrocar={setAba}
         eventoId={id}
+        totalTarefas={tarefas.tarefas.length}
         totalConvidados={convidados.convidados.length}
         totalDespesas={despesas.despesas.length}
         totalPresentes={presentes.presentes.length}
@@ -95,6 +99,15 @@ function EventoDetalhe() {
       />
 
       <div className="aba-conteudo" key={aba}>
+        {aba === 'checklist' && (
+          <AbaChecklist
+            eventoId={id}
+            tarefas={tarefas.tarefas}
+            carregando={tarefas.carregando}
+            recarregar={tarefas.recarregar}
+          />
+        )}
+
         {aba === 'convidados' && (
           <AbaConvidados
             eventoId={id}

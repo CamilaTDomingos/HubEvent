@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Icone from './Icone'
 
 // Abas com um indicador que desliza até a aba ativa.
-function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas, totalPresentes, modulos }) {
+function AbasEvento({ aba, aoTrocar, eventoId, totalTarefas, totalConvidados, totalDespesas, totalPresentes, modulos }) {
   const trilho = useRef(null)
   const indicador = useRef(null)
 
@@ -17,9 +17,10 @@ function AbasEvento({ aba, aoTrocar, eventoId, totalConvidados, totalDespesas, t
     posicionar()
     window.addEventListener('resize', posicionar)
     return () => window.removeEventListener('resize', posicionar)
-  }, [aba, totalConvidados, totalDespesas, totalPresentes])
+  }, [aba, totalTarefas, totalConvidados, totalDespesas, totalPresentes])
 
   const abas = [
+    { chave: 'checklist', label: 'Checklist', icone: 'check', conta: totalTarefas },
     { chave: 'convidados', label: 'Convidados', icone: 'usuarios', conta: totalConvidados },
     { chave: 'financeiro', label: 'Financeiro', icone: 'carteira', conta: totalDespesas },
     modulos.presentes && { chave: 'presentes', label: <><span className="aba-longo">Lista de presentes</span><span className="aba-curto">Presentes</span></>, icone: 'presente', conta: totalPresentes },

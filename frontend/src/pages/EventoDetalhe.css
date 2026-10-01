@@ -169,6 +169,46 @@
 .copiado { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: var(--em); padding: 0 6px; white-space: nowrap; animation: aparece 0.2s ease both; }
 @media (hover: none) { .conv-acoes { opacity: 1; } }
 
+/* ---------- Checklist ---------- */
+
+.check-medidor { margin-bottom: 14px; }
+.ck-pendentes .ponto { background: var(--yellow); }
+.ck-atrasadas .ponto { background: var(--red); }
+.ck-concluidas .ponto { background: var(--em); }
+
+.ck-linha {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--border);
+  animation: surge 0.4s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 25ms);
+  transition: background 0.2s;
+}
+.ck-linha:last-child { border-bottom: none; }
+.ck-linha:hover { background: #fbfcfd; }
+.ck-linha:hover .conv-acoes, .ck-linha:focus-within .conv-acoes { opacity: 1; }
+.ck-linha.feita .conv-nome strong { color: var(--text-3); text-decoration: line-through; font-weight: 500; }
+.ck-atrasada { color: var(--red) !important; }
+
+.ck-marca { display: grid; place-items: center; cursor: pointer; }
+.ck-marca input { position: absolute; opacity: 0; pointer-events: none; }
+.ck-caixa {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-2);
+  color: transparent;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.ck-marca:hover .ck-caixa { border-color: var(--em); }
+.ck-marca input:focus-visible + .ck-caixa { outline: 2px solid var(--em); outline-offset: 2px; }
+.ck-marca input:checked + .ck-caixa { background: var(--em); border-color: var(--em); color: #fff; }
+
 /* ---------- Financeiro ---------- */
 
 .fin-topo { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 28px); margin-bottom: 28px; align-items: start; }
@@ -342,7 +382,8 @@
   .fin-numeros { grid-template-columns: 1fr; gap: 16px; }
   .fin-num { padding: 0; border-left: none; }
   .conv-linha { grid-template-columns: 34px minmax(0, 1fr) auto; padding: 12px 16px; }
-  .conv-acoes { grid-column: 2 / -1; justify-content: flex-start; opacity: 1; margin-left: -8px; }
+  .ck-linha { padding: 12px 16px; }
+  .conv-linha .conv-acoes { grid-column: 2 / -1; justify-content: flex-start; opacity: 1; margin-left: -8px; }
   .desp-linha { grid-template-columns: 8px minmax(0, 1fr) auto; padding: 13px 16px; }
   .desp-forma { grid-column: 2; grid-row: 2; }
   .desp-excluir { grid-column: 3; grid-row: 2; }
