@@ -8,6 +8,9 @@ import Eventos from './pages/Eventos'
 import EventoDetalhe from './pages/EventoDetalhe'
 import Rsvp from './pages/Rsvp'
 import SiteEvento from './pages/SiteEvento'
+import SitePublico from './pages/SitePublico'
+import Sac from './pages/Sac'
+import Perfil from './pages/Perfil'
 
 function App() {
   return (
@@ -17,6 +20,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/rsvp/:convidadoId" element={<Rsvp />} />
+          <Route path="/site/:slug" element={<SitePublico />} />
           <Route
             path="/dashboard"
             element={
@@ -46,6 +50,22 @@ function App() {
             element={
               <RotaProtegida>
                 <SiteEvento />
+              </RotaProtegida>
+            }
+          />
+          <Route
+            path="/sac"
+            element={
+              <RotaProtegida>
+                <Sac />
+              </RotaProtegida>
+            }
+          />
+          <Route
+            path="/perfil"
+            element={
+              <RotaProtegida>
+                <Perfil />
               </RotaProtegida>
             }
           />

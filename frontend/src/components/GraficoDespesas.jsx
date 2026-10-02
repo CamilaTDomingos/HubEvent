@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-
-const CORES = ['#16a37a', '#3b6fe8', '#e8a432', '#e5484d', '#8b5cf6', '#06b6d4', '#f97316', '#64748b']
+import { corDespesa } from '../utils/categorias'
+import { moeda } from '../utils/datas'
 
 function GraficoDespesas({ despesas }) {
   const [animado, setAnimado] = useState(false)
+  const [ativo, setAtivo] = useState(null)
 
   useEffect(() => {
     const t = setTimeout(() => setAnimado(true), 100)
@@ -21,8 +22,11 @@ function GraficoDespesas({ despesas }) {
 
   if (total === 0) {
     return (
-      <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
-        Lance despesas para ver a distribuição por categoria.
+      <div className="grafico-vazio">
+        <svg width="150" height="150" viewBox="0 0 180 180" aria-hidden="true">
+          <circle cx="90" cy="90" r="70" fill="none" stroke="var(--bg-3)" strokeWidth="18" />
+        </svg>
+        <p>As despesas lançadas aparecem aqui, separadas por categoria.</p>
       </div>
     )
   }
@@ -36,47 +40,68 @@ function GraficoDespesas({ despesas }) {
     const tamanho = fracao * circunferencia
     const offset = acc.offset
 
-    acc.segmentos.push({
-      categoria,
-      valor,
-      i,
-      tamanho,
-      offset
-    })
+    acc.segmentos.push({ categoria, valor, i, tamanho, offset })
 
     return { segmentos: acc.segmentos, offset: offset + tamanho }
   }, { segmentos: [], offset: 0 }).segmentos
 
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
-      <svg width="180" height="180" viewBox="0 0 180 180" style={{ transform: 'rotate(-90deg)', flexShrink: 0 }}>
-        <circle cx="90" cy="90" r={raio} fill="none" stroke="var(--bg-2)" strokeWidth="22" />
-        
-        {segmentos.map(({ categoria, i, tamanho, offset }) => (
-          <circle
-            key={categoria}
-            cx="90"
-            cy="90"
-            r={raio}
-            fill="none"
-            stroke={CORES[i % CORES.length]}
-            strokeWidth="22"
-            strokeDasharray={`${animado ? tamanho : 0} ${circunferencia}`}
-            strokeDashoffset={-offset}
-            style={{ transition: `stroke-dasharray 900ms ease ${i * 90}ms` }}
-          />
-        ))}
-      </svg>
+  const destaque = ativo ? entradas.find(([c]) => c === ativo) : null
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 180 }}>
-        {entradas.map(([categoria, valor], i) => (
-          <div key={categoria} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5 }}>
-            <span style={{ width: 9, height: 9, borderRadius: 3, background: CORES[i % CORES.length], flexShrink: 0 }} />
-            <span style={{ flex: 1, color: 'var(--text-2)' }}>{categoria}</span>
-            <span style={{ fontWeight: 600 }}>{((valor / total) * 100).toFixed(0)}%</span>
-          </div>
-        ))}
+  return (
+    <div className="grafico">
+      <div className="grafico-rosca">
+        <svg viewBox="0 0 180 180" style={{ transform: 'rotate(-90deg)' }} aria-hidden="true">
+          <circle cx="90" cy="90" r={raio} fill="none" stroke="var(--bg-2)" strokeWidth="18" />
+          {segmentos.map(({ categoria, i, tamanho, offset }) => (
+            <circle
+              key={categoria}
+              cx="90"
+              cy="90"
+              r={raio}
+              fill="none"
+              stroke={corDespesa(categoria)}
+              strokeWidth={ativo === categoria ? 22 : 18}
+              strokeDasharray={`${animado ? tamanho : 0} ${circunferencia}`}
+              strokeDashoffset={-offset}
+              opacity={ativo && ativo !== categoria ? 0.22 : 1}
+              onMouseEnter={() => setAtivo(categoria)}
+              onMouseLeave={() => setAtivo(null)}
+              style={{
+                cursor: 'pointer',
+                transition: `stroke-dasharray 900ms var(--ease) ${i * 90}ms, opacity 200ms, stroke-width 250ms var(--ease)`,
+              }}
+            />
+          ))}
+        </svg>
+        <div className="grafico-centro">
+          {destaque ? (
+            <>
+              <strong className="titulo num">{((destaque[1] / total) * 100).toFixed(0)}%</strong>
+              <span>{moeda(destaque[1], 0)}</span>
+            </>
+          ) : (
+            <>
+              <strong className="titulo num">{moeda(total, 0)}</strong>
+              <span>gasto total</span>
+            </>
+          )}
+        </div>
       </div>
+
+      <ul className="grafico-legenda">
+        {entradas.map(([categoria, valor]) => (
+          <li
+            key={categoria}
+            className={ativo && ativo !== categoria ? 'apagado' : ''}
+            onMouseEnter={() => setAtivo(categoria)}
+            onMouseLeave={() => setAtivo(null)}
+          >
+            <span className="grafico-cor" style={{ background: corDespesa(categoria) }} />
+            <span className="grafico-cat">{categoria}</span>
+            <span className="num">{((valor / total) * 100).toFixed(0)}%</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

@@ -1,0 +1,69 @@
+/* ---------- SAC (RF22) ---------- */
+
+.sac-grade { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: clamp(28px, 5vw, 56px); align-items: start; }
+.sac-principal { display: flex; flex-direction: column; gap: clamp(32px, 4vw, 44px); }
+
+/* Perguntas frequentes */
+.faq { list-style: none; overflow: hidden; }
+.faq-item + .faq-item { border-top: 1px solid var(--border); }
+.faq-pergunta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.faq-pergunta .icone { flex-shrink: 0; color: var(--text-3); transform: rotate(90deg); transition: transform 0.25s var(--ease), color 0.2s; }
+.faq-pergunta:hover { background: var(--bg-2); }
+.faq-pergunta:focus-visible { outline-offset: -2px; }
+.faq-item.aberto .faq-pergunta { color: var(--em-2); }
+.faq-item.aberto .faq-pergunta .icone { transform: rotate(-90deg); color: var(--em); }
+.faq-resposta { padding: 0 20px 18px; color: var(--text-2); max-width: 640px; animation: surge 0.3s var(--ease) both; }
+
+/* Formulário */
+.sac-form { padding: clamp(20px, 3vw, 28px); }
+.sac-form .btn { margin-top: 4px; }
+.sac-enviada { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 24px 0; animation: surge 0.35s var(--ease) both; }
+.sac-enviada .vazio-icone { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--em-dim); color: var(--em); margin-bottom: 8px; }
+.sac-enviada .titulo { font-size: 22px; }
+.sac-enviada p:not(.titulo) { color: var(--text-2); margin-bottom: 14px; }
+
+/* Contato: o cartão em destaque da página */
+.sac-contato { position: sticky; top: 86px; padding: 24px; border-color: var(--em-border); }
+.sac-contato h2 { font-size: 21px; }
+.sac-contato-sub { font-size: 13.5px; color: var(--text-2); margin: 4px 0 16px; }
+.sac-canais { list-style: none; display: flex; flex-direction: column; gap: 4px; margin: 0 -10px; }
+.sac-canal {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 10px;
+  border-radius: var(--r);
+  text-decoration: none;
+  transition: background 0.25s;
+}
+.sac-canal:hover { background: var(--bg-2); }
+.sac-canal:hover .selo-tipo { background: var(--em-dim); color: var(--em); }
+.sac-canal-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.4; }
+.sac-canal-texto strong { font-size: 14px; font-weight: 600; }
+.sac-canal-texto span { font-size: 12.5px; color: var(--text-2); }
+.sac-canal-texto .sac-canal-valor { margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--em); overflow-wrap: anywhere; }
+
+@media (max-width: 860px) {
+  .sac-grade { grid-template-columns: 1fr; }
+  .sac-contato { position: static; order: -1; }
+}
+
+@media (max-width: 640px) {
+  .sac-form .field-row { grid-template-columns: 1fr; gap: 0; }
+  .faq-pergunta { padding: 14px 16px; }
+  .faq-resposta { padding: 0 16px 16px; }
+}

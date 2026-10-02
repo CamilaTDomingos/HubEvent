@@ -2,16 +2,16 @@ function ModalConfirmacao({ aberto, titulo, mensagem, aoConfirmar, aoCancelar, t
   if (!aberto) return null
 
   return (
-    <div className="overlay open">
-      <div className="popup" style={{ maxWidth: 380 }}>
-        <div className="popup-title">{titulo}</div>
+    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && aoCancelar()}>
+      <div className="popup popup-sm" role="alertdialog" aria-modal="true" aria-labelledby="confirmacao-titulo">
+        <h2 id="confirmacao-titulo" className="popup-title titulo">{titulo}</h2>
         <p className="popup-sub">{mensagem}</p>
 
         <div className="popup-actions">
-          <button className="btn btn-ghost" onClick={aoCancelar}>
+          <button className="btn btn-ghost" onClick={aoCancelar} autoFocus>
             Cancelar
           </button>
-          <button className="btn btn-primary" style={{ background: 'var(--red)' }} onClick={aoConfirmar}>
+          <button className="btn btn-danger" onClick={aoConfirmar}>
             {textoConfirmar}
           </button>
         </div>

@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import Icone from '../components/Icone'
+import Carregando from '../components/Carregando'
+import Confete, { sortearConfete } from '../components/Confete'
+import { tipoEvento } from '../utils/categorias'
+import { dataLonga, hora } from '../utils/datas'
+import './Rsvp.css'
 
 function Rsvp() {
   const { convidadoId } = useParams()
@@ -7,6 +13,8 @@ function Rsvp() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
   const [enviando, setEnviando] = useState(false)
+  const [acabouDeResponder, setAcabouDeResponder] = useState(false)
+  const [confete, setConfete] = useState(null)
 
   useEffect(() => {
     async function buscarConvite() {
@@ -34,6 +42,8 @@ function Rsvp() {
       })
       if (!res.ok) throw new Error('Não foi possível registrar sua resposta.')
       setConvite((atual) => ({ ...atual, status_presenca: resposta }))
+      setAcabouDeResponder(true)
+      if (resposta === 'CONFIRMADO') setConfete(sortearConfete())
     } catch (err) {
       setErro(err.message)
     } finally {
@@ -41,33 +51,79 @@ function Rsvp() {
     }
   }
 
-  if (carregando) return <p style={{ padding: 40 }}>Carregando convite...</p>
-  if (erro) return <p style={{ padding: 40, color: 'var(--red)' }}>{erro}</p>
+  if (carregando) return <Carregando texto="Abrindo seu convite…" telaCheia />
+
+  if (erro && !convite) {
+    return (
+      <div className="rsvp">
+        <div className="rsvp-cartao painel">
+          <span className="rsvp-icone"><Icone nome="brilho" tamanho={22} /></span>
+          <h1 className="titulo rsvp-evento">Convite não encontrado</h1>
+          <p className="rsvp-texto">{erro} Confira se o link está completo ou peça um novo ao anfitrião.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const { evento } = convite
+  const tipo = tipoEvento(evento.categoria)
+  const horario = hora(evento.data_inicio)
 
   return (
-    <div style={{ maxWidth: 420, margin: '60px auto', padding: 32, textAlign: 'center' }}>
-      <h1 style={{ marginBottom: 8 }}>{convite.evento.nome}</h1>
-      <p style={{ color: 'var(--text-2)', marginBottom: 4 }}>
-        {new Date(convite.evento.data_inicio).toLocaleDateString('pt-BR')}
-      </p>
-      {convite.evento.local && <p style={{ color: 'var(--text-2)', marginBottom: 24 }}>{convite.evento.local}</p>}
+    <div className="rsvp">
+      {confete && <Confete pedacos={confete} />}
+      <main className="rsvp-cartao painel rv">
+        <div className="rsvp-interno">
+          <span className="rsvp-icone"><Icone nome={tipo.icone} tamanho={22} /></span>
+          <p className="eyebrow">Você está convidado(a)</p>
+          <p className="rsvp-ola">Olá, {convite.nome}</p>
+          <h1 className="titulo rsvp-evento">{evento.nome}</h1>
 
-      <p style={{ marginBottom: 24 }}>Olá, {convite.nome}! Você foi convidado(a).</p>
+          <div className="ornamento" aria-hidden="true">✦</div>
 
-      {convite.status_presenca === 'PENDENTE' ? (
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <button className="btn btn-primary" disabled={enviando} onClick={() => responder('CONFIRMADO')}>
-            Confirmar presença
-          </button>
-          <button className="btn btn-ghost" disabled={enviando} onClick={() => responder('RECUSADO')}>
-            Não poderei ir
-          </button>
+          <ul className="rsvp-detalhes">
+            <li>
+              <Icone nome="calendario" tamanho={17} />
+              <span className="capitalizar">{dataLonga(evento.data_inicio)}</span>
+            </li>
+            {horario && (
+              <li><Icone nome="relogio" tamanho={17} /><span>{horario}</span></li>
+            )}
+            {evento.local && (
+              <li><Icone nome="local" tamanho={17} /><span>{evento.local}</span></li>
+            )}
+          </ul>
+
+          <div className="rsvp-resposta">
+            {convite.status_presenca === 'PENDENTE' ? (
+              <>
+                <p className="rsvp-pergunta">Podemos contar com você?</p>
+                <div className="rsvp-botoes">
+                  <button className="btn btn-primary btn-lg" disabled={enviando} onClick={() => responder('CONFIRMADO')}>
+                    <Icone nome="check" tamanho={16} /> Confirmar presença
+                  </button>
+                  <button className="btn btn-secondary btn-lg" disabled={enviando} onClick={() => responder('RECUSADO')}>
+                    Não poderei ir
+                  </button>
+                </div>
+                {erro && <p className="erro-msg">{erro}</p>}
+              </>
+            ) : convite.status_presenca === 'CONFIRMADO' ? (
+              <div className={`rsvp-final ok ${acabouDeResponder ? 'agora' : ''}`}>
+                <span className="rsvp-final-icone"><Icone nome="check" tamanho={22} traco={2} /></span>
+                <p><strong>Presença confirmada.</strong> Obrigado — nos vemos lá!</p>
+              </div>
+            ) : (
+              <div className={`rsvp-final ${acabouDeResponder ? 'agora' : ''}`}>
+                <span className="rsvp-final-icone"><Icone nome="mais" tamanho={22} style={{ rotate: '45deg' }} /></span>
+                <p><strong>Resposta registrada.</strong> Que pena! Sentiremos sua falta.</p>
+              </div>
+            )}
+          </div>
         </div>
-      ) : convite.status_presenca === 'CONFIRMADO' ? (
-        <p style={{ color: 'var(--em)', fontWeight: 600 }}>Presença confirmada. Obrigado!</p>
-      ) : (
-        <p style={{ color: 'var(--text-2)', fontWeight: 600 }}>Você registrou que não poderá comparecer.</p>
-      )}
+      </main>
+
+      <p className="rsvp-marca">Enviado com <strong>HubEvent</strong></p>
     </div>
   )
 }

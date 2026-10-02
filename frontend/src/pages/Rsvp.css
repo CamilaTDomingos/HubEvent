@@ -1,0 +1,64 @@
+.rsvp {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 48px var(--gutter);
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, var(--em-dim), transparent 70%),
+    var(--bg);
+}
+
+.rsvp-cartao { width: 100%; max-width: 560px; padding: 14px; border-radius: var(--r-xl); box-shadow: var(--sh3); }
+.rsvp-interno {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(32px, 6vw, 48px) clamp(20px, 5vw, 44px);
+  border: 1px solid var(--em-border);
+  border-radius: 12px;
+}
+.rsvp-cartao > .rsvp-icone, .rsvp-cartao > .titulo, .rsvp-cartao > .rsvp-texto { margin-left: auto; margin-right: auto; }
+.rsvp-cartao:not(:has(.rsvp-interno)) { padding: 40px 32px; text-align: center; }
+
+.rsvp-icone { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--em-dim); color: var(--em); margin-bottom: 18px; }
+.rsvp-ola { font-family: var(--disp); font-style: italic; font-size: 18px; color: var(--text-2); margin-top: 16px; }
+.rsvp-evento { font-size: clamp(28px, 4.4vw, 38px); margin: 4px 0 22px; overflow-wrap: anywhere; }
+.rsvp-texto { color: var(--text-2); margin-top: 8px; }
+
+.rsvp-interno .ornamento { width: 100%; max-width: 220px; margin-bottom: 22px; }
+
+.rsvp-detalhes { list-style: none; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 30px; color: var(--text-2); font-size: 14.5px; }
+.rsvp-detalhes li { display: inline-flex; align-items: center; gap: 9px; }
+.rsvp-detalhes .icone { color: var(--em); flex-shrink: 0; }
+
+.rsvp-resposta { width: 100%; }
+.rsvp-pergunta { font-weight: 500; margin-bottom: 14px; }
+.rsvp-botoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+.rsvp-final { display: flex; flex-direction: column; align-items: center; gap: 12px; font-size: 15px; color: var(--text-2); }
+.rsvp-final strong { color: var(--text); font-weight: 600; }
+.rsvp-final-icone { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--bg-2); color: var(--text-2); }
+.rsvp-final.ok .rsvp-final-icone { background: var(--em); color: #fff; }
+.rsvp-final.agora .rsvp-final-icone { animation: confirma 0.5s var(--ease) both; }
+.rsvp-final.agora p { animation: surge 0.4s var(--ease) both 0.15s; }
+@keyframes confirma {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.rsvp-marca { font-size: 12px; color: var(--text-3); }
+.rsvp-marca strong { font-weight: 600; color: var(--text-2); }
+
+/* Confete ao confirmar presença */
+.confete { position: fixed; left: 50%; top: 60%; z-index: 100; pointer-events: none; }
+.confete span { position: absolute; animation: estoura 1.8s cubic-bezier(0.15, 0.7, 0.3, 1) both; }
+@keyframes estoura {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: translate(var(--x), calc(var(--y) + 520px)) rotate(var(--giro)); opacity: 0; }
+}
