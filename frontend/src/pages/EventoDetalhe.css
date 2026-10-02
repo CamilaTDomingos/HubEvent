@@ -191,6 +191,12 @@
 .ck-linha:hover { background: #fbfcfd; }
 .ck-linha:hover .conv-acoes, .ck-linha:focus-within .conv-acoes { opacity: 1; }
 .ck-linha.feita .conv-nome strong { color: var(--text-3); text-decoration: line-through; font-weight: 500; }
+.ck-colunas { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.ck-feitas { background: var(--bg-2); box-shadow: none; }
+.ck-feitas .ck-linha:hover { background: rgba(255, 255, 255, 0.5); }
+.ck-em-dia { padding: 18px 22px; font-size: 13.5px; color: var(--text-3); border-bottom: 1px solid var(--border); }
+.ck-em-dia:last-child { border-bottom: none; }
+
 .ck-nova {
   width: 100%;
   grid-template-columns: 34px minmax(0, 1fr);

@@ -23,10 +23,14 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
   const contagem = Object.fromEntries(Object.entries(FILTROS).map(([f, info]) => [f, tarefas.filter(info.teste).length]))
   const total = tarefas.length
   const percentual = total ? Math.round((contagem.CONCLUIDAS / total) * 100) : 0
-  const lista = filtro ? tarefas.filter(FILTROS[filtro].teste) : tarefas
+  // Abertas no card principal, concluídas num card próprio logo abaixo.
+  const abertas = tarefas.filter(filtro === 'ATRASADAS' ? atrasada : (t) => !concluida(t))
+  const feitas = tarefas.filter(concluida)
+  const mostraAbertas = filtro !== 'CONCLUIDAS'
+  const mostraFeitas = feitas.length > 0 && (!filtro || filtro === 'CONCLUIDAS')
   // Uma tarefa nova entra como pendente, então só faz sentido oferecer a
   // linha de adicionar onde ela vai aparecer.
-  const mostraLinhaNova = !filtro || filtro === 'PENDENTES'
+  const mostraLinhaNova = filtro !== 'ATRASADAS'
 
   async function alternar(tarefa) {
     const { error } = await supabase
@@ -42,6 +46,31 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
     if (!error) recarregar()
     setConfirmandoExclusao(null)
   }
+
+  const linha = (t, i) => (
+    <li key={t.id} className={`ck-linha ${concluida(t) ? 'feita' : ''}`} style={{ '--i': i }}>
+      <label className="ck-marca">
+        <input type="checkbox" checked={concluida(t)} onChange={() => alternar(t)} aria-label={`Marcar "${t.titulo}" como ${concluida(t) ? 'pendente' : 'concluída'}`} />
+        <span className="ck-caixa"><Icone nome="check" tamanho={14} traco={2.2} /></span>
+      </label>
+      <div className="conv-nome">
+        <strong>{t.titulo}</strong>
+        {t.prazo ? (
+          <span className={atrasada(t) ? 'ck-atrasada' : ''}>
+            <span className="capitalizar">{dataMedia(t.prazo)}</span>
+            {!concluida(t) && ` · ${rotuloContagem(t.prazo)}`}
+          </span>
+        ) : (
+          <span>Sem prazo</span>
+        )}
+      </div>
+      <div className="conv-acoes">
+        <button className="btn-icone perigo" onClick={() => setConfirmandoExclusao(t.id)} title="Remover" aria-label={`Remover ${t.titulo}`}>
+          <Icone nome="lixeira" tamanho={16} />
+        </button>
+      </div>
+    </li>
+  )
 
   return (
     <div className="conv">
@@ -79,62 +108,69 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
         </button>
       </aside>
 
-      <section className="painel conv-principal">
-        <div className="painel-cab">
-          <h3 className="titulo">{filtro ? FILTROS[filtro].label : 'Checklist'}</h3>
-          {filtro ? (
-            <button className="link" onClick={() => setFiltro(null)}>Mostrar todas</button>
-          ) : (
-            <span className="muted">{contagem.PENDENTES} {contagem.PENDENTES === 1 ? 'pendente' : 'pendentes'}</span>
-          )}
-        </div>
+      <div className="ck-colunas">
+        {mostraAbertas && (
+          <section className="painel conv-principal">
+            <div className="painel-cab">
+              <h3 className="titulo">{filtro === 'ATRASADAS' ? 'Atrasadas' : 'Checklist'}</h3>
+              {filtro ? (
+                <button className="link" onClick={() => setFiltro(null)}>Mostrar todas</button>
+              ) : (
+                <span className="muted">{contagem.PENDENTES} {contagem.PENDENTES === 1 ? 'pendente' : 'pendentes'}</span>
+              )}
+            </div>
 
-        {carregando ? (
-          <p className="muted painel-vazio">Carregando…</p>
-        ) : total === 0 ? (
-          <button className="painel-vazio ck-vazio" onClick={() => setCriando(true)}>
-            <span className="ck-vazio-icone"><Icone nome="mais" tamanho={22} /></span>
-            <strong>Adicionar nova tarefa</strong>
-            <span>Monte o checklist do que precisa estar pronto até o dia.</span>
-          </button>
-        ) : (
-          <ul className="conv-lista">
-            {lista.length === 0 && <li className="painel-vazio">Nenhuma tarefa nesse filtro.</li>}
-            {lista.map((t, i) => (
-              <li key={t.id} className={`ck-linha ${concluida(t) ? 'feita' : ''}`} style={{ '--i': i }}>
-                <label className="ck-marca">
-                  <input type="checkbox" checked={concluida(t)} onChange={() => alternar(t)} aria-label={`Marcar "${t.titulo}" como ${concluida(t) ? 'pendente' : 'concluída'}`} />
-                  <span className="ck-caixa"><Icone nome="check" tamanho={14} traco={2.2} /></span>
-                </label>
-                <div className="conv-nome">
-                  <strong>{t.titulo}</strong>
-                  {t.prazo ? (
-                    <span className={atrasada(t) ? 'ck-atrasada' : ''}>
-                      <span className="capitalizar">{dataMedia(t.prazo)}</span>
-                      {!concluida(t) && ` · ${rotuloContagem(t.prazo)}`}
-                    </span>
-                  ) : (
-                    <span>Sem prazo</span>
-                  )}
-                </div>
-                <div className="conv-acoes">
-                  <button className="btn-icone perigo" onClick={() => setConfirmandoExclusao(t.id)} title="Remover" aria-label={`Remover ${t.titulo}`}>
-                    <Icone nome="lixeira" tamanho={16} />
-                  </button>
-                </div>
-              </li>
-            ))}
-            {mostraLinhaNova && (
-              <li>
-                <button className="ck-linha ck-nova" onClick={() => setCriando(true)}>
-                  <span className="ck-caixa"><Icone nome="mais" tamanho={14} traco={2} /></span>
-                  Adicionar tarefa
-                </button>
-              </li>
+            {carregando ? (
+              <p className="muted painel-vazio">Carregando…</p>
+            ) : total === 0 ? (
+              <button className="painel-vazio ck-vazio" onClick={() => setCriando(true)}>
+                <span className="ck-vazio-icone"><Icone nome="mais" tamanho={22} /></span>
+                <strong>Adicionar nova tarefa</strong>
+                <span>Monte o checklist do que precisa estar pronto até o dia.</span>
+              </button>
+            ) : (
+              <ul className="conv-lista">
+                {abertas.length === 0 && (
+                  <li className="ck-em-dia">{filtro === 'ATRASADAS' ? 'Nenhuma tarefa atrasada.' : 'Tudo concluído por aqui.'}</li>
+                )}
+                {abertas.map(linha)}
+                {mostraLinhaNova && (
+                  <li>
+                    <button className="ck-linha ck-nova" onClick={() => setCriando(true)}>
+                      <span className="ck-caixa"><Icone nome="mais" tamanho={14} traco={2} /></span>
+                      Adicionar tarefa
+                    </button>
+                  </li>
+                )}
+              </ul>
             )}
-          </ul>
+          </section>
         )}
-      </section>
+
+        {mostraFeitas && (
+          <section className="painel conv-principal ck-feitas">
+            <div className="painel-cab">
+              <h3 className="titulo">Concluídas</h3>
+              {filtro ? (
+                <button className="link" onClick={() => setFiltro(null)}>Mostrar todas</button>
+              ) : (
+                <span className="muted">{feitas.length} {feitas.length === 1 ? 'tarefa' : 'tarefas'}</span>
+              )}
+            </div>
+            <ul className="conv-lista">{feitas.map(linha)}</ul>
+          </section>
+        )}
+
+        {filtro === 'CONCLUIDAS' && feitas.length === 0 && (
+          <section className="painel conv-principal">
+            <div className="painel-cab">
+              <h3 className="titulo">Concluídas</h3>
+              <button className="link" onClick={() => setFiltro(null)}>Mostrar todas</button>
+            </div>
+            <p className="painel-vazio">Nenhuma tarefa concluída ainda.</p>
+          </section>
+        )}
+      </div>
 
       <ModalConfirmacao
         aberto={!!confirmandoExclusao}
