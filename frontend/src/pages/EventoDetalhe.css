@@ -178,7 +178,7 @@
 
 .ck-linha {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto 40px;
+  grid-template-columns: 34px minmax(0, 1fr) auto 72px;
   align-items: center;
   gap: 14px;
   padding: 12px 22px;
@@ -236,6 +236,9 @@
 .ck-vazio:hover { background: #fbfcfd; }
 .ck-vazio:hover strong { color: var(--em); }
 .ck-vazio:hover .ck-vazio-icone { border-color: var(--em); border-style: solid; color: var(--em); background: var(--em-dim); }
+
+.ck-abrir { padding: 0; border: none; background: none; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.ck-abrir:hover strong { color: var(--em); }
 
 .ck-atrasada { color: var(--red) !important; }
 

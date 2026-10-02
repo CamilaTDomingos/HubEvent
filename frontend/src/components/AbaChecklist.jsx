@@ -19,6 +19,7 @@ const FILTROS = {
 
 function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
   const [criando, setCriando] = useState(false)
+  const [editando, setEditando] = useState(null)
   const [filtro, setFiltro] = useState(null)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(null)
   const { categorias } = useCategorias()
@@ -57,7 +58,7 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
         <input type="checkbox" checked={concluida(t)} onChange={() => alternar(t)} aria-label={`Marcar "${t.titulo}" como ${concluida(t) ? 'pendente' : 'concluída'}`} />
         <span className="ck-caixa"><Icone nome="check" tamanho={14} traco={2.2} /></span>
       </label>
-      <div className="conv-nome">
+      <button className="conv-nome ck-abrir" onClick={() => setEditando(t)} title="Editar tarefa">
         <strong>{t.titulo}</strong>
         {t.prazo ? (
           <span className={atrasada(t) ? 'ck-atrasada' : ''}>
@@ -67,9 +68,12 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
         ) : (
           <span>Sem prazo</span>
         )}
-      </div>
+      </button>
       <SeloCategoria categoria={categoriaPorId[t.categoria_id]} />
       <div className="conv-acoes">
+        <button className="btn-icone" onClick={() => setEditando(t)} title="Editar" aria-label={`Editar ${t.titulo}`}>
+          <Icone nome="editar" tamanho={16} />
+        </button>
         <button className="btn-icone perigo" onClick={() => setConfirmandoExclusao(t.id)} title="Remover" aria-label={`Remover ${t.titulo}`}>
           <Icone nome="lixeira" tamanho={16} />
         </button>
@@ -186,7 +190,15 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
         aoCancelar={() => setConfirmandoExclusao(null)}
       />
 
-      <ModalTarefa aberto={criando} eventoId={eventoId} categorias={categorias} aoFechar={() => setCriando(false)} aoSalvar={recarregar} />
+      {(criando || editando) && (
+        <ModalTarefa
+          tarefa={editando}
+          eventoId={eventoId}
+          categorias={categorias}
+          aoFechar={() => { setCriando(false); setEditando(null) }}
+          aoSalvar={recarregar}
+        />
+      )}
     </div>
   )
 }

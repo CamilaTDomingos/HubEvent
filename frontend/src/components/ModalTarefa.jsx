@@ -4,22 +4,16 @@ import { supabase } from '../lib/supabaseClient'
 import Icone from './Icone'
 import './Categorias.css'
 
-function ModalTarefa({ aberto, eventoId, categorias, aoFechar, aoSalvar }) {
-  const [titulo, setTitulo] = useState('')
-  const [prazo, setPrazo] = useState('')
-  const [categoriaId, setCategoriaId] = useState(null)
+// Cria uma tarefa nova ou, quando recebe `tarefa`, edita a existente.
+// O componente só é montado enquanto o modal está aberto, então o estado
+// inicial sempre parte da tarefa certa.
+function ModalTarefa({ tarefa, eventoId, categorias, aoFechar, aoSalvar }) {
+  const editando = !!tarefa
+  const [titulo, setTitulo] = useState(tarefa?.titulo ?? '')
+  const [prazo, setPrazo] = useState(tarefa?.prazo ?? '')
+  const [categoriaId, setCategoriaId] = useState(tarefa?.categoria_id ?? null)
   const [erro, setErro] = useState(null)
   const [salvando, setSalvando] = useState(false)
-
-  if (!aberto) return null
-
-  function fechar() {
-    setTitulo('')
-    setPrazo('')
-    setCategoriaId(null)
-    setErro(null)
-    aoFechar()
-  }
 
   async function handleSalvar(e) {
     e.preventDefault()
@@ -28,15 +22,18 @@ function ModalTarefa({ aberto, eventoId, categorias, aoFechar, aoSalvar }) {
       return
     }
 
-    setSalvando(true)
-    const { error } = await supabase.from('tarefa').insert({
-      evento_id: eventoId,
+    const dados = {
       titulo: titulo.trim(),
       prazo: prazo || null,
-      // Só envia a coluna quando há categoria: assim criar tarefa sem
-      // categoria continua funcionando mesmo antes da migração no banco.
-      ...(categoriaId && { categoria_id: categoriaId }),
-    })
+      // Só envia a coluna quando há categoria (ou quando a tarefa já veio
+      // com ela): assim salvar continua funcionando antes da migração.
+      ...((categoriaId || (editando && 'categoria_id' in tarefa)) && { categoria_id: categoriaId }),
+    }
+
+    setSalvando(true)
+    const { error } = editando
+      ? await supabase.from('tarefa').update(dados).eq('id', tarefa.id)
+      : await supabase.from('tarefa').insert({ ...dados, evento_id: eventoId })
     setSalvando(false)
 
     if (error) {
@@ -45,14 +42,14 @@ function ModalTarefa({ aberto, eventoId, categorias, aoFechar, aoSalvar }) {
     }
 
     aoSalvar()
-    fechar()
+    aoFechar()
   }
 
   return (
-    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && fechar()}>
+    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && aoFechar()}>
       <form className="popup popup-sm" onSubmit={handleSalvar} role="dialog" aria-modal="true" aria-labelledby="nova-tarefa-titulo">
-        <h2 id="nova-tarefa-titulo" className="popup-title titulo">Nova <em>tarefa</em></h2>
-        <p className="popup-sub">O que precisa estar pronto até o grande dia?</p>
+        <h2 id="nova-tarefa-titulo" className="popup-title titulo">{editando ? <>Editar <em>tarefa</em></> : <>Nova <em>tarefa</em></>}</h2>
+        <p className="popup-sub">{editando ? 'Ajuste o que mudou nesta tarefa.' : 'O que precisa estar pronto até o grande dia?'}</p>
 
         <div className="field">
           <label htmlFor="tarefa-titulo">Tarefa</label>
@@ -95,8 +92,8 @@ function ModalTarefa({ aberto, eventoId, categorias, aoFechar, aoSalvar }) {
         {erro && <p className="erro-msg">{erro}</p>}
 
         <div className="popup-actions">
-          <button type="button" className="btn btn-ghost" onClick={fechar}>Cancelar</button>
-          <button type="submit" className="btn btn-primary" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar tarefa'}</button>
+          <button type="button" className="btn btn-ghost" onClick={aoFechar}>Cancelar</button>
+          <button type="submit" className="btn btn-primary" disabled={salvando}>{salvando ? 'Salvando…' : editando ? 'Salvar alterações' : 'Salvar tarefa'}</button>
         </div>
       </form>
     </div>
