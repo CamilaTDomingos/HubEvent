@@ -1,9 +1,13 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import Icone from './Icone'
+import './Categorias.css'
 
-function ModalTarefa({ aberto, eventoId, aoFechar, aoSalvar }) {
+function ModalTarefa({ aberto, eventoId, categorias, aoFechar, aoSalvar }) {
   const [titulo, setTitulo] = useState('')
   const [prazo, setPrazo] = useState('')
+  const [categoriaId, setCategoriaId] = useState(null)
   const [erro, setErro] = useState(null)
   const [salvando, setSalvando] = useState(false)
 
@@ -12,6 +16,7 @@ function ModalTarefa({ aberto, eventoId, aoFechar, aoSalvar }) {
   function fechar() {
     setTitulo('')
     setPrazo('')
+    setCategoriaId(null)
     setErro(null)
     aoFechar()
   }
@@ -28,6 +33,9 @@ function ModalTarefa({ aberto, eventoId, aoFechar, aoSalvar }) {
       evento_id: eventoId,
       titulo: titulo.trim(),
       prazo: prazo || null,
+      // Só envia a coluna quando há categoria: assim criar tarefa sem
+      // categoria continua funcionando mesmo antes da migração no banco.
+      ...(categoriaId && { categoria_id: categoriaId }),
     })
     setSalvando(false)
 
@@ -54,6 +62,35 @@ function ModalTarefa({ aberto, eventoId, aoFechar, aoSalvar }) {
           <label htmlFor="tarefa-prazo">Prazo <span className="muted">(opcional)</span></label>
           <input id="tarefa-prazo" type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} />
         </div>
+
+        <fieldset className="field cat-campo">
+          <legend className="label">Categoria <span className="muted">(opcional)</span></legend>
+          {categorias.length === 0 ? (
+            <p className="muted modal-cat-vazio">
+              Você ainda não tem categorias. <Link to="/perfil" className="link">Criar no perfil <Icone nome="seta" tamanho={13} /></Link>
+            </p>
+          ) : (
+            <div className="modal-cat-lista" role="radiogroup">
+              <button type="button" role="radio" aria-checked={!categoriaId} className="modal-cat" onClick={() => setCategoriaId(null)}>
+                Sem categoria
+              </button>
+              {categorias.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={categoriaId === c.id}
+                  className="modal-cat"
+                  style={{ '--cat': c.cor }}
+                  onClick={() => setCategoriaId(c.id)}
+                >
+                  <span className="modal-cat-ponto" />
+                  {c.nome}
+                </button>
+              ))}
+            </div>
+          )}
+        </fieldset>
 
         {erro && <p className="erro-msg">{erro}</p>}
 

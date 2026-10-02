@@ -178,7 +178,7 @@
 
 .ck-linha {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 40px;
+  grid-template-columns: 34px minmax(0, 1fr) auto 40px;
   align-items: center;
   gap: 14px;
   padding: 12px 22px;
@@ -188,6 +188,7 @@
   transition: background 0.2s;
 }
 .ck-linha:last-child { border-bottom: none; }
+.ck-linha .conv-acoes { grid-column: 4; }
 .ck-linha:hover { background: #fbfcfd; }
 .ck-linha:hover .conv-acoes, .ck-linha:focus-within .conv-acoes { opacity: 1; }
 .ck-linha.feita .conv-nome strong { color: var(--text-3); text-decoration: line-through; font-weight: 500; }
@@ -427,7 +428,8 @@
   .fin-numeros { grid-template-columns: 1fr; gap: 16px; }
   .fin-num { padding: 0; border-left: none; }
   .conv-linha { grid-template-columns: 34px minmax(0, 1fr) auto; padding: 12px 16px; }
-  .ck-linha { padding: 12px 16px; }
+  .ck-linha { padding: 12px 16px; gap: 10px; }
+  .ck-linha .selo-cat { max-width: 110px; }
   .conv-linha .conv-acoes { grid-column: 2 / -1; justify-content: flex-start; opacity: 1; margin-left: -8px; }
   .desp-linha { grid-template-columns: 8px minmax(0, 1fr) auto; padding: 13px 16px; }
   .desp-forma { grid-column: 2; grid-row: 2; }

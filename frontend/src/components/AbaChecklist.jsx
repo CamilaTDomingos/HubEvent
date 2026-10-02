@@ -4,6 +4,8 @@ import ModalConfirmacao from './ModalConfirmacao'
 import ModalTarefa from './ModalTarefa'
 import NumeroAnimado from './NumeroAnimado'
 import Icone from './Icone'
+import SeloCategoria from './SeloCategoria'
+import { useCategorias } from '../hooks/useCategorias'
 import { diasAte, dataMedia, rotuloContagem } from '../utils/datas'
 
 const concluida = (t) => t.status === 'CONCLUIDA'
@@ -19,6 +21,8 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
   const [criando, setCriando] = useState(false)
   const [filtro, setFiltro] = useState(null)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(null)
+  const { categorias } = useCategorias()
+  const categoriaPorId = Object.fromEntries(categorias.map((c) => [c.id, c]))
 
   const contagem = Object.fromEntries(Object.entries(FILTROS).map(([f, info]) => [f, tarefas.filter(info.teste).length]))
   const total = tarefas.length
@@ -64,6 +68,7 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
           <span>Sem prazo</span>
         )}
       </div>
+      <SeloCategoria categoria={categoriaPorId[t.categoria_id]} />
       <div className="conv-acoes">
         <button className="btn-icone perigo" onClick={() => setConfirmandoExclusao(t.id)} title="Remover" aria-label={`Remover ${t.titulo}`}>
           <Icone nome="lixeira" tamanho={16} />
@@ -181,7 +186,7 @@ function AbaChecklist({ eventoId, tarefas, carregando, recarregar }) {
         aoCancelar={() => setConfirmandoExclusao(null)}
       />
 
-      <ModalTarefa aberto={criando} eventoId={eventoId} aoFechar={() => setCriando(false)} aoSalvar={recarregar} />
+      <ModalTarefa aberto={criando} eventoId={eventoId} categorias={categorias} aoFechar={() => setCriando(false)} aoSalvar={recarregar} />
     </div>
   )
 }

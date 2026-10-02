@@ -114,6 +114,19 @@ CREATE TABLE assistente_ia (
 );
 
 -- ============================================================
+-- CATEGORIA DE TAREFA (criada por cada usuário, com cor própria)
+-- ============================================================
+CREATE TABLE categoria_tarefa (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL DEFAULT auth.uid(),
+    nome VARCHAR(60) NOT NULL,
+    cor VARCHAR(7) NOT NULL,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_categoria_tarefa_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT chk_categoria_tarefa_cor CHECK (cor ~ '^#[0-9a-fA-F]{6}$')
+);
+
+-- ============================================================
 -- TAREFA
 -- ============================================================
 CREATE TABLE tarefa (
@@ -123,8 +136,10 @@ CREATE TABLE tarefa (
     descricao TEXT,
     prazo DATE,
     status status_tarefa NOT NULL DEFAULT 'PENDENTE',
+    categoria_id UUID,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT fk_tarefa_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE
+    CONSTRAINT fk_tarefa_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tarefa_categoria FOREIGN KEY (categoria_id) REFERENCES categoria_tarefa(id) ON DELETE SET NULL
 );
 
 -- ============================================================
@@ -179,6 +194,8 @@ CREATE INDEX idx_evento_organizador ON evento(organizador_id);
 CREATE INDEX idx_evento_data_inicio ON evento(data_inicio);
 CREATE INDEX idx_convidado_evento ON convidado(evento_id);
 CREATE INDEX idx_tarefa_evento ON tarefa(evento_id);
+CREATE INDEX idx_tarefa_categoria ON tarefa(categoria_id);
+CREATE INDEX idx_categoria_tarefa_usuario ON categoria_tarefa(usuario_id);
 CREATE INDEX idx_despesa_evento ON despesa(evento_id);
 CREATE INDEX idx_parcela_despesa ON parcela(despesa_id);
 CREATE INDEX idx_lista_presentes_evento ON lista_presentes(evento_id);
@@ -230,6 +247,7 @@ ALTER TABLE landing_page ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lista_presentes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assistente_ia ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tarefa ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categoria_tarefa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE despesa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE parcela ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mensagem_chat ENABLE ROW LEVEL SECURITY;
@@ -287,6 +305,11 @@ CREATE POLICY "tarefa_organizador" ON tarefa
     FOR ALL USING (
         EXISTS (SELECT 1 FROM evento WHERE evento.id = tarefa.evento_id AND evento.organizador_id = auth.uid())
     );
+
+-- CATEGORIA_TAREFA: só o dono
+CREATE POLICY "categoria_tarefa_propria" ON categoria_tarefa
+    FOR ALL USING (auth.uid() = usuario_id)
+    WITH CHECK (auth.uid() = usuario_id);
 
 -- DESPESA: só o organizador do evento
 CREATE POLICY "despesa_organizador" ON despesa
