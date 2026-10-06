@@ -25,6 +25,8 @@ backend, que usa a `service_role` key e expõe apenas os dados necessários.
 
 No painel do Supabase, abra o **SQL Editor** e execute o conteúdo de `database/schema.sql`.
 
+Para a recuperação de senha funcionar, em **Authentication → URL Configuration** adicione em *Redirect URLs* o endereço da página de redefinição de cada ambiente, por exemplo `http://localhost:5173/redefinir-senha` (e o domínio de produção, quando houver).
+
 ### 2. Backend
 
 ```bash
@@ -83,3 +85,4 @@ Os arquivos `.env` estão no `.gitignore` e nunca devem ir para o repositório.
 | `'vite' não é reconhecido como um comando` | Dependências do frontend não instaladas | `npm install` dentro de `frontend/` |
 | `supabaseUrl is required` | `.env` ausente ou com nome de variável errado | Criar o `.env` a partir do `.env.example` |
 | Tela de RSVP chama `undefined/api/rsvp/...` | `VITE_API_URL` não definido | Definir no `frontend/.env` e reiniciar o Vite |
+| Link de recuperação de senha abre o login ou a home | URL não liberada no Supabase | Adicionar `/redefinir-senha` em *Redirect URLs* (Authentication → URL Configuration) |

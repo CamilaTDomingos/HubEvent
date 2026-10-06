@@ -70,3 +70,8 @@
   .auth-manchete { padding: 32px 0 8px; }
   .auth-manchete p, .auth-amostra { display: none; }
 }
+
+/* Rótulo da senha com o link "Esqueci minha senha" ao lado */
+.field-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.auth-esqueci { font-size: 12.5px; font-weight: 500; color: var(--em); text-decoration: none; }
+.auth-esqueci:hover { text-decoration: underline; }

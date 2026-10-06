@@ -64,7 +64,10 @@ function Login() {
               />
             </div>
             <div className="field">
-              <label htmlFor="login-senha">Senha</label>
+              <div className="field-topo">
+                <label htmlFor="login-senha" className="label">Senha</label>
+                <Link to="/recuperar-senha" className="auth-esqueci">Esqueci minha senha</Link>
+              </div>
               <input
                 id="login-senha"
                 type="password"

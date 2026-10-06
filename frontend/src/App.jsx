@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext'
 import RotaProtegida from './components/RotaProtegida'
 import Login from './pages/Login'
 import Cadastro from './pages/Cadastro'
+import RecuperarSenha from './pages/RecuperarSenha'
+import RedefinirSenha from './pages/RedefinirSenha'
 import Dashboard from './pages/Dashboard'
 import Eventos from './pages/Eventos'
 import EventoDetalhe from './pages/EventoDetalhe'
@@ -19,6 +21,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
           <Route path="/rsvp/:convidadoId" element={<Rsvp />} />
           <Route path="/site/:slug" element={<SitePublico />} />
           <Route
