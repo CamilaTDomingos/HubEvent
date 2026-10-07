@@ -219,6 +219,7 @@ CREATE INDEX idx_categoria_tarefa_usuario ON categoria_tarefa(usuario_id);
 CREATE INDEX idx_despesa_evento ON despesa(evento_id);
 CREATE INDEX idx_parcela_despesa ON parcela(despesa_id);
 CREATE INDEX idx_lista_presentes_evento ON lista_presentes(evento_id);
+CREATE INDEX idx_lista_presentes_responsavel ON lista_presentes(responsavel_por_id);
 CREATE INDEX idx_reserva_presente_presente ON reserva_presente(presente_id);
 CREATE INDEX idx_mensagem_assistente ON mensagem_chat(assistente_id);
 CREATE INDEX idx_mensagem_usuario ON mensagem_chat(usuario_id);
@@ -232,7 +233,7 @@ BEGIN
     NEW.atualizado_em = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 CREATE TRIGGER trigger_evento_atualizado_em
 BEFORE UPDATE ON evento FOR EACH ROW EXECUTE FUNCTION atualizar_data_modificacao();
@@ -251,7 +252,10 @@ BEGIN
     VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'nome', ''), NEW.email);
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Só o trigger chama a função; pela API (/rest/v1/rpc) ela fica fechada.
+REVOKE EXECUTE ON FUNCTION criar_usuario_apos_signup() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -275,39 +279,29 @@ ALTER TABLE mensagem_chat ENABLE ROW LEVEL SECURITY;
 
 -- USUARIO: só vê/edita o próprio perfil
 CREATE POLICY "usuario_proprio" ON usuario
-    FOR ALL USING (auth.uid() = id);
+    FOR ALL USING ((select auth.uid()) = id);
 
 -- EVENTO: só o organizador acessa
 CREATE POLICY "evento_do_organizador" ON evento
-    FOR ALL USING (auth.uid() = organizador_id);
+    FOR ALL USING ((select auth.uid()) = organizador_id);
 
--- CONVIDADO: organizador gerencia; QUALQUER PESSOA (sem login) pode
--- ler e confirmar presença via link público -- necessário pro RSVP funcionar
+-- CONVIDADO: só o organizador. O RSVP público passa pelo backend (service_role).
 CREATE POLICY "convidado_organizador_gerencia" ON convidado
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM evento WHERE evento.id = convidado.evento_id AND evento.organizador_id = auth.uid())
+        EXISTS (SELECT 1 FROM evento WHERE evento.id = convidado.evento_id AND evento.organizador_id = (select auth.uid()))
     );
 
-CREATE POLICY "convidado_publico_confirma_presenca" ON convidado
-    FOR SELECT USING (true);
-
-CREATE POLICY "convidado_publico_atualiza_rsvp" ON convidado
-    FOR UPDATE USING (true);
-
--- LANDING_PAGE: organizador gerencia; qualquer um pode ler se estiver ativa (página pública)
+-- LANDING_PAGE: só o organizador. O site público lê pelo backend (service_role).
 CREATE POLICY "landing_page_organizador" ON landing_page
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM evento WHERE evento.id = landing_page.evento_id AND evento.organizador_id = auth.uid())
+        EXISTS (SELECT 1 FROM evento WHERE evento.id = landing_page.evento_id AND evento.organizador_id = (select auth.uid()))
     );
-
-CREATE POLICY "landing_page_publica_leitura" ON landing_page
-    FOR SELECT USING (ativa = true);
 
 -- LISTA_PRESENTES: organizador gerencia; o site público lê e reserva
 -- pelo backend (service_role), nunca direto com a chave anon.
 CREATE POLICY "lista_presentes_organizador" ON lista_presentes
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM evento WHERE evento.id = lista_presentes.evento_id AND evento.organizador_id = auth.uid())
+        EXISTS (SELECT 1 FROM evento WHERE evento.id = lista_presentes.evento_id AND evento.organizador_id = (select auth.uid()))
     );
 
 ALTER TABLE reserva_presente ENABLE ROW LEVEL SECURITY;
@@ -316,31 +310,31 @@ CREATE POLICY "reserva_presente_organizador" ON reserva_presente
     FOR ALL USING (
         EXISTS (
             SELECT 1 FROM lista_presentes p JOIN evento e ON e.id = p.evento_id
-            WHERE p.id = reserva_presente.presente_id AND e.organizador_id = auth.uid()
+            WHERE p.id = reserva_presente.presente_id AND e.organizador_id = (select auth.uid())
         )
     );
 
 -- ASSISTENTE_IA: só o organizador do evento
 CREATE POLICY "assistente_ia_organizador" ON assistente_ia
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM evento WHERE evento.id = assistente_ia.evento_id AND evento.organizador_id = auth.uid())
+        EXISTS (SELECT 1 FROM evento WHERE evento.id = assistente_ia.evento_id AND evento.organizador_id = (select auth.uid()))
     );
 
 -- TAREFA: só o organizador do evento
 CREATE POLICY "tarefa_organizador" ON tarefa
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM evento WHERE evento.id = tarefa.evento_id AND evento.organizador_id = auth.uid())
+        EXISTS (SELECT 1 FROM evento WHERE evento.id = tarefa.evento_id AND evento.organizador_id = (select auth.uid()))
     );
 
 -- CATEGORIA_TAREFA: só o dono
 CREATE POLICY "categoria_tarefa_propria" ON categoria_tarefa
-    FOR ALL USING (auth.uid() = usuario_id)
-    WITH CHECK (auth.uid() = usuario_id);
+    FOR ALL USING ((select auth.uid()) = usuario_id)
+    WITH CHECK ((select auth.uid()) = usuario_id);
 
 -- DESPESA: só o organizador do evento
 CREATE POLICY "despesa_organizador" ON despesa
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM evento WHERE evento.id = despesa.evento_id AND evento.organizador_id = auth.uid())
+        EXISTS (SELECT 1 FROM evento WHERE evento.id = despesa.evento_id AND evento.organizador_id = (select auth.uid()))
     );
 
 -- PARCELA: só o organizador (via despesa -> evento)
@@ -349,7 +343,7 @@ CREATE POLICY "parcela_organizador" ON parcela
         EXISTS (
             SELECT 1 FROM despesa
             JOIN evento ON evento.id = despesa.evento_id
-            WHERE despesa.id = parcela.despesa_id AND evento.organizador_id = auth.uid()
+            WHERE despesa.id = parcela.despesa_id AND evento.organizador_id = (select auth.uid())
         )
     );
 
@@ -359,7 +353,7 @@ CREATE POLICY "mensagem_chat_organizador" ON mensagem_chat
         EXISTS (
             SELECT 1 FROM assistente_ia
             JOIN evento ON evento.id = assistente_ia.evento_id
-            WHERE assistente_ia.id = mensagem_chat.assistente_id AND evento.organizador_id = auth.uid()
+            WHERE assistente_ia.id = mensagem_chat.assistente_id AND evento.organizador_id = (select auth.uid())
         )
     );
 
