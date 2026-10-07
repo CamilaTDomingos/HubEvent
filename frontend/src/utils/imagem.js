@@ -1,5 +1,5 @@
-// Reduz a foto antes de guardar: fotos de celular passam de 3 MB e o
-// armazenamento do navegador comporta poucos megabytes no total.
+// Reduz a foto antes de enviar ao Storage: fotos de celular passam de 3 MB
+// e o site carrega todas as fotos da lista de uma vez.
 export function comprimirImagem(arquivo, lado = 900, qualidade = 0.82) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(arquivo)

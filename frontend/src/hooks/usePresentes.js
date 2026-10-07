@@ -1,26 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ler, gravar } from '../lib/armazemLocal'
+import { supabase } from '../lib/supabaseClient'
+import { importarPresentes } from '../lib/importarDadosLocais'
 
-// Lista de presentes com dados mockados. A tabela `lista_presentes` ainda não
-// tem foto, quantidade, link e reservas; até ter, os itens ficam no navegador
-// (localStorage), por evento. Painel do casal e site do evento leem o mesmo
-// armazenamento, então uma reserva feita no site aparece no painel.
-// A troca pelo Supabase fica restrita a este arquivo.
+// Lista de presentes. O organizador lê e grava direto no Supabase (com RLS);
+// o site público passa pelo backend, que esconde quem reservou e faz a
+// reserva de forma atômica.
 
-const ATRASO_MS = 450
-
-const busca = (termo) => `https://www.amazon.com.br/s?k=${encodeURIComponent(termo)}`
-
-const SEMENTE = [
-  { nome: 'Jogo de taças de cristal', valor: 249.9, categoria: 'Mesa posta', quantidade: 1, reservas: [], link: busca('jogo de taças de cristal'), descricao: 'Seis taças para vinho tinto, em cristal lapidado.' },
-  { nome: 'Jogo de cama queen', valor: 389.9, categoria: 'Cama e banho', quantidade: 1, reservas: [{ nome: 'Tia Marta', forma: 'pix' }], descricao: 'Percal 400 fios, em tons claros.' },
-  { nome: 'Cafeteira', valor: 699, categoria: 'Eletroportáteis', quantidade: 1, reservas: [], link: busca('cafeteira espresso'), descricao: 'Cafeteira espresso com vaporizador de leite.' },
-  { nome: 'Air fryer', valor: 549.9, categoria: 'Eletroportáteis', quantidade: 1, reservas: [{ nome: 'Carlos e Júlia', forma: 'loja' }], link: busca('air fryer 5 litros'), descricao: 'Capacidade de 5 litros, com cesto antiaderente.' },
-  { nome: 'Conjunto de panelas', valor: 799, categoria: 'Cozinha', quantidade: 1, reservas: [], descricao: 'Cinco peças em inox com fundo triplo.' },
-  { nome: 'Toalhas de banho', valor: 89.9, categoria: 'Cama e banho', quantidade: 4, reservas: [{ nome: 'Família Souza', forma: 'cartao' }, { nome: 'Renata', forma: 'pix' }, { nome: 'Paulo', forma: 'pix' }], descricao: 'Toalhas de algodão egípcio, 70 × 140 cm.' },
-  { nome: 'Pratos de sobremesa', valor: 159, categoria: 'Mesa posta', quantidade: 2, reservas: [{ nome: 'Renata', forma: 'loja' }], link: busca('pratos de sobremesa porcelana'), descricao: 'Jogo com seis pratos de porcelana branca.' },
-  { nome: 'Vaso de cerâmica', valor: 179.9, categoria: 'Casa e decoração', quantidade: 1, reservas: [], descricao: 'Peça artesanal em cerâmica esmaltada.' },
-]
+const BUCKET = 'presentes'
 
 export const FORMAS_PRESENTE = {
   loja: 'Comprou na loja',
@@ -28,19 +14,55 @@ export const FORMAS_PRESENTE = {
   cartao: 'Cartão',
 }
 
-const chaveItens = (eventoId) => `hubevent:presentes:${eventoId}`
-const chaveRecebimento = (eventoId) => `hubevent:recebimento:${eventoId}`
-
 export function esgotado(presente) {
   return presente.reservas.length >= presente.quantidade
 }
 
-function itensDoEvento(eventoId) {
-  const salvos = ler(chaveItens(eventoId), null)
-  if (salvos) return salvos
-  const iniciais = SEMENTE.map((p, i) => ({ id: `${eventoId}-${i}`, imagem: null, link: null, ...p }))
-  gravar(chaveItens(eventoId), iniciais)
-  return iniciais
+function doBanco(linha) {
+  return {
+    id: linha.id,
+    nome: linha.nome,
+    descricao: linha.descricao,
+    valor: linha.valor === null ? null : Number(linha.valor),
+    categoria: linha.categoria,
+    quantidade: linha.quantidade,
+    link: linha.link,
+    imagem: linha.imagem_url,
+    reservas: (linha.reserva_presente || [])
+      .map((r) => ({ id: r.id, nome: r.nome, forma: r.forma, em: r.criado_em }))
+      .sort((a, b) => a.em.localeCompare(b.em)),
+  }
+}
+
+// A foto chega do formulário como data URL (já comprimida); vai para o Storage
+// e no banco fica só o endereço público.
+async function enviarFoto(eventoId, imagem) {
+  if (!imagem || !imagem.startsWith('data:')) return imagem
+  const blob = await (await fetch(imagem)).blob()
+  const caminho = `${eventoId}/${crypto.randomUUID()}.jpg`
+  const { error } = await supabase.storage.from(BUCKET).upload(caminho, blob, { contentType: blob.type || 'image/jpeg' })
+  if (error) throw error
+  return supabase.storage.from(BUCKET).getPublicUrl(caminho).data.publicUrl
+}
+
+// Apaga a foto antiga quando ela é trocada ou o presente sai da lista.
+// Falhar aqui não impede a operação: no máximo sobra um arquivo no bucket.
+async function apagarFoto(url) {
+  const marcador = `/object/public/${BUCKET}/`
+  const i = url?.indexOf(marcador) ?? -1
+  if (i < 0) return
+  await supabase.storage.from(BUCKET).remove([url.slice(i + marcador.length)])
+}
+
+function paraBanco(dados) {
+  return {
+    nome: dados.nome,
+    descricao: dados.descricao,
+    valor: dados.valor,
+    categoria: dados.categoria,
+    quantidade: dados.quantidade,
+    link: dados.link,
+  }
 }
 
 export function usePresentes(eventoId) {
@@ -52,9 +74,26 @@ export function usePresentes(eventoId) {
   const buscarPresentes = useCallback(async () => {
     if (!eventoId) return
     setCarregando(true)
-    await new Promise((r) => setTimeout(r, ATRASO_MS))
-    setPresentes(itensDoEvento(eventoId))
-    setRecebimento(ler(chaveRecebimento(eventoId), null))
+    await importarPresentes(eventoId)
+
+    const [lista, evento] = await Promise.all([
+      supabase
+        .from('lista_presentes')
+        .select('*, reserva_presente(id, nome, forma, criado_em)')
+        .eq('evento_id', eventoId)
+        .order('criado_em'),
+      supabase.from('evento').select('pix_chave, pix_nome, pix_cidade').eq('id', eventoId).single(),
+    ])
+
+    if (lista.error) {
+      setErro('Não foi possível carregar a lista de presentes.')
+    } else {
+      setErro(null)
+      setPresentes(lista.data.map(doBanco))
+    }
+
+    const pix = evento.data
+    setRecebimento(pix?.pix_chave ? { chave: pix.pix_chave, nome: pix.pix_nome, cidade: pix.pix_cidade || '' } : null)
     setCarregando(false)
   }, [eventoId])
 
@@ -63,67 +102,129 @@ export function usePresentes(eventoId) {
     buscarPresentes()
   }, [buscarPresentes])
 
-  // Mantém painel e site sincronizados quando estão abertos em abas diferentes.
-  useEffect(() => {
-    function aoMudar(e) {
-      if (e.key === chaveItens(eventoId)) setPresentes(itensDoEvento(eventoId))
-      if (e.key === chaveRecebimento(eventoId)) setRecebimento(ler(chaveRecebimento(eventoId), null))
-    }
-    window.addEventListener('storage', aoMudar)
-    return () => window.removeEventListener('storage', aoMudar)
-  }, [eventoId])
-
-  const salvar = useCallback(
-    (itens) => {
-      if (!gravar(chaveItens(eventoId), itens)) {
-        setErro('Não foi possível salvar. O armazenamento do navegador pode estar cheio — tente uma foto menor.')
+  // Devolve true/false para o formulário saber se pode fechar.
+  const executar = useCallback(
+    async (operacao, mensagem) => {
+      try {
+        await operacao()
+        setErro(null)
+        await buscarPresentes()
+        return true
+      } catch {
+        setErro(mensagem)
         return false
       }
-      setErro(null)
-      setPresentes(itens)
+    },
+    [buscarPresentes]
+  )
+
+  const cadastrar = useCallback(
+    (dados) =>
+      executar(async () => {
+        const imagem_url = await enviarFoto(eventoId, dados.imagem)
+        const { error } = await supabase.from('lista_presentes').insert({ ...paraBanco(dados), evento_id: eventoId, imagem_url })
+        if (error) throw error
+      }, 'Não foi possível cadastrar o presente.'),
+    [eventoId, executar]
+  )
+
+  // Reservas não passam pelo formulário, então nunca são alteradas aqui.
+  const editar = useCallback(
+    (presenteId, dados) =>
+      executar(async () => {
+        const anterior = presentes.find((p) => p.id === presenteId)
+        const imagem_url = await enviarFoto(eventoId, dados.imagem)
+        const { error } = await supabase.from('lista_presentes').update({ ...paraBanco(dados), imagem_url }).eq('id', presenteId)
+        if (error) throw error
+        if (anterior?.imagem && anterior.imagem !== imagem_url) await apagarFoto(anterior.imagem).catch(() => {})
+      }, 'Não foi possível salvar as alterações.'),
+    [eventoId, presentes, executar]
+  )
+
+  const remover = useCallback(
+    (presenteId) =>
+      executar(async () => {
+        const anterior = presentes.find((p) => p.id === presenteId)
+        const { error } = await supabase.from('lista_presentes').delete().eq('id', presenteId)
+        if (error) throw error
+        if (anterior?.imagem) await apagarFoto(anterior.imagem).catch(() => {})
+      }, 'Não foi possível remover o presente.'),
+    [presentes, executar]
+  )
+
+  const salvarRecebimento = useCallback(
+    async (dados) => {
+      const { error } = await supabase
+        .from('evento')
+        .update({ pix_chave: dados.chave, pix_nome: dados.nome, pix_cidade: dados.cidade || null })
+        .eq('id', eventoId)
+      if (error) {
+        setErro('Não foi possível salvar a chave Pix.')
+        return false
+      }
+      setRecebimento(dados)
       return true
     },
     [eventoId]
   )
 
-  const cadastrar = useCallback(
-    (dados) => salvar([...itensDoEvento(eventoId), { id: crypto.randomUUID(), reservas: [], ...dados }]),
-    [eventoId, salvar]
-  )
+  return { presentes, carregando, erro, recarregar: buscarPresentes, cadastrar, editar, remover, recebimento, salvarRecebimento }
+}
 
-  // Reserva uma unidade; o item só aparece como reservado quando todas forem.
-  const reservar = useCallback(
-    (presenteId, { nome, forma }) => {
-      const itens = itensDoEvento(eventoId)
-      const alvo = itens.find((p) => p.id === presenteId)
-      if (!alvo || esgotado(alvo)) return false
-      return salvar(
-        itens.map((p) =>
-          p.id === presenteId ? { ...p, reservas: [...p.reservas, { nome, forma, em: new Date().toISOString() }] } : p
-        )
+// Versão do site público: lê pelo backend e reserva por lá.
+export function usePresentesSite(slug) {
+  const [presentes, setPresentes] = useState([])
+  const [recebimento, setRecebimento] = useState(null)
+  const [carregando, setCarregando] = useState(true)
+
+  const api = `${import.meta.env.VITE_API_URL}/api/site/${slug}/presentes`
+
+  const buscar = useCallback(async () => {
+    try {
+      const res = await fetch(api)
+      if (!res.ok) throw new Error()
+      const dados = await res.json()
+      // O site só precisa saber quantas unidades já foram; os nomes não vêm.
+      setPresentes(
+        dados.presentes.map(({ reservadas, imagem_url, valor, ...p }) => ({
+          ...p,
+          valor: valor === null ? null : Number(valor),
+          imagem: imagem_url,
+          reservas: Array.from({ length: reservadas }, () => ({})),
+        }))
       )
+      setRecebimento(dados.recebimento)
+    } catch {
+      setPresentes([])
+    } finally {
+      setCarregando(false)
+    }
+  }, [api])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    buscar()
+  }, [buscar])
+
+  // Devolve true, 'esgotado' (alguém levou a última unidade antes) ou 'erro'.
+  const reservar = useCallback(
+    async (presenteId, { nome, forma }) => {
+      try {
+        const res = await fetch(`${api}/${presenteId}/reservar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, forma }),
+        })
+        if (res.ok) return true
+        return res.status === 409 ? 'esgotado' : 'erro'
+      } catch {
+        return 'erro'
+      } finally {
+        buscar()
+      }
     },
-    [eventoId, salvar]
+    [api, buscar]
   )
 
-  // Reservas não passam pelo formulário, então nunca são sobrescritas aqui.
-  const editar = useCallback(
-    (presenteId, dados) =>
-      salvar(itensDoEvento(eventoId).map((p) => (p.id === presenteId ? { ...p, ...dados, reservas: p.reservas } : p))),
-    [eventoId, salvar]
-  )
-
-  const remover = useCallback(
-    (presenteId) => salvar(itensDoEvento(eventoId).filter((p) => p.id !== presenteId)),
-    [eventoId, salvar]
-  )
-
-  const salvarRecebimento = useCallback(
-    (dados) => {
-      if (gravar(chaveRecebimento(eventoId), dados)) setRecebimento(dados)
-    },
-    [eventoId]
-  )
-
-  return { presentes, carregando, erro, recarregar: buscarPresentes, cadastrar, editar, reservar, remover, recebimento, salvarRecebimento }
+  return { presentes, carregando, reservar, recebimento }
 }

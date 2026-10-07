@@ -12,13 +12,16 @@ function ModalRecebimento({ aberto, atual, aoSalvar, aoFechar }) {
   const [chave, setChave] = useState(atual?.chave || '')
   const [nome, setNome] = useState(atual?.nome || '')
   const [cidade, setCidade] = useState(atual?.cidade || '')
+  const [salvando, setSalvando] = useState(false)
   if (!aberto) return null
 
-  function salvar(e) {
+  async function salvar(e) {
     e.preventDefault()
     if (!chave.trim() || !nome.trim()) return
-    aoSalvar({ chave: chave.trim(), nome: nome.trim(), cidade: cidade.trim() })
-    aoFechar()
+    setSalvando(true)
+    const ok = await aoSalvar({ chave: chave.trim(), nome: nome.trim(), cidade: cidade.trim() })
+    setSalvando(false)
+    if (ok) aoFechar()
   }
 
   return (
@@ -43,7 +46,7 @@ function ModalRecebimento({ aberto, atual, aoSalvar, aoFechar }) {
         </div>
         <div className="popup-actions">
           <button type="button" className="btn btn-ghost" onClick={aoFechar}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Salvar</button>
+          <button type="submit" className="btn btn-primary" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar'}</button>
         </div>
       </form>
     </div>

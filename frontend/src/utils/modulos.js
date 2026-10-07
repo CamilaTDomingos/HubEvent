@@ -1,5 +1,3 @@
-import { ler, gravar } from '../lib/armazemLocal'
-
 // Funcionalidades de um evento. As obrigatórias existem em todo evento;
 // as opcionais são escolhidas na criação.
 export const MODULOS_OBRIGATORIOS = [
@@ -13,16 +11,10 @@ export const MODULOS_OPCIONAIS = [
   { chave: 'site', nome: 'Site do evento', descricao: 'Página pública com as informações do evento.', icone: 'globo' },
 ]
 
-// Eventos criados antes da escolha de módulos mantêm tudo ativo.
-const PADRAO_LEGADO = { presentes: true, site: true }
+// Os módulos escolhidos ficam na coluna `evento.modulos`. Eventos criados
+// antes da escolha existir têm tudo ativo (é o padrão da coluna).
+const PADRAO = { presentes: true, site: true }
 
-// Ainda não há coluna para isso no banco: a escolha fica no navegador.
-const chave = (eventoId) => `hubevent:modulos:${eventoId}`
-
-export function lerModulos(eventoId) {
-  return { ...PADRAO_LEGADO, ...ler(chave(eventoId), {}) }
-}
-
-export function salvarModulos(eventoId, modulos) {
-  gravar(chave(eventoId), modulos)
+export function lerModulos(evento) {
+  return { ...PADRAO, ...evento?.modulos }
 }

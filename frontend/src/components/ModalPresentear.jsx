@@ -30,10 +30,16 @@ function ModalPresentear({ presente, recebimento, aoReservar, aoFechar }) {
     ? pixCopiaECola({ chave: recebimento.chave, nome: recebimento.nome, cidade: recebimento.cidade || '', valor: presente.valor })
     : ''
 
-  function concluir() {
-    const ok = aoReservar(presente.id, { nome: nome.trim(), forma })
-    if (ok === false) {
+  async function concluir() {
+    setProcessando(true)
+    const resultado = await aoReservar(presente.id, { nome: nome.trim(), forma })
+    setProcessando(false)
+    if (resultado === 'esgotado') {
       setErro('Alguém acabou de reservar este presente. Que tal escolher outro?')
+      return
+    }
+    if (resultado !== true) {
+      setErro('Não foi possível concluir a reserva agora. Tente novamente em instantes.')
       return
     }
     setEtapa('feito')
@@ -63,8 +69,7 @@ function ModalPresentear({ presente, recebimento, aoReservar, aoFechar }) {
   async function pagarComCartao() {
     setProcessando(true)
     await new Promise((r) => setTimeout(r, TEMPO_CHECKOUT_MS))
-    setProcessando(false)
-    concluir()
+    await concluir()
   }
 
   return (
@@ -111,7 +116,7 @@ function ModalPresentear({ presente, recebimento, aoReservar, aoFechar }) {
 
             <div className="popup-actions">
               <button type="button" className="btn btn-ghost" onClick={aoFechar}>Cancelar</button>
-              <button type="submit" className="btn btn-primary" disabled={!forma || !nome.trim()}>
+              <button type="submit" className="btn btn-primary" disabled={!forma || !nome.trim() || processando}>
                 {forma === 'loja' ? 'Reservar presente' : 'Continuar'}
               </button>
             </div>
@@ -133,7 +138,7 @@ function ModalPresentear({ presente, recebimento, aoReservar, aoFechar }) {
             {erro && <p className="erro-msg">{erro}</p>}
             <div className="popup-actions">
               <button type="button" className="btn btn-ghost" onClick={() => setEtapa('escolha')}>Voltar</button>
-              <button type="button" className="btn btn-primary" onClick={concluir}><Icone nome="check" tamanho={15} /> Já fiz o Pix</button>
+              <button type="button" className="btn btn-primary" onClick={concluir} disabled={processando}><Icone nome="check" tamanho={15} /> Já fiz o Pix</button>
             </div>
           </div>
         )}

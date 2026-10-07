@@ -6,15 +6,15 @@ import EsqueletoPresentes from '../components/EsqueletoPresentes'
 import ModalPresentear from '../components/ModalPresentear'
 import Carregando from '../components/Carregando'
 import Icone from '../components/Icone'
-import { usePresentes, esgotado } from '../hooks/usePresentes'
+import { usePresentesSite, esgotado } from '../hooks/usePresentes'
 import { lerModulos } from '../utils/modulos'
 import './SiteEvento.css'
 import './SitePublico.css'
 
 const RECURSOS_PADRAO = { confirmarPresenca: true, listaPresentes: true }
 
-function ListaPresentesSite({ eventoId }) {
-  const { presentes, carregando, reservar, recebimento } = usePresentes(eventoId)
+function ListaPresentesSite({ slug }) {
+  const { presentes, carregando, reservar, recebimento } = usePresentesSite(slug)
   const [escolhidoId, setEscolhidoId] = useState(null)
   const escolhido = presentes.find((p) => p.id === escolhidoId) || null
 
@@ -99,7 +99,7 @@ function SitePublico() {
 
   const { evento, titulo, conteudo } = site
   const recursos = { ...RECURSOS_PADRAO, ...conteudo?.recursos }
-  const modulos = lerModulos(evento.id)
+  const modulos = lerModulos(evento)
   const mostrarPresentes = modulos.presentes && recursos.listaPresentes
 
   return (
@@ -112,7 +112,7 @@ function SitePublico() {
         cor={conteudo?.cor || '#1e6b7b'}
         recursos={{ ...recursos, listaPresentes: mostrarPresentes }}
       >
-        {mostrarPresentes && <ListaPresentesSite eventoId={evento.id} />}
+        {mostrarPresentes && <ListaPresentesSite slug={slug} />}
       </PreviewSite>
     </div>
   )

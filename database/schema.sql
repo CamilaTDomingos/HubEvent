@@ -50,6 +50,10 @@ CREATE TABLE evento (
     status status_evento NOT NULL DEFAULT 'PLANEJAMENTO',
     criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    modulos JSONB NOT NULL DEFAULT '{"presentes": true, "site": true}'::jsonb,
+    pix_chave VARCHAR(140),
+    pix_nome VARCHAR(100),
+    pix_cidade VARCHAR(100),
     CONSTRAINT fk_evento_organizador FOREIGN KEY (organizador_id) REFERENCES usuario(id) ON DELETE CASCADE,
     CONSTRAINT chk_evento_datas CHECK (data_fim >= data_inicio)
 );
@@ -94,10 +98,26 @@ CREATE TABLE lista_presentes (
     valor DECIMAL(10,2),
     loja VARCHAR(255),
     reservado BOOLEAN NOT NULL DEFAULT FALSE,
+    quantidade INTEGER NOT NULL DEFAULT 1,
+    categoria VARCHAR(60),
+    link TEXT,
+    imagem_url TEXT,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_lista_presentes_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE,
     CONSTRAINT fk_lista_presentes_responsavel FOREIGN KEY (responsavel_por_id) REFERENCES usuario(id) ON DELETE SET NULL,
-    CONSTRAINT chk_lista_presentes_valor CHECK (valor IS NULL OR valor >= 0)
+    CONSTRAINT chk_lista_presentes_valor CHECK (valor IS NULL OR valor >= 0),
+    CONSTRAINT chk_lista_presentes_quantidade CHECK (quantidade >= 1)
+);
+
+-- Uma linha por unidade reservada pelos convidados no site.
+CREATE TABLE reserva_presente (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    presente_id UUID NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    forma VARCHAR(10) NOT NULL,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_reserva_presente FOREIGN KEY (presente_id) REFERENCES lista_presentes(id) ON DELETE CASCADE,
+    CONSTRAINT chk_reserva_forma CHECK (forma IN ('loja', 'pix', 'cartao'))
 );
 
 -- ============================================================
@@ -199,6 +219,7 @@ CREATE INDEX idx_categoria_tarefa_usuario ON categoria_tarefa(usuario_id);
 CREATE INDEX idx_despesa_evento ON despesa(evento_id);
 CREATE INDEX idx_parcela_despesa ON parcela(despesa_id);
 CREATE INDEX idx_lista_presentes_evento ON lista_presentes(evento_id);
+CREATE INDEX idx_reserva_presente_presente ON reserva_presente(presente_id);
 CREATE INDEX idx_mensagem_assistente ON mensagem_chat(assistente_id);
 CREATE INDEX idx_mensagem_usuario ON mensagem_chat(usuario_id);
 
@@ -282,17 +303,22 @@ CREATE POLICY "landing_page_organizador" ON landing_page
 CREATE POLICY "landing_page_publica_leitura" ON landing_page
     FOR SELECT USING (ativa = true);
 
--- LISTA_PRESENTES: organizador gerencia; público pode ler e reservar
+-- LISTA_PRESENTES: organizador gerencia; o site público lê e reserva
+-- pelo backend (service_role), nunca direto com a chave anon.
 CREATE POLICY "lista_presentes_organizador" ON lista_presentes
     FOR ALL USING (
         EXISTS (SELECT 1 FROM evento WHERE evento.id = lista_presentes.evento_id AND evento.organizador_id = auth.uid())
     );
 
-CREATE POLICY "lista_presentes_publica_leitura" ON lista_presentes
-    FOR SELECT USING (true);
+ALTER TABLE reserva_presente ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "lista_presentes_publica_reserva" ON lista_presentes
-    FOR UPDATE USING (true);
+CREATE POLICY "reserva_presente_organizador" ON reserva_presente
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM lista_presentes p JOIN evento e ON e.id = p.evento_id
+            WHERE p.id = reserva_presente.presente_id AND e.organizador_id = auth.uid()
+        )
+    );
 
 -- ASSISTENTE_IA: só o organizador do evento
 CREATE POLICY "assistente_ia_organizador" ON assistente_ia
@@ -339,4 +365,10 @@ CREATE POLICY "mensagem_chat_organizador" ON mensagem_chat
 
 -- ============================================================
 -- FIM DO SCRIPT
+-- ============================================================
+
+-- ============================================================
+-- RESERVA DE PRESENTES E FOTOS
+-- A função reservar_presente e o bucket "presentes" do Storage estão em
+-- database/migrations/2026-10-07_dados_do_navegador_para_o_banco.sql
 -- ============================================================

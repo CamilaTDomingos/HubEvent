@@ -17,6 +17,7 @@ import Carregando from '../components/Carregando'
 import { tipoEvento } from '../utils/categorias'
 import { diasAte, dataLonga, hora } from '../utils/datas'
 import { lerModulos } from '../utils/modulos'
+import { importarModulos } from '../lib/importarDadosLocais'
 import './EventoDetalhe.css'
 
 function Contagem({ dataInicio }) {
@@ -47,12 +48,13 @@ function EventoDetalhe() {
   const despesas = useDespesas(id)
   const presentes = usePresentes(id)
   const { landingPage } = useLandingPage(id)
-  const modulos = lerModulos(id)
+  const modulos = lerModulos(evento)
   const siteUrl = modulos.site && landingPage?.ativa ? `/site/${landingPage.slug}` : null
 
   useEffect(() => {
     async function buscarEvento() {
       const { data } = await supabase.from('evento').select('*').eq('id', id).single()
+      if (data) data.modulos = await importarModulos(data)
       setEvento(data)
     }
     buscarEvento()

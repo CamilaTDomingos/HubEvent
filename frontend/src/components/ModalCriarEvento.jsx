@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { TIPOS_EVENTO } from '../utils/categorias'
-import { MODULOS_OBRIGATORIOS, MODULOS_OPCIONAIS, salvarModulos } from '../utils/modulos'
+import { MODULOS_OBRIGATORIOS, MODULOS_OPCIONAIS } from '../utils/modulos'
 import Icone from './Icone'
 
 function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
@@ -32,14 +32,15 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
 
     const dataInicio = hora ? `${data}T${hora}:00` : `${data}T00:00:00`
 
-    const { data: criado, error } = await supabase.from('evento').insert({
+    const { error } = await supabase.from('evento').insert({
       organizador_id: usuario.id,
       nome,
       categoria,
       local,
       data_inicio: dataInicio,
       data_fim: dataInicio,
-    }).select('id').single()
+      modulos: opcionais,
+    })
 
     setSalvando(false)
 
@@ -47,8 +48,6 @@ function ModalCriarEvento({ aberto, aoFechar, aoCriar }) {
       setErro(error.message)
       return
     }
-
-    salvarModulos(criado.id, opcionais)
 
     setNome('')
     setLocal('')

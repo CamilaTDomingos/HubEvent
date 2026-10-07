@@ -18,3 +18,11 @@ export function gravar(chave, valor) {
     return false
   }
 }
+
+export function apagar(chave) {
+  try {
+    localStorage.removeItem(chave)
+  } catch {
+    // sem acesso ao armazenamento: nada a apagar
+  }
+}

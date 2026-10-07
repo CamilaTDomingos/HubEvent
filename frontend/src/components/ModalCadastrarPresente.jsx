@@ -30,6 +30,7 @@ function ModalCadastrarPresente({ aberto, presente = null, aoFechar, aoSalvar })
   const [imagem, setImagem] = useState(presente?.imagem || null)
   const [link, setLink] = useState(presente?.link || '')
   const [processandoImagem, setProcessandoImagem] = useState(false)
+  const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState(null)
 
   if (!aberto) return null
@@ -77,7 +78,7 @@ function ModalCadastrarPresente({ aberto, presente = null, aoFechar, aoSalvar })
     }
   }
 
-  function handleCadastrar(e) {
+  async function handleCadastrar(e) {
     e.preventDefault()
     const valorNum = valor === '' ? null : Number(valor)
     const qtd = Number(quantidade)
@@ -103,7 +104,8 @@ function ModalCadastrarPresente({ aberto, presente = null, aoFechar, aoSalvar })
       return
     }
 
-    const salvou = aoSalvar({
+    setSalvando(true)
+    const salvou = await aoSalvar({
       nome: nome.trim(),
       valor: valorNum,
       descricao: descricao.trim() || null,
@@ -112,8 +114,9 @@ function ModalCadastrarPresente({ aberto, presente = null, aoFechar, aoSalvar })
       imagem,
       link: link.trim() || null,
     })
+    setSalvando(false)
     if (salvou === false) {
-      setErro('Não foi possível salvar. O armazenamento do navegador está cheio — tente sem foto ou com uma menor.')
+      setErro('Não foi possível salvar o presente. Verifique sua conexão e tente de novo.')
       return
     }
     fechar()
@@ -227,7 +230,7 @@ function ModalCadastrarPresente({ aberto, presente = null, aoFechar, aoSalvar })
 
         <div className="popup-actions">
           <button type="button" className="btn btn-ghost" onClick={fechar}>Cancelar</button>
-          <button type="submit" className="btn btn-primary" disabled={processandoImagem}>{editando ? 'Salvar alterações' : 'Cadastrar presente'}</button>
+          <button type="submit" className="btn btn-primary" disabled={processandoImagem || salvando}>{salvando ? 'Salvando…' : editando ? 'Salvar alterações' : 'Cadastrar presente'}</button>
         </div>
       </form>
     </div>
