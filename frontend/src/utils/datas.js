@@ -38,6 +38,19 @@ export function formatar(valor, opcoes) {
   return data.toLocaleDateString('pt-BR', opcoes)
 }
 
+// "AAAA-MM-DD" no fuso local (toISOString usaria UTC e erraria o dia à noite).
+export function dataISO(data = new Date()) {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`
+}
+
+// Soma meses a uma data "AAAA-MM-DD" sem transbordar: 31/01 + 1 mês = 28/02
+// (setMonth daria 03/03 e jogaria a parcela no mês errado).
+export function somarMeses(iso, meses) {
+  const [ano, mes, diaDoMes] = iso.split('-').map(Number)
+  const ultimoDia = new Date(ano, mes - 1 + meses + 1, 0).getDate()
+  return dataISO(new Date(ano, mes - 1 + meses, Math.min(diaDoMes, ultimoDia)))
+}
+
 export const dia = (v) => formatar(v, { day: '2-digit' })
 export const mesCurto = (v) => formatar(v, { month: 'short' }).replace('.', '')
 export const semanaCurta = (v) => formatar(v, { weekday: 'short' }).replace('.', '')

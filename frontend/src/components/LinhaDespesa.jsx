@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useParcelas } from '../hooks/useParcelas'
 import { COR_SEM_CATEGORIA } from '../utils/categorias'
-import { moeda, dataMedia } from '../utils/datas'
+import { moeda, dataMedia, dia, mesCurto } from '../utils/datas'
 import Icone from './Icone'
 
 function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
@@ -38,7 +38,7 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
               Parcelado <Icone nome="chevron" tamanho={14} />
             </button>
           ) : (
-            <span className="muted">À vista</span>
+            <span className="muted">À vista{despesa.vencimento && ` · ${dia(despesa.vencimento)} ${mesCurto(despesa.vencimento)}`}</span>
           )}
         </div>
         <span className="desp-valor num">{moeda(despesa.valor_total)}</span>

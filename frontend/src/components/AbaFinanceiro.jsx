@@ -8,7 +8,7 @@ import NumeroAnimado from './NumeroAnimado'
 import Icone from './Icone'
 import { Link } from 'react-router-dom'
 import { useCategorias } from '../hooks/useCategorias'
-import { moeda } from '../utils/datas'
+import { moeda, dataISO, somarMeses } from '../utils/datas'
 
 function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOrcamento }) {
   const [descDespesa, setDescDespesa] = useState('')
@@ -19,6 +19,7 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
   const [parcelar, setParcelar] = useState(false)
   const [numParcelas, setNumParcelas] = useState(2)
   const [primeiroVencimento, setPrimeiroVencimento] = useState('')
+  const [dataPagamento, setDataPagamento] = useState(dataISO)
 
   const [editandoOrcamento, setEditandoOrcamento] = useState(false)
   const [novoOrcamento, setNovoOrcamento] = useState('')
@@ -37,6 +38,7 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
     const valor = Number(valorDespesa)
     if (!descDespesa || !valorDespesa || valor < 0) return
     if (parcelar && (!primeiroVencimento || numParcelas < 2)) return
+    if (!parcelar && !dataPagamento) return
 
     const { data: novaDespesa, error } = await supabase
       .from('despesa')
@@ -46,6 +48,7 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
         valor_total: valor,
         categoria_id: categoriaDespesa || null,
         parcelado: parcelar,
+        vencimento: parcelar ? null : dataPagamento,
       })
       .select()
       .single()
@@ -54,18 +57,14 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
 
     if (parcelar) {
       const valorParcela = Math.round((valor / numParcelas) * 100) / 100
-      const parcelas = []
-      const dataBase = new Date(primeiroVencimento)
-      for (let i = 0; i < numParcelas; i++) {
-        const vencimento = new Date(dataBase)
-        vencimento.setMonth(vencimento.getMonth() + i)
-        parcelas.push({
-          despesa_id: novaDespesa.id,
-          numero: i + 1,
-          valor: valorParcela,
-          vencimento: vencimento.toISOString().split('T')[0],
-        })
-      }
+      // A última parcela absorve a sobra do arredondamento (100 em 3× = 33,33 + 33,33 + 33,34).
+      const valorUltima = Math.round((valor - valorParcela * (numParcelas - 1)) * 100) / 100
+      const parcelas = Array.from({ length: numParcelas }, (_, i) => ({
+        despesa_id: novaDespesa.id,
+        numero: i + 1,
+        valor: i === numParcelas - 1 ? valorUltima : valorParcela,
+        vencimento: somarMeses(primeiroVencimento, i),
+      }))
       await supabase.from('parcela').insert(parcelas)
     }
 
@@ -75,6 +74,7 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
     setParcelar(false)
     setNumParcelas(2)
     setPrimeiroVencimento('')
+    setDataPagamento(dataISO())
     recarregar()
   }
 
@@ -212,6 +212,21 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
           </label>
           <button type="submit" className="btn btn-primary"><Icone nome="mais" tamanho={16} /> Adicionar</button>
         </div>
+
+        {!parcelar && (
+          <div className="lancar-parcelas-campos">
+            <label className="label" htmlFor="data-pagamento">Data do pagamento</label>
+            <input
+              id="data-pagamento"
+              className="input"
+              type="date"
+              value={dataPagamento}
+              onChange={(e) => setDataPagamento(e.target.value)}
+              required
+            />
+            <span className="muted">É o mês em que a despesa entra no fluxo de caixa.</span>
+          </div>
+        )}
 
         <div className={`lancar-parcelas ${parcelar ? 'aberto' : ''}`}>
           <div>

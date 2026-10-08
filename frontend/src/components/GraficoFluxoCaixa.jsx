@@ -20,7 +20,8 @@ function passoRedondo(maximo, linhas = 4) {
 }
 
 // Agrupa as saídas por mês: parcelas pelo vencimento; despesas à vista pela
-// data em que foram lançadas (o banco não guarda data de pagamento para elas).
+// data do pagamento. Sem data (parcelada cujas parcelas não foram gravadas),
+// cai no dia do lançamento para o valor não sumir do gráfico.
 function montarMeses(despesas, parcelas) {
   const comParcelas = new Set(parcelas.map((p) => p.despesa_id))
   const porMes = {}
@@ -34,7 +35,7 @@ function montarMeses(despesas, parcelas) {
   parcelas.forEach((p) => somar(paraData(p.vencimento), p.valor, 'parcelas'))
   despesas
     .filter((d) => !comParcelas.has(d.id))
-    .forEach((d) => somar(paraData(d.criado_em), d.valor_total, 'aVista'))
+    .forEach((d) => somar(paraData(d.vencimento ?? d.criado_em), d.valor_total, 'aVista'))
 
   const chaves = Object.keys(porMes).sort()
   if (!chaves.length) return []
@@ -131,6 +132,15 @@ function GraficoFluxoCaixa({ eventoId, despesas, orcamento, dataEvento }) {
   // Rótulo direto só no ponto que importa: o mês mais pesado, ou o total no fim.
   const destaque = modo === 'mensal' ? valores.indexOf(Math.max(...valores)) : meses.length - 1
 
+  // Acima do ponto, a não ser que ali já esteja o texto de "hoje"/"evento":
+  // aí vai para o lado (para dentro do gráfico, perto das bordas).
+  const [dx, dy] = pontos[destaque]
+  const perto = (destaque === hoje || destaque === evento) && dy - 12 < MARGEM.topo + 4
+  const aDireita = dx < largura - MARGEM.direita - 70
+  const posicaoRotulo = perto
+    ? { x: aDireita ? dx + 9 : dx - 9, y: dy + 4, textAnchor: aDireita ? 'start' : 'end' }
+    : { x: Math.min(Math.max(dx, MARGEM.esquerda + 30), largura - MARGEM.direita - 30), y: Math.max(dy - 12, 12), textAnchor: 'middle' }
+
   function aoMover(e) {
     const caixa = e.currentTarget.getBoundingClientRect()
     const px = e.clientX - caixa.left
@@ -206,12 +216,7 @@ function GraficoFluxoCaixa({ eventoId, despesas, orcamento, dataEvento }) {
               ))}
 
               {ativo !== destaque && (
-                <text
-                  className="fluxo-rotulo"
-                  x={Math.min(Math.max(pontos[destaque][0], MARGEM.esquerda + 30), largura - MARGEM.direita - 30)}
-                  y={Math.max(pontos[destaque][1] - 12, 12)}
-                  textAnchor="middle"
-                >
+                <text className="fluxo-rotulo" {...posicaoRotulo}>
                   {moedaCompacta(valores[destaque])}
                 </text>
               )}
@@ -242,7 +247,7 @@ function GraficoFluxoCaixa({ eventoId, despesas, orcamento, dataEvento }) {
           )}
         </div>
 
-        <p className="fluxo-nota muted">Parcelas entram no mês do vencimento; despesas à vista, no mês em que foram lançadas.</p>
+        <p className="fluxo-nota muted">Parcelas entram no mês do vencimento; despesas à vista, no mês do pagamento.</p>
       </div>
 
       <table className="sr-only">

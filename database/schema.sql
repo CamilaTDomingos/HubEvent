@@ -186,10 +186,13 @@ CREATE TABLE despesa (
     categoria VARCHAR(100), -- legado: o app usa categoria_id
     categoria_id UUID,
     pago BOOLEAN NOT NULL DEFAULT FALSE,
+    parcelado BOOLEAN NOT NULL DEFAULT FALSE,
+    vencimento DATE, -- data do pagamento da despesa à vista; parcelada usa a tabela parcela
     criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_despesa_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE,
     CONSTRAINT fk_despesa_categoria FOREIGN KEY (categoria_id) REFERENCES categoria_despesa(id) ON DELETE SET NULL,
-    CONSTRAINT chk_despesa_valor CHECK (valor_total >= 0)
+    CONSTRAINT chk_despesa_valor CHECK (valor_total >= 0),
+    CONSTRAINT chk_despesa_vencimento CHECK (parcelado OR vencimento IS NOT NULL)
 );
 
 -- ============================================================
