@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
-// Categorias de tarefa do usuário logado. O RLS já filtra pelo dono,
-// então a busca não precisa de .eq('usuario_id', …).
-export function useCategorias() {
+// Categorias do usuário logado: 'categoria_tarefa' (checklist) ou
+// 'categoria_despesa' (financeiro). O RLS já filtra pelo dono, então a busca
+// não precisa de .eq('usuario_id', …).
+export function useCategorias(tabela = 'categoria_tarefa') {
   const [categorias, setCategorias] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
@@ -12,7 +13,7 @@ export function useCategorias() {
     setCarregando(true)
 
     const { data, error } = await supabase
-      .from('categoria_tarefa')
+      .from(tabela)
       .select('*')
       .order('nome', { ascending: true })
 
@@ -23,7 +24,7 @@ export function useCategorias() {
       setCategorias(data)
     }
     setCarregando(false)
-  }, [])
+  }, [tabela])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -40,9 +41,9 @@ export function useCategorias() {
     [buscarCategorias]
   )
 
-  const criar = useCallback((dados) => executar(supabase.from('categoria_tarefa').insert(dados)), [executar])
-  const editar = useCallback((id, dados) => executar(supabase.from('categoria_tarefa').update(dados).eq('id', id)), [executar])
-  const remover = useCallback((id) => executar(supabase.from('categoria_tarefa').delete().eq('id', id)), [executar])
+  const criar = useCallback((dados) => executar(supabase.from(tabela).insert(dados)), [tabela, executar])
+  const editar = useCallback((id, dados) => executar(supabase.from(tabela).update(dados).eq('id', id)), [tabela, executar])
+  const remover = useCallback((id) => executar(supabase.from(tabela).delete().eq('id', id)), [tabela, executar])
 
   return { categorias, carregando, erro, recarregar: buscarCategorias, criar, editar, remover }
 }

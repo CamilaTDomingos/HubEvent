@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useParcelas } from '../hooks/useParcelas'
-import { corDespesa } from '../utils/categorias'
+import { COR_SEM_CATEGORIA } from '../utils/categorias'
 import { moeda, dataMedia } from '../utils/datas'
 import Icone from './Icone'
 
@@ -27,7 +27,7 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
   return (
     <li className="desp" style={{ '--i': indice }}>
       <div className="desp-linha">
-        <span className="desp-cor" style={{ background: corDespesa(despesa.categoria) }} aria-hidden="true" />
+        <span className="desp-cor" style={{ background: despesa.cor || COR_SEM_CATEGORIA }} aria-hidden="true" />
         <div className="desp-desc">
           <strong>{despesa.descricao}</strong>
           <span>{despesa.categoria || 'Sem categoria'}</span>

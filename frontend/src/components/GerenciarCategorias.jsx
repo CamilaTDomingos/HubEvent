@@ -62,9 +62,10 @@ function FormCategoria({ inicial, categorias, ignorarId, textoSalvar, aoSalvar, 
   )
 }
 
-function GerenciarCategorias() {
+// Painel do perfil para um tipo de categoria (tarefa ou despesa).
+function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
   const { usuario } = useAuth()
-  const { categorias, carregando, erro, criar, editar, remover } = useCategorias()
+  const { categorias, carregando, erro, criar, editar, remover } = useCategorias(tabela)
   const [editando, setEditando] = useState(null)
   const [criando, setCriando] = useState(false)
   const [apagando, setApagando] = useState(null)
@@ -78,7 +79,7 @@ function GerenciarCategorias() {
   return (
     <section className="painel cat-painel">
       <div className="painel-cab">
-        <h3 className="titulo">Categorias de tarefas</h3>
+        <h3 className="titulo">{titulo}</h3>
         <span className="muted">{categorias.length} {categorias.length === 1 ? 'categoria' : 'categorias'}</span>
       </div>
 
@@ -89,7 +90,7 @@ function GerenciarCategorias() {
       ) : (
         <ul className="cat-lista">
           {categorias.length === 0 && !criando && (
-            <li className="cat-vazio">Nenhuma categoria ainda. Crie categorias para organizar as tarefas do checklist.</li>
+            <li className="cat-vazio">{textoVazio}</li>
           )}
 
           {categorias.map((c) =>
@@ -151,7 +152,7 @@ function GerenciarCategorias() {
       <ModalConfirmacao
         aberto={!!apagando}
         titulo="Apagar categoria?"
-        mensagem={`As tarefas marcadas como "${apagando?.nome}" não serão apagadas, só ficarão sem categoria.`}
+        mensagem={textoRemocao(apagando?.nome)}
         textoConfirmar="Apagar"
         aoConfirmar={confirmarRemocao}
         aoCancelar={() => setApagando(null)}

@@ -320,7 +320,9 @@
 
 /* Nova despesa: área levemente destacada, sem borda */
 .lancar { padding: 20px 22px; margin-bottom: 28px; border-radius: var(--r-lg); background: var(--bg-2); }
-.lancar-titulo { font-size: 17px; margin-bottom: 14px; }
+.lancar-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.lancar-titulo { font-size: 17px; }
+.lancar-gerenciar { font-size: 12.5px; }
 .lancar .input { background: var(--card); }
 .lancar-campos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr) auto auto; gap: 10px; align-items: center; }
 .lancar-campos .switch { padding: 0 6px; }

@@ -5,13 +5,15 @@ import LinhaDespesa from './LinhaDespesa'
 import GraficoDespesas from './GraficoDespesas'
 import NumeroAnimado from './NumeroAnimado'
 import Icone from './Icone'
-import { CATEGORIAS_DESPESA } from '../utils/categorias'
+import { Link } from 'react-router-dom'
+import { useCategorias } from '../hooks/useCategorias'
 import { moeda } from '../utils/datas'
 
 function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOrcamento }) {
   const [descDespesa, setDescDespesa] = useState('')
   const [valorDespesa, setValorDespesa] = useState('')
   const [categoriaDespesa, setCategoriaDespesa] = useState('')
+  const { categorias } = useCategorias('categoria_despesa')
 
   const [parcelar, setParcelar] = useState(false)
   const [numParcelas, setNumParcelas] = useState(2)
@@ -41,7 +43,7 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
         evento_id: evento.id,
         descricao: descDespesa,
         valor_total: valor,
-        categoria: categoriaDespesa || null,
+        categoria_id: categoriaDespesa || null,
         parcelado: parcelar,
       })
       .select()
@@ -164,7 +166,10 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
       </section>
 
       <form className="lancar" onSubmit={handleAdicionarDespesa}>
-        <h3 className="titulo lancar-titulo">Nova despesa</h3>
+        <div className="lancar-cab">
+          <h3 className="titulo lancar-titulo">Nova despesa</h3>
+          <Link to="/perfil" className="link lancar-gerenciar">Gerenciar categorias</Link>
+        </div>
         <div className="lancar-campos">
           <input
             className="input lancar-desc"
@@ -181,9 +186,9 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
             value={categoriaDespesa}
             onChange={(e) => setCategoriaDespesa(e.target.value)}
           >
-            <option value="">Categoria</option>
-            {CATEGORIAS_DESPESA.map((c) => (
-              <option key={c.nome}>{c.nome}</option>
+            <option value="">{categorias.length ? 'Categoria' : 'Sem categorias'}</option>
+            {categorias.map((c) => (
+              <option key={c.id} value={c.id}>{c.nome}</option>
             ))}
           </select>
           <input

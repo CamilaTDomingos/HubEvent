@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { corDespesa } from '../utils/categorias'
+import { COR_SEM_CATEGORIA } from '../utils/categorias'
 import { moeda } from '../utils/datas'
 
 function GraficoDespesas({ despesas }) {
@@ -16,6 +16,8 @@ function GraficoDespesas({ despesas }) {
     acc[cat] = (acc[cat] || 0) + Number(d.valor_total)
     return acc
   }, {})
+  const cores = Object.fromEntries(despesas.map((d) => [d.categoria || 'Sem categoria', d.cor || COR_SEM_CATEGORIA]))
+  const corDespesa = (categoria) => cores[categoria]
 
   const total = Object.values(porCategoria).reduce((a, b) => a + b, 0)
   const entradas = Object.entries(porCategoria).sort((a, b) => b[1] - a[1])

@@ -147,6 +147,19 @@ CREATE TABLE categoria_tarefa (
 );
 
 -- ============================================================
+-- CATEGORIA DE DESPESA (por usuário; começa com as 9 iniciais)
+-- ============================================================
+CREATE TABLE categoria_despesa (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL DEFAULT auth.uid(),
+    nome VARCHAR(60) NOT NULL,
+    cor VARCHAR(7) NOT NULL,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_categoria_despesa_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT chk_categoria_despesa_cor CHECK (cor ~ '^#[0-9a-fA-F]{6}$')
+);
+
+-- ============================================================
 -- TAREFA
 -- ============================================================
 CREATE TABLE tarefa (
@@ -170,10 +183,12 @@ CREATE TABLE despesa (
     evento_id UUID NOT NULL,
     descricao VARCHAR(255) NOT NULL,
     valor_total DECIMAL(10,2) NOT NULL,
-    categoria VARCHAR(100),
+    categoria VARCHAR(100), -- legado: o app usa categoria_id
+    categoria_id UUID,
     pago BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_despesa_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE,
+    CONSTRAINT fk_despesa_categoria FOREIGN KEY (categoria_id) REFERENCES categoria_despesa(id) ON DELETE SET NULL,
     CONSTRAINT chk_despesa_valor CHECK (valor_total >= 0)
 );
 
@@ -217,6 +232,8 @@ CREATE INDEX idx_tarefa_evento ON tarefa(evento_id);
 CREATE INDEX idx_tarefa_categoria ON tarefa(categoria_id);
 CREATE INDEX idx_categoria_tarefa_usuario ON categoria_tarefa(usuario_id);
 CREATE INDEX idx_despesa_evento ON despesa(evento_id);
+CREATE INDEX idx_despesa_categoria ON despesa(categoria_id);
+CREATE INDEX idx_categoria_despesa_usuario ON categoria_despesa(usuario_id);
 CREATE INDEX idx_parcela_despesa ON parcela(despesa_id);
 CREATE INDEX idx_lista_presentes_evento ON lista_presentes(evento_id);
 CREATE INDEX idx_lista_presentes_responsavel ON lista_presentes(responsavel_por_id);
@@ -242,14 +259,38 @@ CREATE TRIGGER trigger_landing_page_atualizado_em
 BEFORE UPDATE ON landing_page FOR EACH ROW EXECUTE FUNCTION atualizar_data_modificacao();
 
 -- ============================================================
--- FUNÇÃO AUXILIAR: cria linha em "usuario" automaticamente
--- toda vez que alguém se cadastra via Supabase Auth
+-- CATEGORIAS DE DESPESA INICIAIS de um usuário (só se ele não tiver nenhuma)
+-- ============================================================
+CREATE OR REPLACE FUNCTION criar_categorias_despesa_padrao(p_usuario UUID)
+RETURNS VOID AS $$
+    INSERT INTO public.categoria_despesa (usuario_id, nome, cor)
+    SELECT p_usuario, v.nome, v.cor
+    FROM (VALUES
+        ('Local e Cerimônia', '#1e6b7b'),
+        ('Buffet e Bebidas', '#3b6fe8'),
+        ('Decoração', '#e8a432'),
+        ('Fotografia e Vídeo', '#8b5cf6'),
+        ('Vestuário', '#e5484d'),
+        ('Música e Entretenimento', '#06b6d4'),
+        ('Convites e Papelaria', '#f97316'),
+        ('Transporte', '#64748b'),
+        ('Outros', '#9aa0ae')
+    ) AS v(nome, cor)
+    WHERE NOT EXISTS (SELECT 1 FROM public.categoria_despesa c WHERE c.usuario_id = p_usuario);
+$$ LANGUAGE sql SET search_path = '';
+
+REVOKE EXECUTE ON FUNCTION criar_categorias_despesa_padrao(UUID) FROM PUBLIC, anon, authenticated;
+
+-- ============================================================
+-- FUNÇÃO AUXILIAR: cria linha em "usuario" (e as categorias de despesa
+-- iniciais) toda vez que alguém se cadastra via Supabase Auth
 -- ============================================================
 CREATE OR REPLACE FUNCTION criar_usuario_apos_signup()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO public.usuario (id, nome, email)
     VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'nome', ''), NEW.email);
+    PERFORM public.criar_categorias_despesa_padrao(NEW.id);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
@@ -273,6 +314,7 @@ ALTER TABLE lista_presentes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assistente_ia ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tarefa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categoria_tarefa ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categoria_despesa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE despesa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE parcela ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mensagem_chat ENABLE ROW LEVEL SECURITY;
@@ -328,6 +370,11 @@ CREATE POLICY "tarefa_organizador" ON tarefa
 
 -- CATEGORIA_TAREFA: só o dono
 CREATE POLICY "categoria_tarefa_propria" ON categoria_tarefa
+    FOR ALL USING ((select auth.uid()) = usuario_id)
+    WITH CHECK ((select auth.uid()) = usuario_id);
+
+-- CATEGORIA_DESPESA: só o dono
+CREATE POLICY "categoria_despesa_propria" ON categoria_despesa
     FOR ALL USING ((select auth.uid()) = usuario_id)
     WITH CHECK ((select auth.uid()) = usuario_id);
 

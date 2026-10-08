@@ -13,7 +13,18 @@ function Perfil() {
       </header>
 
       <div className="perfil-grade">
-        <GerenciarCategorias />
+        <GerenciarCategorias
+          tabela="categoria_tarefa"
+          titulo="Categorias de tarefas"
+          textoVazio="Nenhuma categoria ainda. Crie categorias para organizar as tarefas do checklist."
+          textoRemocao={(nome) => `As tarefas marcadas como "${nome}" não serão apagadas, só ficarão sem categoria.`}
+        />
+        <GerenciarCategorias
+          tabela="categoria_despesa"
+          titulo="Categorias de despesas"
+          textoVazio="Nenhuma categoria ainda. Crie categorias para separar os gastos no financeiro."
+          textoRemocao={(nome) => `As despesas marcadas como "${nome}" não serão apagadas, só ficarão sem categoria.`}
+        />
       </div>
     </LayoutApp>
   )
