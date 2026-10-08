@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useParcelas } from '../hooks/useParcelas'
+import { COR_SEM_CATEGORIA } from '../utils/categorias'
+import { moeda, dataMedia, dia, mesCurto } from '../utils/datas'
+import Icone from './Icone'
 
-function LinhaDespesa({ despesa, aoExcluir }) {
+function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
   const [expandido, setExpandido] = useState(false)
   const { parcelas, carregando, recarregar } = useParcelas(expandido ? despesa.id : null)
 
   const temParcelas = despesa.parcelado
+  const pagas = parcelas.filter((p) => p.pago).length
 
   async function togglePago(parcela) {
     const { error } = await supabase
@@ -21,62 +25,57 @@ function LinhaDespesa({ despesa, aoExcluir }) {
   }
 
   return (
-    <>
-      <tr>
-        <td>{despesa.descricao}</td>
-        <td>{despesa.categoria || '—'}</td>
-        <td>R$ {Number(despesa.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-        <td>
+    <li className="desp" style={{ '--i': indice }}>
+      <div className="desp-linha">
+        <span className="desp-cor" style={{ background: despesa.cor || COR_SEM_CATEGORIA }} aria-hidden="true" />
+        <div className="desp-desc">
+          <strong>{despesa.descricao}</strong>
+          <span>{despesa.categoria || 'Sem categoria'}</span>
+        </div>
+        <div className="desp-forma">
           {temParcelas ? (
-            <button
-              onClick={() => setExpandido(!expandido)}
-              style={{ background: 'none', border: 'none', color: 'var(--em)', cursor: 'pointer', fontSize: 12 }}
-            >
-              {expandido ? 'Ocultar parcelas' : 'Ver parcelas'}
+            <button className={`desp-parcelado ${expandido ? 'aberto' : ''}`} aria-expanded={expandido} onClick={() => setExpandido(!expandido)}>
+              Parcelado <Icone nome="chevron" tamanho={14} />
             </button>
           ) : (
-            <span style={{ fontSize: 12, color: 'var(--text-3)' }}>À vista</span>
+            <span className="muted">À vista{despesa.vencimento && ` · ${dia(despesa.vencimento)} ${mesCurto(despesa.vencimento)}`}</span>
           )}
-        </td>
-        <td>
-          <button
-            onClick={() => aoExcluir(despesa.id)}
-            style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 12 }}
-          >
-            Excluir
-          </button>
-        </td>
-      </tr>
+        </div>
+        <span className="desp-valor num">{moeda(despesa.valor_total)}</span>
+        <button className="btn-icone perigo desp-excluir" onClick={() => aoExcluir(despesa.id)} title="Excluir" aria-label={`Excluir ${despesa.descricao}`}>
+          <Icone nome="lixeira" tamanho={16} />
+        </button>
+      </div>
 
       {expandido && (
-        <tr>
-          <td colSpan={5} style={{ background: 'var(--bg-2)', padding: '12px 16px' }}>
-            {carregando ? (
-              <p style={{ fontSize: 12 }}>Carregando parcelas...</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="parcelas">
+          {carregando && parcelas.length === 0 ? (
+            <p className="muted">Carregando parcelas…</p>
+          ) : (
+            <>
+              <div className="parcelas-progresso">
+                <span>{pagas} de {parcelas.length} parcelas pagas</span>
+                <span className="parcelas-barra">
+                  <span style={{ width: `${parcelas.length ? (pagas / parcelas.length) * 100 : 0}%` }} />
+                </span>
+              </div>
+              <div className="parcelas-lista">
                 {parcelas.map((p) => (
-                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
-                    <input
-                      type="checkbox"
-                      checked={p.pago}
-                      onChange={() => togglePago(p)}
-                      style={{ accentColor: 'var(--em)' }}
-                    />
-                    <span>Parcela {p.numero}</span>
-                    <span>R$ {Number(p.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    <span style={{ color: 'var(--text-3)' }}>
-                      Vencimento: {new Date(p.vencimento).toLocaleDateString('pt-BR')}
+                  <label key={p.id} className={`parcela ${p.pago ? 'paga' : ''}`}>
+                    <input type="checkbox" checked={p.pago} onChange={() => togglePago(p)} />
+                    <span className="parcela-check" aria-hidden="true">{p.pago ? <Icone nome="check" tamanho={13} traco={2.2} /> : p.numero}</span>
+                    <span className="parcela-info">
+                      <strong className="num">{moeda(p.valor)}</strong>
+                      <span>{p.pago ? 'Pago' : `Vence ${dataMedia(p.vencimento)}`}</span>
                     </span>
-                    {p.pago && <span className="badge badge-ok">Pago</span>}
-                  </div>
+                  </label>
                 ))}
               </div>
-            )}
-          </td>
-        </tr>
+            </>
+          )}
+        </div>
       )}
-    </>
+    </li>
   )
 }
 

@@ -1,0 +1,1 @@
+.perfil-grade { display: grid; grid-template-columns: minmax(0, 640px); gap: 28px; }

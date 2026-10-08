@@ -1,0 +1,86 @@
+/* Site público do evento: a mesma página da prévia, em tela cheia. */
+
+.site-publico { min-height: 100vh; background: var(--bg); padding: clamp(0px, 3vw, 32px) 0; }
+.site-publico > .ps {
+  max-width: 880px;
+  margin: 0 auto;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--sh1);
+}
+.site-publico .ps-hero { padding: clamp(14px, 3vw, 28px); }
+.site-publico .ps-moldura { padding: clamp(48px, 8vw, 80px) 24px; }
+
+.ps-nota { width: 100%; font-size: 13.5px; color: var(--text-2); }
+a.ps-btn { text-decoration: none; }
+a.ps-btn:hover { background: color-mix(in srgb, var(--tema) 8%, transparent); }
+
+/* Lista de presentes no site: herda a cor escolhida pelo casal */
+.ps-presentes { padding: 36px clamp(16px, 4vw, 40px) 40px; border-bottom: 1px solid var(--border); text-align: center; scroll-margin-top: 16px; }
+.ps-presentes-titulo { font-family: var(--disp); font-weight: 400; font-size: clamp(20px, 2.4vw, 24px); line-height: 1.35; max-width: 460px; margin: 0 auto 28px; }
+.ps-presentes-vazio { margin: -8px auto 24px; font-size: 14px; color: var(--text-2); }
+.ps-presentes .pres-grade { text-align: left; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.ps-presentes .pres-cartao { box-shadow: none; }
+.ps-presentes .pres-cartao:not(.reservado):hover .pres-midia .icone { color: var(--tema); }
+.ps-presentes .pres-cartao.reservado .pres-midia { cursor: default; }
+.ps-presentes .badge-ok { background: color-mix(in srgb, var(--tema) 10%, #fff); color: var(--tema); }
+
+.ps .btn-primary { background: var(--tema); }
+.ps .btn-primary:not(:disabled):hover { background: color-mix(in srgb, var(--tema) 88%, #000); box-shadow: 0 6px 16px color-mix(in srgb, var(--tema) 25%, transparent); }
+.ps .input:focus, .ps .field input:focus { border-color: var(--tema); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tema) 12%, transparent); }
+.ps-presentear { width: 100%; }
+
+/* Modal do convidado */
+.presentear-item { display: flex; align-items: center; gap: 16px; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+.presentear-item h2 { font-size: 20px; overflow-wrap: anywhere; }
+.presentear-foto { display: grid; place-items: center; width: 64px; height: 64px; flex-shrink: 0; border-radius: var(--r); background: var(--bg-2); color: var(--text-3); overflow: hidden; }
+.presentear-foto img { width: 100%; height: 100%; object-fit: cover; }
+.presentear-valor { font-size: 17px; color: var(--tema); margin-top: 2px; }
+.presentear-desc { font-size: 14px; color: var(--text-2); margin-bottom: 18px; }
+
+.presentear { text-align: left; }
+.presentear-formas { border: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.presentear-formas legend { margin-bottom: 8px; }
+.presentear-forma {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.presentear-forma input { position: absolute; opacity: 0; pointer-events: none; }
+.presentear-forma:hover { border-color: color-mix(in srgb, var(--tema) 40%, transparent); }
+.presentear-forma.sel { border-color: var(--tema); background: color-mix(in srgb, var(--tema) 6%, #fff); }
+.presentear-forma:has(input:focus-visible) { outline: 2px solid var(--tema); outline-offset: 2px; }
+.presentear-forma-icone { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--bg-2); color: var(--text-2); transition: background 0.2s, color 0.2s; }
+.presentear-forma.sel .presentear-forma-icone { background: var(--tema); color: #fff; }
+.presentear-forma-texto { display: flex; flex-direction: column; min-width: 0; }
+.presentear-forma-texto strong { font-size: 14px; font-weight: 600; }
+.presentear-forma-texto span { font-size: 12.5px; color: var(--text-2); }
+
+.pix-codigo { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--r); background: var(--bg-2); }
+.pix-codigo code { font-size: 11.5px; line-height: 1.5; color: var(--text-2); word-break: break-all; max-height: 72px; overflow-y: auto; user-select: all; }
+.pix-codigo .btn { align-self: flex-start; }
+.pix-chave { margin-top: 12px; font-size: 12.5px; color: var(--text-3); overflow-wrap: anywhere; }
+.pix-chave strong { color: var(--text-2); font-weight: 500; }
+
+.presentear-feito { text-align: center; animation: surge 0.35s var(--ease) both; }
+.presentear-feito-selo { display: inline-grid; place-items: center; width: 52px; height: 52px; margin-bottom: 12px; border-radius: 50%; background: var(--tema); color: #fff; }
+.presentear-feito h3 { font-size: 22px; margin-bottom: 6px; }
+.presentear-feito p { font-size: 14px; color: var(--text-2); }
+.presentear-feito .popup-actions { justify-content: center; }
+.btn .carregando-anel { border-color: rgba(255, 255, 255, 0.35); border-top-color: #fff; }
+
+.site-publico-erro { display: grid; place-items: center; padding: 16px; }
+.site-publico-erro .painel { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 420px; padding: 40px 28px; text-align: center; color: var(--text-3); }
+.site-publico-erro h1 { font-size: 24px; }
+.site-publico-erro p { font-size: 14px; color: var(--text-2); }
+
+@media (max-width: 640px) {
+  .site-publico > .ps { border-radius: 0; box-shadow: none; }
+  .ps-presentes .pres-grade { grid-template-columns: 1fr; }
+}
+.ps-presentes .pres-status .icone { color: var(--text-3); }

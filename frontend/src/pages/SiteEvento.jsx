@@ -1,10 +1,22 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useLandingPage } from '../hooks/useLandingPage'
-import Sidebar from '../components/Sidebar'
+import LayoutApp from '../components/LayoutApp'
+import PreviewSite from '../components/PreviewSite'
+import Carregando from '../components/Carregando'
+import Icone from '../components/Icone'
+import './SiteEvento.css'
 
-const CORES = ['#16a37a', '#6d47c9', '#d94f6e', '#e86a2a', '#3b6fe8', '#111318']
+const CORES = [
+  { hex: '#1e6b7b', nome: 'Petróleo' },
+  { hex: '#16a37a', nome: 'Esmeralda' },
+  { hex: '#6d47c9', nome: 'Violeta' },
+  { hex: '#d94f6e', nome: 'Rosé' },
+  { hex: '#e86a2a', nome: 'Terracota' },
+  { hex: '#3b6fe8', nome: 'Azul' },
+  { hex: '#111318', nome: 'Grafite' },
+]
 
 const RECURSOS_LABELS = {
   confirmarPresenca: 'Confirmar presença online',
@@ -21,7 +33,7 @@ function SiteEvento() {
 
   const [titulo, setTitulo] = useState('')
   const [mensagem, setMensagem] = useState('')
-  const [cor, setCor] = useState('#16a37a')
+  const [cor, setCor] = useState(conteudoPadrao.cor)
   const [recursos, setRecursos] = useState(conteudoPadrao.recursos)
   const [ativa, setAtiva] = useState(false)
   const [salvando, setSalvando] = useState(false)
@@ -74,124 +86,114 @@ function SiteEvento() {
     }
   }
 
-  if (carregando || !evento) return <p style={{ padding: 40 }}>Carregando...</p>
+  if (carregando || !evento) {
+    return (
+      <LayoutApp>
+        <Carregando texto="Preparando o construtor…" />
+      </LayoutApp>
+    )
+  }
 
   const slugPreview = (titulo || evento.nome)
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
   return (
-    <div className="screen">
-      <Sidebar />
-      <div className="main">
-        <div className="ev-header">
-          <h2>{evento.nome}</h2>
-          <div className="meta">Site do evento</div>
+    <LayoutApp>
+      <Link to={`/eventos/${id}`} className="voltar"><Icone nome="voltar" tamanho={15} /> {evento.nome}</Link>
+
+      <header className="cab site-topo rv">
+        <div>
+          <p className="eyebrow">Site do evento</p>
+          <h1 className="titulo">Monte a página <em>do convite</em></h1>
         </div>
+        <span className={`site-status ${ativa ? 'no-ar' : ''}`}>
+          <span className="ponto" /> {ativa ? 'Publicado' : 'Rascunho'}
+        </span>
+      </header>
 
-        <div className="page-body">
-          <div className="site-wrap">
-            <div className="site-panel">
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>Construtor de site</div>
-              <div style={{ fontSize: 12, color: 'var(--text-2)' }}>Personalize a página do evento</div>
+      <div className="site">
+        <div className="site-controles painel">
+          <section className="passo rv" style={{ '--d': 1 }}>
+            <h2 className="passo-titulo"><span>1</span> Texto</h2>
+            <div className="field">
+              <label htmlFor="site-titulo">Título</label>
+              <input id="site-titulo" type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="site-mensagem">Mensagem para os convidados</label>
+              <textarea id="site-mensagem" rows={3} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
+            </div>
+          </section>
 
-              <div className="ctrl-sep">Informações</div>
-              <div className="field">
-                <label>Título</label>
-                <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Mensagem</label>
-                <textarea
-                  value={mensagem}
-                  onChange={(e) => setMensagem(e.target.value)}
-                  rows={3}
-                  style={{ width: '100%', padding: '10px 13px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', fontFamily: 'var(--font)', fontSize: 13, resize: 'vertical' }}
-                />
-              </div>
+          <section className="passo rv" style={{ '--d': 2 }}>
+            <h2 className="passo-titulo"><span>2</span> Cor</h2>
+            <div className="cores" role="radiogroup" aria-label="Cor do tema">
+              {CORES.map((c) => (
+                <button
+                  key={c.hex}
+                  type="button"
+                  role="radio"
+                  aria-checked={cor === c.hex}
+                  aria-label={c.nome}
+                  title={c.nome}
+                  className={`cor ${cor === c.hex ? 'sel' : ''}`}
+                  style={{ background: c.hex }}
+                  onClick={() => setCor(c.hex)}
+                >
+                  {cor === c.hex && <Icone nome="check" tamanho={15} traco={2.4} />}
+                </button>
+              ))}
+            </div>
+          </section>
 
-              <div className="ctrl-sep">Cor do tema</div>
-              <div className="color-sw">
-                {CORES.map((c) => (
-                  <div
-                    key={c}
-                    className={`cs ${cor === c ? 'sel' : ''}`}
-                    style={{ background: c }}
-                    onClick={() => setCor(c)}
-                  />
-                ))}
-              </div>
-
-              <div className="ctrl-sep">Recursos</div>
+          <section className="passo rv" style={{ '--d': 3 }}>
+            <h2 className="passo-titulo"><span>3</span> O que mostrar</h2>
+            <div className="recursos">
               {Object.entries(RECURSOS_LABELS).map(([chave, label]) => (
-                <label key={chave} className="toggle-row">
+                <label key={chave} className="switch recurso">
                   <input type="checkbox" checked={recursos[chave]} onChange={() => toggleRecurso(chave)} />
-                  {label}
+                  <span className="switch-track" />
+                  <span className="switch-texto">{label}</span>
                 </label>
               ))}
-
-              <button className="btn btn-primary" style={{ width: '100%', marginTop: 18 }} onClick={handlePublicar} disabled={salvando}>
-                {salvando ? 'Publicando...' : ativa ? 'Atualizar site' : 'Publicar site'}
-              </button>
-
-              {sucesso && <p style={{ color: 'var(--em)', fontSize: 12, textAlign: 'center', marginTop: 8 }}>Publicado com sucesso!</p>}
-
-              <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center', marginTop: 9 }}>
-                hubevent.app/{slugPreview}
-              </div>
             </div>
+          </section>
 
-            <div className="preview-wrap">
-              <div className="prev-chrome">
-                <div className="prev-dots">
-                  <div className="prev-dot" style={{ background: '#ff5f57' }} />
-                  <div className="prev-dot" style={{ background: '#febc2e' }} />
-                  <div className="prev-dot" style={{ background: '#28c840' }} />
-                </div>
-                <div className="prev-url-bar">hubevent.app/{slugPreview}</div>
-              </div>
-
-              <div className="prev-frame">
-                <div className="prev-hero" style={{ background: cor }}>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-                    {evento.categoria || 'Evento'}
-                  </div>
-                  <div className="prev-hero-title">{titulo || evento.nome}</div>
-                  <div className="prev-hero-sub">
-                    {new Date(evento.data_inicio).toLocaleDateString('pt-BR')}
-                    {evento.local ? ` · ${evento.local}` : ''}
-                  </div>
-                </div>
-
-                <div className="prev-section">
-                  <div className="prev-sec-lbl">Mensagem</div>
-                  <div className="prev-desc-txt">{mensagem}</div>
-                </div>
-
-                {recursos.confirmarPresenca && (
-                  <div className="prev-section">
-                    <div className="prev-sec-lbl">Confirmar presença</div>
-                    <div className="prev-desc-txt">Confirme sua presença até a data do evento.</div>
-                    <span className="prev-btn" style={{ background: cor }}>Confirmar presença</span>
-                  </div>
-                )}
-
-                {recursos.listaPresentes && (
-                  <div className="prev-section">
-                    <div className="prev-sec-lbl">Lista de presentes</div>
-                    <div className="prev-desc-txt">Escolha um presente especial.</div>
-                    <span className="prev-btn" style={{ background: cor }}>Ver lista de presentes</span>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="publicar rv" style={{ '--d': 4 }}>
+            <button className="btn btn-primary btn-lg btn-block" onClick={handlePublicar} disabled={salvando}>
+              {salvando ? 'Publicando…' : ativa ? 'Atualizar site' : 'Publicar site'}
+            </button>
+            {sucesso ? (
+              <p className="publicado" role="status"><Icone nome="check" tamanho={15} /> Site publicado com sucesso</p>
+            ) : (
+              <p className="publicar-url">hubevent.app/{slugPreview}</p>
+            )}
+            {ativa && landingPage?.slug && (
+              <a className="link publicar-abrir" href={`/site/${landingPage.slug}`} target="_blank" rel="noopener noreferrer">
+                Abrir o site publicado <Icone nome="abrir" tamanho={13} />
+              </a>
+            )}
           </div>
         </div>
+
+        <div className="site-previa rv" style={{ '--d': 2 }}>
+          <div className="moldura">
+            <div className="moldura-barra">
+              <span className="moldura-bolas" aria-hidden="true"><i /><i /><i /></span>
+              <span className="moldura-url">hubevent.app/{slugPreview}</span>
+            </div>
+            <div className="moldura-tela">
+              <PreviewSite evento={evento} titulo={titulo} mensagem={mensagem} cor={cor} recursos={recursos} />
+            </div>
+          </div>
+          <p className="previa-legenda">Prévia ao vivo · as alterações aparecem na hora</p>
+        </div>
       </div>
-    </div>
+    </LayoutApp>
   )
 }
 
