@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import ModalConfirmacao from './ModalConfirmacao'
 import LinhaDespesa from './LinhaDespesa'
 import GraficoDespesas from './GraficoDespesas'
+import GraficoFluxoCaixa from './GraficoFluxoCaixa'
 import NumeroAnimado from './NumeroAnimado'
 import Icone from './Icone'
 import { Link } from 'react-router-dom'
@@ -164,6 +165,8 @@ function AbaFinanceiro({ evento, despesas, carregando, recarregar, aoAtualizarOr
           <GraficoDespesas despesas={despesas} />
         </div>
       </section>
+
+      <GraficoFluxoCaixa eventoId={evento?.id} despesas={despesas} orcamento={orcamento} dataEvento={evento?.data_inicio} />
 
       <form className="lancar" onSubmit={handleAdicionarDespesa}>
         <div className="lancar-cab">
