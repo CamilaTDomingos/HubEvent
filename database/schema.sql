@@ -62,14 +62,40 @@ CREATE TABLE evento (
 -- ============================================================
 -- CONVIDADO
 -- ============================================================
+-- Grupos de convidados de cada evento (Família, Amigos…). O evento
+-- começa com três (trigger) e o organizador gerencia na aba Convidados.
+CREATE TABLE grupo_convidado (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    evento_id UUID NOT NULL,
+    nome VARCHAR(60) NOT NULL,
+    cor VARCHAR(7) NOT NULL,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_grupo_convidado_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE,
+    CONSTRAINT uq_grupo_convidado_evento UNIQUE (id, evento_id),
+    CONSTRAINT chk_grupo_convidado_nome CHECK (btrim(nome) <> ''),
+    CONSTRAINT chk_grupo_convidado_cor CHECK (cor ~ '^#[0-9a-fA-F]{6}$')
+);
+
 CREATE TABLE convidado (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     evento_id UUID NOT NULL,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255),
     status_presenca status_presenca NOT NULL DEFAULT 'PENDENTE',
-    confirmado_em TIMESTAMPTZ,
-    CONSTRAINT fk_convidado_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE
+    confirmado_em TIMESTAMPTZ, -- quando respondeu (confirmando ou recusando)
+    grupo_id UUID,
+    acompanhantes_permitidos SMALLINT NOT NULL DEFAULT 0,
+    acompanhantes_confirmados SMALLINT NOT NULL DEFAULT 0,
+    enviado_em TIMESTAMPTZ, -- quando o link foi enviado; quem respondeu conta como enviado
+    CONSTRAINT fk_convidado_evento FOREIGN KEY (evento_id) REFERENCES evento(id) ON DELETE CASCADE,
+    -- Só aceita grupo do mesmo evento; apagar o grupo zera só grupo_id.
+    CONSTRAINT fk_convidado_grupo FOREIGN KEY (grupo_id, evento_id) REFERENCES grupo_convidado(id, evento_id) ON DELETE SET NULL (grupo_id),
+    CONSTRAINT chk_convidado_acompanhantes_permitidos CHECK (acompanhantes_permitidos BETWEEN 0 AND 20),
+    -- Só quem confirmou leva acompanhantes, e nunca acima do permitido.
+    CONSTRAINT chk_convidado_acompanhantes_confirmados CHECK (
+        acompanhantes_confirmados BETWEEN 0 AND acompanhantes_permitidos
+        AND (status_presenca = 'CONFIRMADO' OR acompanhantes_confirmados = 0)
+    )
 );
 
 -- ============================================================
@@ -290,6 +316,8 @@ CREATE TABLE mensagem_chat (
 CREATE INDEX idx_evento_organizador ON evento(organizador_id);
 CREATE INDEX idx_evento_data_inicio ON evento(data_inicio);
 CREATE INDEX idx_convidado_evento ON convidado(evento_id);
+CREATE INDEX idx_convidado_grupo ON convidado(grupo_id, evento_id);
+CREATE UNIQUE INDEX uq_grupo_convidado_nome ON grupo_convidado(evento_id, lower(nome));
 CREATE INDEX idx_tarefa_evento ON tarefa(evento_id);
 CREATE INDEX idx_tarefa_categoria ON tarefa(categoria_id);
 CREATE INDEX idx_categoria_tarefa_usuario ON categoria_tarefa(usuario_id);
@@ -349,6 +377,24 @@ CREATE TRIGGER trigger_evento_participante_organizador
 AFTER INSERT ON evento FOR EACH ROW EXECUTE FUNCTION criar_participante_organizador();
 
 -- ============================================================
+-- GRUPOS DE CONVIDADOS INICIAIS (evento novo)
+-- ============================================================
+CREATE OR REPLACE FUNCTION criar_grupos_evento_novo()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.grupo_convidado (evento_id, nome, cor)
+    VALUES (NEW.id, 'Família', '#d9468f'), (NEW.id, 'Amigos', '#3b6fe8'), (NEW.id, 'Trabalho', '#e8a432')
+    ON CONFLICT DO NOTHING;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = '';
+
+REVOKE EXECUTE ON FUNCTION criar_grupos_evento_novo() FROM PUBLIC, anon, authenticated;
+
+CREATE TRIGGER trigger_evento_grupos_convidado
+AFTER INSERT ON evento FOR EACH ROW EXECUTE FUNCTION criar_grupos_evento_novo();
+
+-- ============================================================
 -- CATEGORIAS DE DESPESA INICIAIS de um usuário (só se ele não tiver nenhuma)
 -- ============================================================
 CREATE OR REPLACE FUNCTION criar_categorias_despesa_padrao(p_usuario UUID)
@@ -399,6 +445,7 @@ FOR EACH ROW EXECUTE FUNCTION criar_usuario_apos_signup();
 ALTER TABLE usuario ENABLE ROW LEVEL SECURITY;
 ALTER TABLE evento ENABLE ROW LEVEL SECURITY;
 ALTER TABLE convidado ENABLE ROW LEVEL SECURITY;
+ALTER TABLE grupo_convidado ENABLE ROW LEVEL SECURITY;
 ALTER TABLE landing_page ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lista_presentes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assistente_ia ENABLE ROW LEVEL SECURITY;
@@ -424,6 +471,12 @@ CREATE POLICY "evento_do_organizador" ON evento
 CREATE POLICY "convidado_organizador_gerencia" ON convidado
     FOR ALL USING (
         EXISTS (SELECT 1 FROM evento WHERE evento.id = convidado.evento_id AND evento.organizador_id = (select auth.uid()))
+    );
+
+-- GRUPO_CONVIDADO: só o organizador do evento
+CREATE POLICY "grupo_convidado_organizador" ON grupo_convidado
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM evento WHERE evento.id = grupo_convidado.evento_id AND evento.organizador_id = (select auth.uid()))
     );
 
 -- LANDING_PAGE: só o organizador. O site público lê pelo backend (service_role).

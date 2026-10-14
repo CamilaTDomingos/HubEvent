@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabaseClient'
 
 // Categorias do usuário logado: 'categoria_tarefa' (checklist) ou
 // 'categoria_despesa' (financeiro). O RLS já filtra pelo dono, então a busca
-// não precisa de .eq('usuario_id', …).
-export function useCategorias(tabela = 'categoria_tarefa') {
+// não precisa de .eq('usuario_id', …). Com eventoId, lê as de um evento
+// ('grupo_convidado', os grupos da aba Convidados).
+export function useCategorias(tabela = 'categoria_tarefa', eventoId = null) {
   const [categorias, setCategorias] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
@@ -12,10 +13,9 @@ export function useCategorias(tabela = 'categoria_tarefa') {
   const buscarCategorias = useCallback(async () => {
     setCarregando(true)
 
-    const { data, error } = await supabase
-      .from(tabela)
-      .select('*')
-      .order('nome', { ascending: true })
+    let consulta = supabase.from(tabela).select('*')
+    if (eventoId) consulta = consulta.eq('evento_id', eventoId)
+    const { data, error } = await consulta.order('nome', { ascending: true })
 
     if (error) {
       setErro(error.message)
@@ -24,7 +24,7 @@ export function useCategorias(tabela = 'categoria_tarefa') {
       setCategorias(data)
     }
     setCarregando(false)
-  }, [tabela])
+  }, [tabela, eventoId])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

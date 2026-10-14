@@ -29,7 +29,7 @@ function contar(lista, teste) {
 export async function montarContexto(evento, agora = new Date()) {
   const id = evento.id
   const [convidados, despesas, tarefas, presentes, categorias] = await Promise.all([
-    supabaseAdmin.from('convidado').select('status_presenca').eq('evento_id', id),
+    supabaseAdmin.from('convidado').select('status_presenca, acompanhantes_confirmados').eq('evento_id', id),
     supabaseAdmin.from('despesa').select('valor_total, pago, categoria_despesa:categoria_id (nome)').eq('evento_id', id),
     supabaseAdmin
       .from('tarefa')
@@ -76,6 +76,10 @@ export async function montarContexto(evento, agora = new Date()) {
       confirmados: contar(listaConvidados, (c) => c.status_presenca === 'CONFIRMADO'),
       pendentes: contar(listaConvidados, (c) => c.status_presenca === 'PENDENTE'),
       recusados: contar(listaConvidados, (c) => c.status_presenca === 'RECUSADO'),
+      // Titulares confirmados + acompanhantes: é o número para buffet e bebidas.
+      pessoasConfirmadas: listaConvidados
+        .filter((c) => c.status_presenca === 'CONFIRMADO')
+        .reduce((soma, c) => soma + 1 + (c.acompanhantes_confirmados ?? 0), 0),
     },
     financeiro: {
       despesas: listaDespesas.length,

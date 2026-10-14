@@ -14,6 +14,11 @@ export function tipoEvento(categoria) {
   return TIPOS_EVENTO[categoria] || TIPOS_EVENTO.Outro
 }
 
+// Palavras usadas nos textos do painel de categorias: categorias (perfil)
+// ou grupos de convidados (aba Convidados).
+export const TERMO_CATEGORIA = { singular: 'categoria', plural: 'categorias', o: 'a', um: 'uma', do: 'da' }
+export const TERMO_GRUPO = { singular: 'grupo', plural: 'grupos', o: 'o', um: 'um', do: 'do' }
+
 // Cor das despesas sem categoria (no gráfico e no extrato).
 export const COR_SEM_CATEGORIA = '#c9ced8'
 

@@ -15,6 +15,8 @@ function Rsvp() {
   const [enviando, setEnviando] = useState(false)
   const [acabouDeResponder, setAcabouDeResponder] = useState(false)
   const [confete, setConfete] = useState(null)
+  const [alterando, setAlterando] = useState(false)
+  const [acompanhantes, setAcompanhantes] = useState(0)
 
   useEffect(() => {
     async function buscarConvite() {
@@ -23,6 +25,7 @@ function Rsvp() {
         if (!res.ok) throw new Error('Convite não encontrado.')
         const data = await res.json()
         setConvite(data)
+        setAcompanhantes(data.acompanhantes_confirmados ?? 0)
       } catch (err) {
         setErro(err.message)
       } finally {
@@ -32,16 +35,21 @@ function Rsvp() {
     buscarConvite()
   }, [convidadoId])
 
+  // O servidor confere o limite de acompanhantes; a página só ajuda.
   async function responder(resposta) {
     setEnviando(true)
+    setErro(null)
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/rsvp/${convidadoId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resposta }),
+        body: JSON.stringify({ resposta, acompanhantes: resposta === 'CONFIRMADO' ? acompanhantes : 0 }),
       })
-      if (!res.ok) throw new Error('Não foi possível registrar sua resposta.')
-      setConvite((atual) => ({ ...atual, status_presenca: resposta }))
+      const corpo = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(corpo.error || 'Não foi possível registrar sua resposta.')
+      setConvite((atual) => ({ ...atual, status_presenca: corpo.status_presenca, acompanhantes_confirmados: corpo.acompanhantes_confirmados }))
+      setAcompanhantes(corpo.acompanhantes_confirmados)
+      setAlterando(false)
       setAcabouDeResponder(true)
       if (resposta === 'CONFIRMADO') setConfete(sortearConfete())
     } catch (err) {
@@ -68,6 +76,17 @@ function Rsvp() {
   const { evento } = convite
   const tipo = tipoEvento(evento.categoria)
   const horario = hora(evento.data_inicio)
+  const limite = convite.acompanhantes_permitidos ?? 0
+  const levando = convite.acompanhantes_confirmados ?? 0
+  const perguntando = !convite.encerrado && (convite.status_presenca === 'PENDENTE' || alterando)
+  const podeAlterar = !convite.encerrado && !enviando
+
+  function alterarResposta() {
+    setAcompanhantes(levando)
+    setAcabouDeResponder(false)
+    setErro(null)
+    setAlterando(true)
+  }
 
   return (
     <div className="rsvp">
@@ -95,9 +114,24 @@ function Rsvp() {
           </ul>
 
           <div className="rsvp-resposta">
-            {convite.status_presenca === 'PENDENTE' ? (
+            {perguntando ? (
               <>
                 <p className="rsvp-pergunta">Podemos contar com você?</p>
+                {limite > 0 && (
+                  <div className="rsvp-acomp">
+                    <span id="rsvp-acomp-rotulo">Quantas pessoas vão com você?</span>
+                    <div className="contador" role="group" aria-labelledby="rsvp-acomp-rotulo">
+                      <button type="button" className="btn-icone" disabled={acompanhantes <= 0 || enviando} onClick={() => setAcompanhantes((n) => Math.max(0, n - 1))} aria-label="Menos um acompanhante">
+                        <span aria-hidden="true">−</span>
+                      </button>
+                      <output className="num" aria-live="polite" data-testid="acompanhantes">{acompanhantes}</output>
+                      <button type="button" className="btn-icone" disabled={acompanhantes >= limite || enviando} onClick={() => setAcompanhantes((n) => Math.min(limite, n + 1))} aria-label="Mais um acompanhante">
+                        <Icone nome="mais" tamanho={15} />
+                      </button>
+                    </div>
+                    <small>Seu convite inclui até {limite} {limite === 1 ? 'acompanhante' : 'acompanhantes'}.</small>
+                  </div>
+                )}
                 <div className="rsvp-botoes">
                   <button className="btn btn-primary btn-lg" disabled={enviando} onClick={() => responder('CONFIRMADO')}>
                     <Icone nome="check" tamanho={16} /> Confirmar presença
@@ -106,18 +140,34 @@ function Rsvp() {
                     Não poderei ir
                   </button>
                 </div>
+                {alterando && (
+                  <button className="link rsvp-cancelar" onClick={() => setAlterando(false)}>Manter a resposta anterior</button>
+                )}
                 {erro && <p className="erro-msg">{erro}</p>}
               </>
             ) : convite.status_presenca === 'CONFIRMADO' ? (
               <div className={`rsvp-final ok ${acabouDeResponder ? 'agora' : ''}`}>
                 <span className="rsvp-final-icone"><Icone nome="check" tamanho={22} traco={2} /></span>
-                <p><strong>Presença confirmada.</strong> Obrigado — nos vemos lá!</p>
+                <p>
+                  <strong>Presença confirmada{levando > 0 && ` para você e mais ${levando} ${levando === 1 ? 'pessoa' : 'pessoas'}`}.</strong> Obrigado — nos vemos lá!
+                </p>
               </div>
-            ) : (
+            ) : convite.status_presenca === 'RECUSADO' ? (
               <div className={`rsvp-final ${acabouDeResponder ? 'agora' : ''}`}>
                 <span className="rsvp-final-icone"><Icone nome="mais" tamanho={22} style={{ rotate: '45deg' }} /></span>
                 <p><strong>Resposta registrada.</strong> Que pena! Sentiremos sua falta.</p>
               </div>
+            ) : (
+              <div className="rsvp-final">
+                <span className="rsvp-final-icone"><Icone nome="relogio" tamanho={22} /></span>
+                <p><strong>As confirmações foram encerradas.</strong> Fale direto com o anfitrião.</p>
+              </div>
+            )}
+
+            {!perguntando && convite.status_presenca !== 'PENDENTE' && podeAlterar && (
+              <button className="btn btn-ghost btn-sm rsvp-alterar" onClick={alterarResposta}>
+                <Icone nome="editar" tamanho={14} /> Alterar resposta
+              </button>
             )}
           </div>
         </div>

@@ -55,6 +55,7 @@ export const dia = (v) => formatar(v, { day: '2-digit' })
 export const mesCurto = (v) => formatar(v, { month: 'short' }).replace('.', '')
 export const semanaCurta = (v) => formatar(v, { weekday: 'short' }).replace('.', '')
 export const dataLonga = (v) => formatar(v, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+export const dataCurta = (v) => formatar(v, { day: '2-digit', month: '2-digit' })
 export const dataMedia = (v) => formatar(v, { day: 'numeric', month: 'long' })
 export const mesAno = (v) => formatar(v, { month: 'long', year: 'numeric' })
 

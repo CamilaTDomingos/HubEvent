@@ -24,10 +24,10 @@ const EVENTOS = {
 // Linhas "completas", como no banco. O servidor falso só devolve as colunas
 // pedidas no select, igual ao PostgREST, para o teste de privacidade valer.
 const CONVIDADOS = [
-  { nome: 'Carlos Pereira', email: 'carlos@exemplo.com', status_presenca: 'CONFIRMADO' },
-  { nome: 'Dora Lima', email: 'dora@exemplo.com', status_presenca: 'CONFIRMADO' },
-  { nome: 'Edu Souza', email: 'edu@exemplo.com', status_presenca: 'PENDENTE' },
-  { nome: 'Fê Alves', email: 'fe@exemplo.com', status_presenca: 'RECUSADO' },
+  { nome: 'Carlos Pereira', email: 'carlos@exemplo.com', status_presenca: 'CONFIRMADO', acompanhantes_confirmados: 2 },
+  { nome: 'Dora Lima', email: 'dora@exemplo.com', status_presenca: 'CONFIRMADO', acompanhantes_confirmados: 0 },
+  { nome: 'Edu Souza', email: 'edu@exemplo.com', status_presenca: 'PENDENTE', acompanhantes_confirmados: 0 },
+  { nome: 'Fê Alves', email: 'fe@exemplo.com', status_presenca: 'RECUSADO', acompanhantes_confirmados: 0 },
 ]
 
 let requisicoes = []
@@ -230,7 +230,7 @@ test('atalho de checklist: manda só dados agregados, pede JSON e grava as duas 
 
   // Privacidade: os convidados viram só contagens.
   const instrucoes = chamada.config.systemInstruction
-  assert.match(instrucoes, /"convidados":\{"total":4,"confirmados":2,"pendentes":1,"recusados":1\}/)
+  assert.match(instrucoes, /"convidados":\{"total":4,"confirmados":2,"pendentes":1,"recusados":1,"pessoasConfirmadas":4\}/)
   assert.match(instrucoes, /"totalGasto":1500\.5/)
   assert.match(instrucoes, /"porCategoria":\{"Buffet":1200,"Sem categoria":300\.5\}/)
   assert.match(instrucoes, /"Reservar o salão"/)
@@ -239,7 +239,7 @@ test('atalho de checklist: manda só dados agregados, pede JSON e grava as duas 
     assert.ok(!instrucoes.includes(c.nome), `nome de convidado vazou: ${c.nome}`)
     assert.ok(!instrucoes.includes(c.email), `e-mail de convidado vazou: ${c.email}`)
   }
-  assert.equal(requisicoes.find((q) => q.tabela === 'convidado').select, 'status_presenca')
+  assert.equal(requisicoes.find((q) => q.tabela === 'convidado').select, 'status_presenca,acompanhantes_confirmados')
 })
 
 test('resposta sem tarefas grava dados nulos', async () => {

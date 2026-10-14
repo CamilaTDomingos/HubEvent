@@ -2,23 +2,24 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCategorias } from '../hooks/useCategorias'
 import { corEmUso, proximaCor } from '../utils/coresCategoria'
+import { TERMO_CATEGORIA } from '../utils/categorias'
 import SeletorCor from './SeletorCor'
 import SeloCategoria from './SeloCategoria'
 import ModalConfirmacao from './ModalConfirmacao'
 import Icone from './Icone'
 import './Categorias.css'
 
-function validar(categorias, { nome, cor }, ignorarId) {
-  if (!nome.trim()) return 'Dê um nome para a categoria.'
+function validar(categorias, { nome, cor }, ignorarId, termo) {
+  if (!nome.trim()) return `Dê um nome para ${termo.o} ${termo.singular}.`
   const mesmoNome = categorias.find((c) => c.id !== ignorarId && c.nome.toLowerCase() === nome.trim().toLowerCase())
-  if (mesmoNome) return 'Já existe uma categoria com esse nome.'
+  if (mesmoNome) return `Já existe ${termo.um} ${termo.singular} com esse nome.`
   const mesmaCor = corEmUso(categorias, cor, ignorarId)
-  if (mesmaCor) return `Essa cor já é da categoria "${mesmaCor.nome}". Escolha outra.`
+  if (mesmaCor) return `Essa cor já é ${termo.do} ${termo.singular} "${mesmaCor.nome}". Escolha outra.`
   return null
 }
 
 // Formulário usado tanto para criar quanto para editar uma categoria.
-function FormCategoria({ inicial, categorias, ignorarId, textoSalvar, aoSalvar, aoCancelar }) {
+function FormCategoria({ inicial, categorias, ignorarId, termo, textoSalvar, aoSalvar, aoCancelar }) {
   const [nome, setNome] = useState(inicial.nome)
   const [cor, setCor] = useState(inicial.cor)
   const [erro, setErro] = useState(null)
@@ -26,7 +27,7 @@ function FormCategoria({ inicial, categorias, ignorarId, textoSalvar, aoSalvar, 
 
   async function enviar(e) {
     e.preventDefault()
-    const problema = validar(categorias, { nome, cor }, ignorarId)
+    const problema = validar(categorias, { nome, cor }, ignorarId, termo)
     if (problema) {
       setErro(problema)
       return
@@ -43,11 +44,11 @@ function FormCategoria({ inicial, categorias, ignorarId, textoSalvar, aoSalvar, 
         <input
           className="input"
           type="text"
-          placeholder="Nome da categoria"
+          placeholder={`Nome ${termo.do} ${termo.singular}`}
           maxLength={60}
           value={nome}
           onChange={(e) => setNome(e.target.value)}
-          aria-label="Nome da categoria"
+          aria-label={`Nome ${termo.do} ${termo.singular}`}
           autoFocus
         />
         <SeloCategoria categoria={{ nome: nome.trim() || 'Prévia', cor }} />
@@ -62,10 +63,10 @@ function FormCategoria({ inicial, categorias, ignorarId, textoSalvar, aoSalvar, 
   )
 }
 
-// Painel do perfil para um tipo de categoria (tarefa ou despesa).
-function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
-  const { usuario } = useAuth()
-  const { categorias, carregando, erro, criar, editar, remover } = useCategorias(tabela)
+// Lista editável de categorias. Recebe o resultado de useCategorias e o
+// dono das novas ({ usuario_id } ou { evento_id }).
+export function PainelCategorias({ colecao, dono, titulo, textoVazio, textoRemocao, termo = TERMO_CATEGORIA }) {
+  const { categorias, carregando, erro, criar, editar, remover } = colecao
   const [editando, setEditando] = useState(null)
   const [criando, setCriando] = useState(false)
   const [apagando, setApagando] = useState(null)
@@ -80,13 +81,13 @@ function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
     <section className="painel cat-painel">
       <div className="painel-cab">
         <h3 className="titulo">{titulo}</h3>
-        <span className="muted">{categorias.length} {categorias.length === 1 ? 'categoria' : 'categorias'}</span>
+        <span className="muted">{categorias.length} {categorias.length === 1 ? termo.singular : termo.plural}</span>
       </div>
 
       {carregando ? (
         <p className="muted painel-vazio">Carregando…</p>
       ) : erro ? (
-        <p className="erro-msg cat-erro">Não foi possível carregar as categorias: {erro}</p>
+        <p className="erro-msg cat-erro">Não foi possível carregar {termo.o}s {termo.plural}: {erro}</p>
       ) : (
         <ul className="cat-lista">
           {categorias.length === 0 && !criando && (
@@ -100,6 +101,7 @@ function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
                   inicial={c}
                   categorias={categorias}
                   ignorarId={c.id}
+                  termo={termo}
                   textoSalvar="Salvar"
                   aoSalvar={async (dados) => {
                     const falha = await editar(c.id, dados)
@@ -129,9 +131,10 @@ function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
               <FormCategoria
                 inicial={{ nome: '', cor: proximaCor(categorias) }}
                 categorias={categorias}
-                textoSalvar="Criar categoria"
+                termo={termo}
+                textoSalvar={`Criar ${termo.singular}`}
                 aoSalvar={async (dados) => {
-                  const falha = await criar({ ...dados, usuario_id: usuario.id })
+                  const falha = await criar({ ...dados, ...dono })
                   if (!falha) setCriando(false)
                   return falha
                 }}
@@ -142,7 +145,7 @@ function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
             <li>
               <button className="cat-nova" onClick={() => { setEditando(null); setCriando(true) }}>
                 <span className="cat-nova-icone"><Icone nome="mais" tamanho={14} traco={2} /></span>
-                Adicionar categoria
+                Adicionar {termo.singular}
               </button>
             </li>
           )}
@@ -151,7 +154,7 @@ function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
 
       <ModalConfirmacao
         aberto={!!apagando}
-        titulo="Apagar categoria?"
+        titulo={`Apagar ${termo.singular}?`}
         mensagem={textoRemocao(apagando?.nome)}
         textoConfirmar="Apagar"
         aoConfirmar={confirmarRemocao}
@@ -159,6 +162,13 @@ function GerenciarCategorias({ tabela, titulo, textoVazio, textoRemocao }) {
       />
     </section>
   )
+}
+
+// Painel do perfil para um tipo de categoria (tarefa ou despesa).
+function GerenciarCategorias({ tabela, ...props }) {
+  const { usuario } = useAuth()
+  const colecao = useCategorias(tabela)
+  return <PainelCategorias colecao={colecao} dono={{ usuario_id: usuario.id }} {...props} />
 }
 
 export default GerenciarCategorias

@@ -1,7 +1,11 @@
+import { createPortal } from 'react-dom'
+
+// Vai direto para o <body>: dentro de uma coluna sticky (como a lateral da
+// aba Convidados) o overlay ficaria preso no contexto de empilhamento dela.
 function ModalConfirmacao({ aberto, titulo, mensagem, aoConfirmar, aoCancelar, textoConfirmar = 'Confirmar' }) {
   if (!aberto) return null
 
-  return (
+  return createPortal(
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && aoCancelar()}>
       <div className="popup popup-sm" role="alertdialog" aria-modal="true" aria-labelledby="confirmacao-titulo">
         <h2 id="confirmacao-titulo" className="popup-title titulo">{titulo}</h2>
@@ -16,7 +20,8 @@ function ModalConfirmacao({ aberto, titulo, mensagem, aoConfirmar, aoCancelar, t
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

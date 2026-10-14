@@ -62,6 +62,7 @@ function instrucoesDoSistema(contexto) {
       'O prazo, quando houver, vai no formato AAAA-MM-DD, entre hoje e o dia do evento. A categoria deve ser exatamente uma das categoriasDeTarefa, ou vazia. ' +
       'Não repita tarefas que já estão no checklist. Se a resposta não sugerir tarefas, devolva "tarefas" vazio.',
     'Você não recebe nomes nem contatos de convidados e não deve pedi-los.',
+    'Para comida, bebida e espaço, conte as pessoas por convidados.pessoasConfirmadas (titulares confirmados mais os acompanhantes); os pendentes podem ou não vir.',
     '',
     'Dados do evento (JSON):',
     JSON.stringify(contexto),
