@@ -54,6 +54,7 @@ CREATE TABLE evento (
     pix_chave VARCHAR(140),
     pix_nome VARCHAR(100),
     pix_cidade VARCHAR(100),
+    orcamento_estimado DECIMAL(10,2),
     CONSTRAINT fk_evento_organizador FOREIGN KEY (organizador_id) REFERENCES usuario(id) ON DELETE CASCADE,
     CONSTRAINT chk_evento_datas CHECK (data_fim >= data_inicio)
 );
@@ -277,6 +278,7 @@ CREATE TABLE mensagem_chat (
     usuario_id UUID NOT NULL,
     tipo tipo_mensagem NOT NULL,
     conteudo TEXT NOT NULL,
+    dados JSONB, -- resposta estruturada da IA (tarefas sugeridas e quais já foram ao checklist)
     criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_mensagem_assistente FOREIGN KEY (assistente_id) REFERENCES assistente_ia(id) ON DELETE CASCADE,
     CONSTRAINT fk_mensagem_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
@@ -306,7 +308,7 @@ CREATE INDEX idx_pagamento_para ON pagamento_rateio(para_id, evento_id);
 CREATE INDEX idx_lista_presentes_evento ON lista_presentes(evento_id);
 CREATE INDEX idx_lista_presentes_responsavel ON lista_presentes(responsavel_por_id);
 CREATE INDEX idx_reserva_presente_presente ON reserva_presente(presente_id);
-CREATE INDEX idx_mensagem_assistente ON mensagem_chat(assistente_id);
+CREATE INDEX idx_mensagem_assistente_criado ON mensagem_chat(assistente_id, criado_em);
 CREATE INDEX idx_mensagem_usuario ON mensagem_chat(usuario_id);
 
 -- ============================================================

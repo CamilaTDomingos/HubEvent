@@ -12,6 +12,7 @@ import AbaChecklist from '../components/AbaChecklist'
 import AbaConvidados from '../components/AbaConvidados'
 import AbaFinanceiro from '../components/AbaFinanceiro'
 import AbaPresentes from '../components/AbaPresentes'
+import AssistenteIA from '../components/AssistenteIA'
 import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
 import { tipoEvento } from '../utils/categorias'
@@ -146,6 +147,8 @@ function EventoDetalhe() {
           />
         )}
       </div>
+
+      <AssistenteIA eventoId={id} aoAdicionarTarefas={tarefas.recarregar} />
     </LayoutApp>
   )
 }

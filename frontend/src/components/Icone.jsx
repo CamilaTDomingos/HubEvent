@@ -20,6 +20,7 @@ const CAMINHOS = {
   chevron: <path d="M9 6l6 6-6 6" />,
   busca: <><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.3-4.3" /></>,
   mais: <path d="M12 5v14M5 12h14" />,
+  fechar: <path d="M6 6l12 12M18 6 6 18" />,
   editar: <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />,
   sair: <path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15M10 16l4-4-4-4M14 12H4" />,
   presente: <><rect x="3.5" y="8" width="17" height="4" rx="1" /><path d="M5 12v8h14v-8M12 8v12M12 8C10.5 4.5 7 4.5 7.3 7 7.5 8 12 8 12 8zM12 8c1.5-3.5 5-3.5 4.7-1-.2 1-4.7 1-4.7 1z" /></>,

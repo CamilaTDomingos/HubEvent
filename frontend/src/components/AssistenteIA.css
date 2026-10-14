@@ -1,0 +1,204 @@
+/* ---------- Assistente de IA (chat flutuante à direita) ---------- */
+
+.assist-botao {
+  position: fixed;
+  z-index: 45;
+  right: clamp(16px, 2vw, 28px);
+  bottom: clamp(16px, 2vw, 28px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 20px 13px 17px;
+  border: none;
+  border-radius: 40px;
+  background: var(--em);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(30, 107, 123, 0.3);
+  animation: aparece 0.4s ease both;
+  transition: background 0.2s, transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.assist-botao:hover { background: var(--em-2); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(30, 107, 123, 0.34); }
+
+.assist-painel {
+  position: fixed;
+  z-index: 450;
+  right: clamp(16px, 2vw, 28px);
+  bottom: clamp(16px, 2vw, 28px);
+  width: min(400px, calc(100vw - 32px));
+  height: min(660px, calc(100vh - 2 * clamp(16px, 2vw, 28px)));
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh3);
+  overflow: hidden;
+  animation: popup 0.3s var(--ease) both;
+}
+
+.assist-cab {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.assist-cab > div { flex: 1; min-width: 0; }
+.assist-cab h2 { font-size: 17px; }
+.assist-cab p { font-size: 12px; color: var(--text-3); }
+.assist-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--em-dim);
+  color: var(--em);
+}
+
+.assist-mensagens {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 16px;
+  background: var(--bg);
+  overscroll-behavior: contain;
+}
+
+.assist-balao {
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  font-size: 13.5px;
+  line-height: 1.55;
+  animation: surge 0.3s var(--ease) both;
+}
+.assist-balao.ia {
+  align-self: flex-start;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 6px;
+}
+.assist-balao.usuario {
+  align-self: flex-end;
+  background: var(--em);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+.assist-texto { white-space: pre-line; overflow-wrap: anywhere; }
+
+.assist-aviso { align-self: center; font-size: 12.5px; color: var(--text-3); }
+
+.assist-digitando { display: inline-flex; gap: 5px; padding: 14px 16px; }
+.assist-digitando span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+  animation: assist-pulsa 1.2s ease-in-out infinite;
+}
+.assist-digitando span:nth-child(2) { animation-delay: 0.15s; }
+.assist-digitando span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes assist-pulsa { 0%, 60%, 100% { opacity: 0.3; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
+
+.assist-erro {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r);
+  background: var(--red-dim);
+  border: 1px solid rgba(229, 72, 77, 0.2);
+  color: var(--red);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.assist-erro p { flex: 1; }
+.assist-erro .btn { flex-shrink: 0; }
+
+/* Tarefas sugeridas dentro do balão da IA */
+.assist-tarefas {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.assist-tarefas .eyebrow { margin-bottom: 6px; }
+.assist-tarefas ul { list-style: none; margin-bottom: 10px; }
+.assist-tarefas li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+.assist-tarefas li + li { border-top: 1px solid var(--border); }
+.assist-tarefas .ck-caixa { width: 20px; height: 20px; }
+.assist-tarefas li.feita .ck-marca { cursor: default; }
+.assist-tarefas li.feita .ck-caixa { opacity: 0.55; }
+.assist-tarefa-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+.assist-tarefa-texto strong { font-size: 13px; font-weight: 500; }
+.assist-tarefa-texto span { font-size: 12px; color: var(--text-3); }
+.assist-tarefas li.feita strong { color: var(--text-2); }
+.assist-tarefas-ok { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--em); }
+
+/* Atalhos rápidos e campo de mensagem */
+.assist-atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 0;
+  border-top: 1px solid var(--border);
+}
+.assist-atalho {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--em-border);
+  border-radius: 20px;
+  background: var(--em-dim);
+  color: var(--em-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.assist-atalho:not(:disabled):hover { background: var(--card); border-color: var(--em); }
+.assist-atalho:disabled { opacity: 0.5; cursor: default; }
+
+.assist-rodape {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 14px 6px;
+}
+.assist-rodape textarea {
+  flex: 1;
+  min-height: 42px;
+  max-height: 120px;
+  resize: none;
+  line-height: 1.45;
+  field-sizing: content;
+}
+.assist-enviar { width: 42px; height: 42px; padding: 0; flex-shrink: 0; }
+.assist-nota { padding: 0 14px 10px; font-size: 11px; line-height: 1.4; color: var(--text-3); }
+
+@media (max-width: 640px) {
+  /* Acima do menu, que no celular fica embaixo no centro */
+  .assist-botao { bottom: 88px; right: 16px; padding: 14px; }
+  .assist-botao span { display: none; }
+  .assist-painel { inset: 0; width: auto; height: auto; border-radius: 0; border: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assist-botao, .assist-painel, .assist-balao { animation: none; }
+  .assist-digitando span { animation-duration: 2.4s; }
+}

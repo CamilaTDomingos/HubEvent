@@ -71,11 +71,32 @@ A aplicação abre em `http://localhost:5173`.
 | `backend/.env` | `SUPABASE_URL` | URL do projeto Supabase |
 | `backend/.env` | `SUPABASE_SERVICE_ROLE_KEY` | Chave `service_role` — ignora RLS, **uso exclusivo do backend** |
 | `backend/.env` | `PORT` | Porta da API (padrão `3001`) |
+| `backend/.env` | `GEMINI_API_KEY` | Chave do Gemini para o assistente de IA ([Google AI Studio](https://aistudio.google.com/apikey)) — **uso exclusivo do backend** |
+| `backend/.env` | `GEMINI_MODEL` | Modelo do assistente (padrão `gemini-flash-latest`, o Flash estável mais recente) |
+| `backend/.env` | `GEMINI_TIMEOUT_MS` | Tempo máximo de espera pela IA, em ms (padrão `30000`) |
+| `backend/.env` | `ASSISTENTE_LIMITE_MINUTO` / `ASSISTENTE_LIMITE_DIA` | Perguntas ao assistente por usuário (padrão `5` por minuto e `50` por dia) |
 | `frontend/.env` | `VITE_SUPABASE_URL` | URL do projeto Supabase |
 | `frontend/.env` | `VITE_SUPABASE_ANON_KEY` | Chave pública `anon` |
 | `frontend/.env` | `VITE_API_URL` | Endereço do backend (ex: `http://localhost:3001`) |
 
 Os arquivos `.env` estão no `.gitignore` e nunca devem ir para o repositório.
+
+## Assistente de IA (RF02 / RF15)
+
+No detalhe do evento, o botão **Assistente** abre um chat com o Gemini, com atalhos para
+sugerir checklist, montar cronograma, estimar comida e bebida, listar fornecedores e
+redigir o convite. As tarefas sugeridas podem ser adicionadas ao checklist com um clique,
+e a conversa fica salva por evento em `mensagem_chat`.
+
+- O frontend chama `POST /api/assistente/:eventoId/mensagens` com o token da sessão do
+  Supabase. O backend valida o token, confere se o usuário é o organizador do evento e só
+  então fala com o Gemini.
+- Por privacidade (LGPD), a IA recebe só dados agregados do evento: contagens de
+  convidados por status, totais de despesas e títulos de tarefas. Nomes e e-mails de
+  convidados nunca saem do banco.
+- Sem `GEMINI_API_KEY`, o chat abre normalmente e avisa que o assistente não foi configurado.
+- O limite por usuário fica em memória: zera quando o backend reinicia.
+- Testes da rota, com o Supabase e o Gemini simulados: `npm test` dentro de `backend/`.
 
 ## Problemas comuns
 
@@ -85,4 +106,6 @@ Os arquivos `.env` estão no `.gitignore` e nunca devem ir para o repositório.
 | `'vite' não é reconhecido como um comando` | Dependências do frontend não instaladas | `npm install` dentro de `frontend/` |
 | `supabaseUrl is required` | `.env` ausente ou com nome de variável errado | Criar o `.env` a partir do `.env.example` |
 | Tela de RSVP chama `undefined/api/rsvp/...` | `VITE_API_URL` não definido | Definir no `frontend/.env` e reiniciar o Vite |
+| Assistente responde "falta a chave do Gemini" | `GEMINI_API_KEY` vazio no `backend/.env` | Criar a chave no AI Studio, preencher e reiniciar o backend |
+| Assistente responde "modelo de IA ... não existe mais" | `GEMINI_MODEL` com nome antigo | Usar `gemini-flash-latest` ou um modelo listado no AI Studio |
 | Link de recuperação de senha abre o login ou a home | URL não liberada no Supabase | Adicionar `/redefinir-senha` em *Redirect URLs* (Authentication → URL Configuration) |

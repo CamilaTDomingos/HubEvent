@@ -3,6 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import rsvpRoutes from './routes/rsvp.routes.js'
 import siteRoutes from './routes/site.routes.js'
+import assistenteRoutes from './routes/assistente.routes.js'
 
 dotenv.config()
 
@@ -12,6 +13,7 @@ app.use(express.json())
 
 app.use('/api/rsvp', rsvpRoutes)
 app.use('/api/site', siteRoutes)
+app.use('/api/assistente', assistenteRoutes)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
