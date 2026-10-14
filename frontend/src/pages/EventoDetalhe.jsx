@@ -123,6 +123,7 @@ function EventoDetalhe() {
           <AbaFinanceiro
             evento={evento}
             despesas={despesas.despesas}
+            convidados={convidados.convidados}
             carregando={despesas.carregando}
             recarregar={despesas.recarregar}
             aoAtualizarOrcamento={(valor) => setEvento((atual) => ({ ...atual, orcamento_estimado: valor }))}

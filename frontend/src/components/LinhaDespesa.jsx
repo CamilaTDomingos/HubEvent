@@ -5,7 +5,10 @@ import { COR_SEM_CATEGORIA } from '../utils/categorias'
 import { moeda, dataMedia, dia, mesCurto } from '../utils/datas'
 import Icone from './Icone'
 
-function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
+const TEXTO_DIVISAO = { VALOR: 'valores próprios', PERCENTUAL: 'por porcentagem' }
+
+// `pagador` e `aoDividir` só chegam quando o evento tem rateio (mais de um participante).
+function LinhaDespesa({ despesa, indice = 0, aoExcluir, pagador, aoDividir }) {
   const [expandido, setExpandido] = useState(false)
   const { parcelas, carregando, recarregar } = useParcelas(expandido ? despesa.id : null)
 
@@ -30,7 +33,11 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
         <span className="desp-cor" style={{ background: despesa.cor || COR_SEM_CATEGORIA }} aria-hidden="true" />
         <div className="desp-desc">
           <strong>{despesa.descricao}</strong>
-          <span>{despesa.categoria || 'Sem categoria'}</span>
+          <span>
+            {despesa.categoria || 'Sem categoria'}
+            {pagador && ` · pago por ${pagador}`}
+            {pagador && TEXTO_DIVISAO[despesa.divisao] && `, dividida em ${TEXTO_DIVISAO[despesa.divisao]}`}
+          </span>
         </div>
         <div className="desp-forma">
           {temParcelas ? (
@@ -42,9 +49,16 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir }) {
           )}
         </div>
         <span className="desp-valor num">{moeda(despesa.valor_total)}</span>
-        <button className="btn-icone perigo desp-excluir" onClick={() => aoExcluir(despesa.id)} title="Excluir" aria-label={`Excluir ${despesa.descricao}`}>
-          <Icone nome="lixeira" tamanho={16} />
-        </button>
+        <span className="desp-acoes">
+          {aoDividir && (
+            <button className="btn-icone desp-acao" onClick={() => aoDividir(despesa)} title="Quem pagou e divisão" aria-label={`Dividir ${despesa.descricao}`}>
+              <Icone nome="usuarios" tamanho={16} />
+            </button>
+          )}
+          <button className="btn-icone perigo desp-acao" onClick={() => aoExcluir(despesa.id)} title="Excluir" aria-label={`Excluir ${despesa.descricao}`}>
+            <Icone nome="lixeira" tamanho={16} />
+          </button>
+        </span>
       </div>
 
       {expandido && (
