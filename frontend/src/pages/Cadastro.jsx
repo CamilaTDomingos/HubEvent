@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Link } from 'react-router-dom'
-import './Login.css'
-import './Cadastro.css'
+import PainelAuth from '../components/PainelAuth'
+import Icone from '../components/Icone'
+import './Auth.css'
 
 function Cadastro() {
   const [nome, setNome] = useState('')
@@ -34,7 +35,7 @@ function Cadastro() {
 
     setCarregando(true)
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password: senha,
       options: {
@@ -52,20 +53,34 @@ function Cadastro() {
       return
     }
 
-    console.log('Cadastro OK:', data)
     setSucesso(true)
   }
 
+  const painel = (
+    <PainelAuth
+      titulo={
+        <>
+          Comece seu<br />
+          primeiro <em>evento.</em>
+        </>
+      }
+      texto="Crie sua conta em menos de dois minutos e tenha toda a estrutura para organizar do seu jeito."
+    />
+  )
+
   if (sucesso) {
     return (
-      <div className="auth-screen">
-        <div className="auth-right" style={{ width: '100%' }}>
-          <div className="auth-card">
-            <div className="auth-ey">Quase lá</div>
-            <h1>Confirme seu e-mail</h1>
-            <p className="a-desc">
-              Enviamos um link de confirmação para {email}. Verifique sua caixa de entrada para ativar sua conta.
+      <div className="auth">
+        {painel}
+        <div className="auth-lado">
+          <div className="auth-form auth-ok">
+            <span className="auth-ok-icone"><Icone nome="check" tamanho={24} traco={2} /></span>
+            <p className="eyebrow">Quase lá</p>
+            <h2 className="titulo">Confirme seu <em>e-mail</em></h2>
+            <p className="desc">
+              Enviamos um link de confirmação para <strong>{email}</strong>. Abra sua caixa de entrada para ativar a conta.
             </p>
+            <Link to="/login" className="btn btn-secondary">Ir para o login</Link>
           </div>
         </div>
       </div>
@@ -73,54 +88,40 @@ function Cadastro() {
   }
 
   return (
-    <div className="auth-screen">
-      <div className="auth-left">
-        <div className="auth-deco d1"></div>
-        <div className="auth-deco d2"></div>
-        <div className="auth-brand">
-          <div className="auth-brand-mark"></div>
-          <div>
-            <div className="auth-brand-text">HubEvent</div>
-            <div className="auth-brand-sub">Platform</div>
-          </div>
-        </div>
-        <div className="auth-hero">
-          <div className="auth-h1">Comece<br />seu primeiro<br /><em>evento.</em></div>
-          <p className="auth-sub">Crie sua conta em menos de 2 minutos e organize com toda estrutura que precisa.</p>
-        </div>
-      </div>
+    <div className="auth">
+      {painel}
 
-      <div className="auth-right">
-        <div className="auth-card">
-          <div className="auth-ey">Cadastro gratuito</div>
-          <h1>Criar sua conta</h1>
-          <p className="a-desc">Preencha os dados e comece a organizar agora</p>
+      <div className="auth-lado">
+        <div className="auth-form">
+          <p className="eyebrow">Cadastro gratuito</p>
+          <h2 className="titulo">Criar sua <em>conta</em></h2>
+          <p className="desc">Preencha seus dados e comece a organizar agora.</p>
 
           <form onSubmit={handleCadastro}>
             <div className="field-row">
               <div className="field">
-                <label>Nome</label>
-                <input type="text" placeholder="Ana" value={nome} onChange={(e) => setNome(e.target.value)} required />
+                <label htmlFor="cad-nome">Nome</label>
+                <input id="cad-nome" type="text" placeholder="Ana" autoComplete="given-name" value={nome} onChange={(e) => setNome(e.target.value)} required />
               </div>
               <div className="field">
-                <label>Sobrenome</label>
-                <input type="text" placeholder="Lima" value={sobrenome} onChange={(e) => setSobrenome(e.target.value)} />
+                <label htmlFor="cad-sobrenome">Sobrenome</label>
+                <input id="cad-sobrenome" type="text" placeholder="Lima" autoComplete="family-name" value={sobrenome} onChange={(e) => setSobrenome(e.target.value)} />
               </div>
             </div>
 
             <div className="field">
-              <label>E-mail</label>
-              <input type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label htmlFor="cad-email">E-mail</label>
+              <input id="cad-email" type="email" placeholder="seu@email.com" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
 
             <div className="field-row">
               <div className="field">
-                <label>Senha</label>
-                <input type="password" placeholder="Mín. 8 caracteres" value={senha} onChange={(e) => setSenha(e.target.value)} required />
+                <label htmlFor="cad-senha">Senha</label>
+                <input id="cad-senha" type="password" placeholder="Mín. 8 caracteres" autoComplete="new-password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
               </div>
               <div className="field">
-                <label>Confirmar</label>
-                <input type="password" placeholder="••••••••" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} required />
+                <label htmlFor="cad-confirmar">Confirmar</label>
+                <input id="cad-confirmar" type="password" placeholder="••••••••" autoComplete="new-password" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} required />
               </div>
             </div>
 
@@ -132,18 +133,20 @@ function Cadastro() {
                 onChange={(e) => setAceitouTermos(e.target.checked)}
               />
               <label htmlFor="terms">
-                Concordo com os <a href="#">Termos de Uso</a> e <a href="#">Política de Privacidade</a>
+                Concordo com os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a>
               </label>
             </div>
 
-            {erro && <p style={{ color: 'var(--red)', fontSize: '13px', marginBottom: '12px' }}>{erro}</p>}
+            {erro && <p className="erro-msg">{erro}</p>}
 
-            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={carregando}>
-              {carregando ? 'Criando conta...' : 'Criar conta grátis →'}
+            <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={carregando}>
+              {carregando ? 'Criando conta…' : 'Criar conta grátis'}
             </button>
           </form>
 
-          <p className="auth-switch">Já tem conta? <Link to="/login">Entrar →</Link></p>
+          <p className="auth-troca">
+            Já tem conta? <Link to="/login">Entrar</Link>
+          </p>
         </div>
       </div>
     </div>
