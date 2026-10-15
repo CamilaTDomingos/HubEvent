@@ -51,3 +51,38 @@ export const PERGUNTAS = [
     resposta: 'Use um dos canais em “Entre em contato”, nesta mesma página, ou envie uma mensagem pelo formulário. Nossa equipe retorna o quanto antes.',
   },
 ]
+
+// Tamanhos máximos; os mesmos limites estão na tabela mensagem_sac.
+export const LIMITES = { nome: 100, email: 255, assunto: 120, mensagem: 2000 }
+
+// Intervalo mínimo entre dois envios. O banco também recusa (trigger
+// limitar_envio_mensagem_sac); aqui só evita a ida ao servidor.
+export const INTERVALO_ENVIO_SEGUNDOS = 60
+
+export const STATUS_SAC = {
+  ABERTA: { rotulo: 'Aberta', classe: 'badge-pend' },
+  RESPONDIDA: { rotulo: 'Respondida', classe: 'badge-ok' },
+  FECHADA: { rotulo: 'Fechada', classe: 'badge-neutro' },
+}
+
+const EMAIL_VALIDO = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+
+// Devolve a primeira mensagem de erro do formulário, ou null se estiver ok.
+// "Só espaços" conta como vazio, coisa que o required do navegador aceita.
+export function validarMensagem(form) {
+  const rotulos = { nome: 'o nome', email: 'o e-mail', assunto: 'o assunto', mensagem: 'a mensagem' }
+  for (const campo of Object.keys(LIMITES)) {
+    const valor = (form[campo] ?? '').trim()
+    if (!valor) return `Informe ${rotulos[campo]}.`
+    if (valor.length > LIMITES[campo]) return `Encurte ${rotulos[campo]}: no máximo ${LIMITES[campo]} caracteres.`
+  }
+  if (!EMAIL_VALIDO.test(form.email.trim())) return 'Informe um e-mail válido.'
+  return null
+}
+
+// Segundos que faltam para poder enviar de novo, a partir da mensagem mais recente.
+export function segundosParaNovoEnvio(ultimoEnvio, agora = Date.now()) {
+  if (!ultimoEnvio) return 0
+  const passados = (agora - new Date(ultimoEnvio).getTime()) / 1000
+  return Math.max(0, Math.ceil(INTERVALO_ENVIO_SEGUNDOS - passados))
+}

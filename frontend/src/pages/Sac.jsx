@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import LayoutApp from '../components/LayoutApp'
 import Icone from '../components/Icone'
-import { CONTATOS, PERGUNTAS } from '../utils/sac'
+import Carregando from '../components/Carregando'
+import { useSac } from '../hooks/useSac'
+import { formatar } from '../utils/datas'
+import { CONTATOS, PERGUNTAS, LIMITES, STATUS_SAC, validarMensagem, segundosParaNovoEnvio } from '../utils/sac'
 import './Sac.css'
 
 function formularioInicial(usuario) {
@@ -19,20 +22,43 @@ function Sac() {
   const [aberta, setAberta] = useState(null)
   const [form, setForm] = useState(() => formularioInicial(usuario))
   const [enviada, setEnviada] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [erroForm, setErroForm] = useState(null)
+  const { mensagens, carregando, erro, enviar: enviarMensagem } = useSac()
 
   function alterar(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  // Ainda não há backend para o SAC: o envio é apenas visual.
-  // Quando houver, a chamada à API entra aqui.
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
-    setEnviada(true)
+    if (enviando) return
+
+    const invalido = validarMensagem(form)
+    if (invalido) return setErroForm(invalido)
+
+    // O banco também recusa; aqui só poupa a ida ao servidor.
+    const espera = segundosParaNovoEnvio(mensagens[0]?.criado_em)
+    if (espera > 0) return setErroForm(`Você acabou de enviar uma mensagem. Aguarde ${espera} s para enviar outra.`)
+
+    setEnviando(true)
+    const falha = await enviarMensagem({
+      usuario_id: usuario.id,
+      nome: form.nome.trim(),
+      email: form.email.trim(),
+      assunto: form.assunto.trim(),
+      mensagem: form.mensagem.trim(),
+    })
+    setEnviando(false)
+
+    // Em caso de erro o formulário fica preenchido para tentar de novo.
+    setErroForm(falha)
+    if (!falha) setEnviada(true)
   }
 
   function novaMensagem() {
     setForm(formularioInicial(usuario))
+    setErroForm(null)
     setEnviada(false)
   }
 
@@ -84,35 +110,74 @@ function Sac() {
                 <div className="sac-enviada" role="status">
                   <span className="vazio-icone"><Icone nome="check" tamanho={24} traco={2} /></span>
                   <p className="titulo">Mensagem enviada com sucesso!</p>
-                  <p>Nossa equipe entrará em contato em breve.</p>
+                  <p>Nossa equipe entrará em contato em breve. Acompanhe o andamento em Minhas solicitações.</p>
                   <button className="btn btn-secondary" onClick={novaMensagem}>Enviar outra mensagem</button>
                 </div>
               ) : (
-                <form onSubmit={enviar}>
+                <form onSubmit={enviar} noValidate>
                   <div className="field-row">
                     <div className="field">
                       <label htmlFor="sac-nome">Nome</label>
-                      <input id="sac-nome" name="nome" value={form.nome} onChange={alterar} autoComplete="name" required />
+                      <input id="sac-nome" name="nome" value={form.nome} onChange={alterar} autoComplete="name" maxLength={LIMITES.nome} required />
                     </div>
                     <div className="field">
                       <label htmlFor="sac-email">E-mail</label>
-                      <input id="sac-email" name="email" type="email" value={form.email} onChange={alterar} autoComplete="email" required />
+                      <input id="sac-email" name="email" type="email" value={form.email} onChange={alterar} autoComplete="email" maxLength={LIMITES.email} required />
                     </div>
                   </div>
                   <div className="field">
                     <label htmlFor="sac-assunto">Assunto</label>
-                    <input id="sac-assunto" name="assunto" value={form.assunto} onChange={alterar} placeholder="Sobre o que você quer falar?" required />
+                    <input id="sac-assunto" name="assunto" value={form.assunto} onChange={alterar} placeholder="Sobre o que você quer falar?" maxLength={LIMITES.assunto} required />
                   </div>
                   <div className="field">
                     <label htmlFor="sac-mensagem">Mensagem</label>
-                    <textarea id="sac-mensagem" name="mensagem" rows={5} value={form.mensagem} onChange={alterar} placeholder="Conte com detalhes como podemos ajudar." required />
+                    <textarea id="sac-mensagem" name="mensagem" rows={5} value={form.mensagem} onChange={alterar} placeholder="Conte com detalhes como podemos ajudar." maxLength={LIMITES.mensagem} aria-describedby="sac-mensagem-contador" required />
+                    <p id="sac-mensagem-contador" className="sac-contador">{form.mensagem.length}/{LIMITES.mensagem}</p>
                   </div>
-                  <button type="submit" className="btn btn-primary">
-                    <Icone nome="enviar" tamanho={15} /> Enviar mensagem
+                  {erroForm && <p className="erro-msg" role="alert">{erroForm}</p>}
+                  <button type="submit" className="btn btn-primary" disabled={enviando}>
+                    <Icone nome="enviar" tamanho={15} /> {enviando ? 'Enviando…' : 'Enviar mensagem'}
                   </button>
                 </form>
               )}
             </div>
+          </section>
+
+          <section className="rv" style={{ '--d': 4 }} aria-labelledby="sac-historico">
+            <div className="secao-cab">
+              <h2 id="sac-historico">Minhas solicitações</h2>
+            </div>
+            {carregando ? (
+              <Carregando texto="Buscando suas solicitações…" />
+            ) : erro ? (
+              <p className="erro-msg">{erro}</p>
+            ) : mensagens.length === 0 ? (
+              <p className="sac-historico-vazio painel">Você ainda não enviou nenhuma mensagem.</p>
+            ) : (
+              <ul className="sac-historico painel">
+                {mensagens.map((m) => {
+                  const status = STATUS_SAC[m.status] ?? STATUS_SAC.ABERTA
+                  return (
+                    <li key={m.id} className="sac-solicitacao">
+                      <div className="sac-solicitacao-cab">
+                        <strong>{m.assunto}</strong>
+                        <span className={`badge ${status.classe}`}>{status.rotulo}</span>
+                      </div>
+                      <p className="sac-solicitacao-data">
+                        Enviada em {formatar(m.criado_em, { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </p>
+                      <p className="sac-solicitacao-texto">{m.mensagem}</p>
+                      {m.resposta && (
+                        <div className="sac-resposta">
+                          <span>Resposta da equipe</span>
+                          <p>{m.resposta}</p>
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </section>
         </div>
 

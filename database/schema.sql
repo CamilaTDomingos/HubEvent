@@ -21,6 +21,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_mensagem') THEN
         CREATE TYPE tipo_mensagem AS ENUM ('USUARIO','IA','SISTEMA');
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'status_mensagem_sac') THEN
+        CREATE TYPE status_mensagem_sac AS ENUM ('ABERTA','RESPONDIDA','FECHADA');
+    END IF;
 END
 $$;
 
@@ -311,6 +314,27 @@ CREATE TABLE mensagem_chat (
 );
 
 -- ============================================================
+-- MENSAGEM DO SAC (RF22): formulário da página /sac. O status e a
+-- resposta são mudados pela equipe no painel do Supabase.
+-- ============================================================
+CREATE TABLE mensagem_sac (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL DEFAULT auth.uid(),
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    assunto VARCHAR(120) NOT NULL,
+    mensagem TEXT NOT NULL,
+    status status_mensagem_sac NOT NULL DEFAULT 'ABERTA',
+    resposta TEXT, -- preenchida pela equipe no painel; aparece em "Minhas solicitações"
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_mensagem_sac_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT chk_mensagem_sac_nome CHECK (btrim(nome) <> ''),
+    CONSTRAINT chk_mensagem_sac_email CHECK (email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'),
+    CONSTRAINT chk_mensagem_sac_assunto CHECK (btrim(assunto) <> ''),
+    CONSTRAINT chk_mensagem_sac_mensagem CHECK (btrim(mensagem) <> '' AND char_length(mensagem) <= 2000)
+);
+
+-- ============================================================
 -- ÍNDICES
 -- ============================================================
 CREATE INDEX idx_evento_organizador ON evento(organizador_id);
@@ -338,6 +362,7 @@ CREATE INDEX idx_lista_presentes_responsavel ON lista_presentes(responsavel_por_
 CREATE INDEX idx_reserva_presente_presente ON reserva_presente(presente_id);
 CREATE INDEX idx_mensagem_assistente_criado ON mensagem_chat(assistente_id, criado_em);
 CREATE INDEX idx_mensagem_usuario ON mensagem_chat(usuario_id);
+CREATE INDEX idx_mensagem_sac_usuario_criado ON mensagem_sac(usuario_id, criado_em DESC);
 
 -- ============================================================
 -- TRIGGERS (updated_at automático)
@@ -418,6 +443,37 @@ $$ LANGUAGE sql SET search_path = '';
 REVOKE EXECUTE ON FUNCTION criar_categorias_despesa_padrao(UUID) FROM PUBLIC, anon, authenticated;
 
 -- ============================================================
+-- LIMITE DO SAC: uma mensagem por usuário a cada 60 segundos.
+-- criado_em é sempre a hora do servidor (senão uma data antiga burlaria
+-- o limite); o lock por usuário impede dois envios simultâneos.
+-- ============================================================
+CREATE OR REPLACE FUNCTION limitar_envio_mensagem_sac()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+    NEW.criado_em := NOW();
+    PERFORM pg_advisory_xact_lock(hashtext('mensagem_sac:' || NEW.usuario_id::text));
+
+    IF EXISTS (
+        SELECT 1 FROM public.mensagem_sac
+        WHERE usuario_id = NEW.usuario_id AND criado_em > NOW() - INTERVAL '60 seconds'
+    ) THEN
+        RAISE EXCEPTION 'Você acabou de enviar uma mensagem. Aguarde um minuto para enviar outra.'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION limitar_envio_mensagem_sac() FROM PUBLIC, anon, authenticated;
+
+CREATE TRIGGER trigger_mensagem_sac_limite
+BEFORE INSERT ON mensagem_sac FOR EACH ROW EXECUTE FUNCTION limitar_envio_mensagem_sac();
+
+-- ============================================================
 -- FUNÇÃO AUXILIAR: cria linha em "usuario" (e as categorias de despesa
 -- iniciais) toda vez que alguém se cadastra via Supabase Auth
 -- ============================================================
@@ -458,6 +514,7 @@ ALTER TABLE participante_rateio ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cota_despesa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pagamento_rateio ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mensagem_chat ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mensagem_sac ENABLE ROW LEVEL SECURITY;
 
 -- USUARIO: só vê/edita o próprio perfil
 CREATE POLICY "usuario_proprio" ON usuario
@@ -592,6 +649,16 @@ CREATE POLICY "mensagem_chat_organizador" ON mensagem_chat
             JOIN evento ON evento.id = assistente_ia.evento_id
             WHERE assistente_ia.id = mensagem_chat.assistente_id AND evento.organizador_id = (select auth.uid())
         )
+    );
+
+-- MENSAGEM_SAC: o usuário só cria e lê as próprias mensagens. Sem UPDATE
+-- nem DELETE pela API; toda mensagem nasce ABERTA e sem resposta.
+CREATE POLICY "mensagem_sac_ler" ON mensagem_sac
+    FOR SELECT USING ((select auth.uid()) = usuario_id);
+
+CREATE POLICY "mensagem_sac_criar" ON mensagem_sac
+    FOR INSERT WITH CHECK (
+        (select auth.uid()) = usuario_id AND status = 'ABERTA' AND resposta IS NULL
     );
 
 -- ============================================================
