@@ -1,0 +1,68 @@
+
+/* Destaque do próximo evento: o único cartão com presença na página */
+.proximo {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(20px, 3.5vw, 40px);
+  padding: clamp(20px, 3vw, 28px);
+  margin-bottom: clamp(40px, 5vw, 56px);
+  text-decoration: none;
+  transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s;
+}
+.proximo:hover { box-shadow: var(--sh3); transform: translateY(-2px); border-color: var(--em-border); }
+
+.proximo-aneis { position: absolute; top: 0; right: 0; width: 220px; height: 220px; pointer-events: none; }
+.proximo-aneis circle { fill: none; stroke: var(--em-border); stroke-width: 1; opacity: 0.7; transition: opacity 0.4s; }
+.proximo:hover .proximo-aneis circle { opacity: 1; }
+
+.proximo-contagem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 128px;
+  padding: 22px 18px;
+  border-radius: var(--r);
+  background: var(--em-dim);
+  text-align: center;
+}
+.proximo-contagem strong { font-size: 46px; line-height: 1; color: var(--em-2); }
+.proximo-rotulo { font-size: 12px; color: var(--em-2); margin-top: 8px; opacity: 0.85; }
+
+.proximo-tipo { display: flex; align-items: center; gap: 7px; }
+.proximo-info h2 { font-size: clamp(22px, 2.4vw, 28px); margin: 8px 0 12px; }
+
+
+.proximo-cta { position: relative; align-self: end; }
+.proximo:hover .proximo-cta .icone { transform: translateX(3px); }
+
+/* Lista + resumo lateral */
+.dash-grade { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: clamp(28px, 5vw, 56px); align-items: start; }
+.dash-grade .ev-lista { margin: 0 -16px; }
+.dash-nada { color: var(--text-3); font-size: 14px; padding: 14px 0; }
+
+.dash-resumo { padding-top: 6px; }
+.dash-resumo dl { margin-top: 14px; }
+.dash-resumo dl div { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.dash-resumo dl div:first-child { border-top: 1px solid var(--border); }
+.dash-resumo dt { font-size: 13.5px; color: var(--text-2); }
+.dash-resumo dd { font-family: var(--disp); font-size: 22px; font-weight: 500; }
+
+/* Estado vazio */
+.vazio { display: flex; flex-direction: column; align-items: center; text-align: center; padding: clamp(40px, 6vw, 64px) 24px; }
+.vazio-icone { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: var(--em-dim); color: var(--em); margin-bottom: 20px; }
+.vazio h2 { font-size: 26px; margin-bottom: 10px; }
+.vazio p { color: var(--text-2); max-width: 440px; margin-bottom: 24px; }
+
+@media (max-width: 860px) {
+  .proximo { grid-template-columns: 1fr; }
+  .proximo-contagem { flex-direction: row; gap: 12px; justify-content: flex-start; min-width: 0; padding: 14px 18px; }
+  .proximo-contagem strong { font-size: 34px; }
+  .proximo-rotulo { margin-top: 0; }
+  .proximo-cta { justify-self: start; }
+  .dash-grade { grid-template-columns: 1fr; }
+  .dash-grade .ev-lista { margin: 0 -8px; }
+}
