@@ -12,9 +12,10 @@ export function useDespesas(eventoId) {
 
     const { data, error } = await supabase
       .from('despesa')
-      .select('*, categoria_despesa(id, nome, cor)')
+      .select('*, categoria_despesa(id, nome, cor), parcela(*)')
       .eq('evento_id', eventoId)
       .order('criado_em', { ascending: false })
+      .order('numero', { referencedTable: 'parcela', ascending: true })
 
     if (error) {
       setErro(error.message)

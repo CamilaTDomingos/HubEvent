@@ -16,6 +16,22 @@ function inicioDoDia(data) {
   return d
 }
 
+// Data de hoje no formato do input date ("2026-10-21"), no fuso local.
+export function hojeISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// Soma meses a uma data "AAAA-MM-DD" mantendo o dia; se o mês não tiver
+// esse dia (31/01 + 1 mês), cai no último dia do mês.
+export function somarMeses(iso, meses) {
+  const [ano, mes, diaDoMes] = iso.split('-').map(Number)
+  const alvo = new Date(ano, mes - 1 + meses, 1)
+  const ultimoDia = new Date(alvo.getFullYear(), alvo.getMonth() + 1, 0).getDate()
+  alvo.setDate(Math.min(diaDoMes, ultimoDia))
+  return `${alvo.getFullYear()}-${String(alvo.getMonth() + 1).padStart(2, '0')}-${String(alvo.getDate()).padStart(2, '0')}`
+}
+
 export function diasAte(valor) {
   const data = paraData(valor)
   if (!data) return null

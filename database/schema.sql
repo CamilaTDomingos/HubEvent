@@ -257,6 +257,8 @@ CREATE TABLE parcela (
     vencimento DATE NOT NULL,
     pago BOOLEAN NOT NULL DEFAULT FALSE,
     pago_em TIMESTAMPTZ,
+    entrada BOOLEAN NOT NULL DEFAULT FALSE,
+    pago_por VARCHAR(120),
     CONSTRAINT fk_parcela_despesa FOREIGN KEY (despesa_id) REFERENCES despesa(id) ON DELETE CASCADE,
     CONSTRAINT chk_parcela_numero CHECK (numero > 0),
     CONSTRAINT chk_parcela_valor CHECK (valor >= 0)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import ModalConfirmacao from './ModalConfirmacao'
+import ModalPagamento from './ModalPagamento'
 import LinhaDespesa from './LinhaDespesa'
 import GraficoDespesas from './GraficoDespesas'
 import GraficoFluxoCaixa from './GraficoFluxoCaixa'
@@ -12,7 +13,8 @@ import { Link } from 'react-router-dom'
 import { useCategorias } from '../hooks/useCategorias'
 import { useRateio } from '../hooks/useRateio'
 import { pagadorDaDespesa } from '../utils/rateio'
-import { moeda, dataISO, somarMeses } from '../utils/datas'
+import { moeda, hojeISO, dataMedia } from '../utils/datas'
+import { dividir, montarPagamentos, resumoPagamentos, pagadoresConhecidos } from '../utils/pagamentos'
 
 function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarregar, aoAtualizarOrcamento }) {
   const [descDespesa, setDescDespesa] = useState('')
@@ -21,9 +23,13 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
   const { categorias } = useCategorias('categoria_despesa')
 
   const [parcelar, setParcelar] = useState(false)
-  const [numParcelas, setNumParcelas] = useState(2)
-  const [primeiroVencimento, setPrimeiroVencimento] = useState('')
-  const [dataPagamento, setDataPagamento] = useState(dataISO)
+  const [comEntrada, setComEntrada] = useState(false)
+  const [valorEntrada, setValorEntrada] = useState('')
+  const [dataEntrada, setDataEntrada] = useState(hojeISO())
+  const [numParcelas, setNumParcelas] = useState('2')
+  const [vencimento, setVencimento] = useState(hojeISO())
+  const [erroLancar, setErroLancar] = useState(null)
+  const [salvando, setSalvando] = useState(false)
   const [pagoPor, setPagoPor] = useState('')
 
   const rateio = useRateio(evento?.id, despesas)
@@ -38,6 +44,8 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
   const [novoOrcamento, setNovoOrcamento] = useState('')
 
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(null)
+  const [pagando, setPagando] = useState(null)
+  const [desfazendo, setDesfazendo] = useState(null)
 
   const totalGasto = despesas.reduce((soma, d) => soma + Number(d.valor_total), 0)
   const orcamento = Number(evento?.orcamento_estimado) || 0
@@ -46,51 +54,84 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
   const percentualUsado = Math.min(percentualReal, 100)
   const estourou = orcamento > 0 && saldo < 0
 
+  const pagamentos = resumoPagamentos(despesas)
+
+  const valor = Number(valorDespesa)
+  const entrada = comEntrada ? Number(valorEntrada) : 0
+  const qtdParcelas = Number(numParcelas)
+  const restante = Math.round((valor - entrada) * 100) / 100
+  const previaParcelas = parcelar && valor > 0 && qtdParcelas >= 1 && restante > 0 ? dividir(restante, qtdParcelas) : null
+
+  function validarLancamento() {
+    if (!descDespesa.trim()) return 'Diga o que é a despesa.'
+    if (!valorDespesa || isNaN(valor) || valor <= 0) return 'Informe um valor maior que zero.'
+    if (!vencimento) return parcelar ? 'Informe o vencimento da 1ª parcela.' : 'Informe a data de vencimento.'
+    if (!parcelar) return null
+    if (comEntrada) {
+      if (!valorEntrada || isNaN(entrada) || entrada <= 0) return 'Informe o valor da entrada.'
+      if (entrada >= valor) return 'A entrada precisa ser menor que o valor total.'
+      if (!dataEntrada) return 'Informe a data da entrada.'
+    }
+    const minimo = comEntrada ? 1 : 2
+    if (!Number.isInteger(qtdParcelas) || qtdParcelas < minimo) return `O número de parcelas precisa ser ${minimo} ou mais.`
+    return null
+  }
+
+  function limparLancamento() {
+    setDescDespesa('')
+    setValorDespesa('')
+    setCategoriaDespesa('')
+    setParcelar(false)
+    setComEntrada(false)
+    setValorEntrada('')
+    setDataEntrada(hojeISO())
+    setNumParcelas('2')
+    setVencimento(hojeISO())
+    setPagoPor('')
+  }
+
   async function handleAdicionarDespesa(e) {
     e.preventDefault()
-    const valor = Number(valorDespesa)
-    if (!descDespesa || !valorDespesa || valor < 0) return
-    if (parcelar && (!primeiroVencimento || numParcelas < 2)) return
-    if (!parcelar && !dataPagamento) return
+    const problema = validarLancamento()
+    setErroLancar(problema)
+    if (problema) return
 
+    setSalvando(true)
     const { data: novaDespesa, error } = await supabase
       .from('despesa')
       .insert({
         evento_id: evento.id,
-        descricao: descDespesa,
+        descricao: descDespesa.trim(),
         valor_total: valor,
         categoria_id: categoriaDespesa || null,
         parcelado: parcelar,
-        vencimento: parcelar ? null : dataPagamento,
+        vencimento: parcelar && comEntrada ? dataEntrada : vencimento,
         // Sem escolha, quem pagou é o organizador (pago_por_id fica nulo).
         ...(pagadorEscolhido && { pago_por_id: pagadorEscolhido }),
       })
       .select()
       .single()
 
-    if (error) return
-
-    if (parcelar) {
-      const valorParcela = Math.round((valor / numParcelas) * 100) / 100
-      // A última parcela absorve a sobra do arredondamento (100 em 3× = 33,33 + 33,33 + 33,34).
-      const valorUltima = Math.round((valor - valorParcela * (numParcelas - 1)) * 100) / 100
-      const parcelas = Array.from({ length: numParcelas }, (_, i) => ({
-        despesa_id: novaDespesa.id,
-        numero: i + 1,
-        valor: i === numParcelas - 1 ? valorUltima : valorParcela,
-        vencimento: somarMeses(primeiroVencimento, i),
-      }))
-      await supabase.from('parcela').insert(parcelas)
+    if (error) {
+      setSalvando(false)
+      setErroLancar(error.message)
+      return
     }
 
-    setDescDespesa('')
-    setValorDespesa('')
-    setCategoriaDespesa('')
-    setParcelar(false)
-    setNumParcelas(2)
-    setPrimeiroVencimento('')
-    setDataPagamento(dataISO())
-    setPagoPor('')
+    const linhas = montarPagamentos({ valor, parcelar, comEntrada, valorEntrada: entrada, dataEntrada, numParcelas: qtdParcelas, vencimento })
+    const { error: erroParcelas } = await supabase
+      .from('parcela')
+      .insert(linhas.map((p) => ({ ...p, despesa_id: novaDespesa.id })))
+    setSalvando(false)
+
+    if (erroParcelas) {
+      // Não deixa uma despesa sem pagamentos para trás.
+      await supabase.from('despesa').delete().eq('id', novaDespesa.id)
+      setErroLancar(erroParcelas.message)
+      return
+    }
+
+    limparLancamento()
     recarregar()
   }
 
@@ -99,6 +140,16 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
     const { error } = await supabase.from('despesa').delete().eq('id', confirmandoExclusao)
     if (!error) recarregar()
     setConfirmandoExclusao(null)
+  }
+
+  async function confirmarDesfazer() {
+    if (!desfazendo) return
+    const { error } = await supabase
+      .from('parcela')
+      .update({ pago: false, pago_em: null, ...('pago_por' in desfazendo && { pago_por: null }) })
+      .eq('id', desfazendo.id)
+    if (!error) recarregar()
+    setDesfazendo(null)
   }
 
   function iniciarEdicaoOrcamento() {
@@ -152,7 +203,7 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
               )}
             </div>
             <div className="fin-num">
-              <span className="label">Gasto até agora</span>
+              <span className="label">Total de despesas</span>
               <strong className="titulo num"><NumeroAnimado valor={totalGasto} prefixo="R$ " /></strong>
             </div>
             <div className="fin-num">
@@ -174,6 +225,35 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
           ) : (
             <p className="fin-dica">Defina um orçamento para acompanhar quanto ainda pode ser gasto.</p>
           )}
+
+          <div className="fin-pag">
+            <div className="fin-numeros fin-numeros-2">
+              <div className="fin-num">
+                <span className="label">Já pago</span>
+                <strong className="titulo num pos"><NumeroAnimado valor={pagamentos.pago} prefixo="R$ " /></strong>
+              </div>
+              <div className="fin-num">
+                <span className="label">Falta pagar</span>
+                <strong className="titulo num"><NumeroAnimado valor={pagamentos.falta} prefixo="R$ " /></strong>
+              </div>
+            </div>
+            <div className="medidor-trilho" aria-hidden="true">
+              <div className="medidor-fill" style={{ width: `${pagamentos.percentual}%` }} />
+            </div>
+            <div className="medidor-legenda">
+              <span><strong className="num">{pagamentos.percentual.toFixed(0)}%</strong> das despesas pago</span>
+              {pagamentos.proxima && (
+                <span>Próximo: <strong className="num">{moeda(pagamentos.proxima.valor)}</strong> em {dataMedia(pagamentos.proxima.vencimento)}</span>
+              )}
+            </div>
+            {pagamentos.porPagador.length > 0 && (
+              <ul className="fin-pagadores" aria-label="Quanto cada um pagou">
+                {pagamentos.porPagador.map(([nome, total]) => (
+                  <li key={nome}><span>{nome}</span> <strong className="num">{moeda(total)}</strong></li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <div className="painel fin-grafico">
@@ -184,7 +264,7 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
 
       <GraficoFluxoCaixa eventoId={evento?.id} despesas={despesas} orcamento={orcamento} dataEvento={evento?.data_inicio} />
 
-      <form className="lancar" onSubmit={handleAdicionarDespesa}>
+      <form className="lancar" onSubmit={handleAdicionarDespesa} noValidate>
         <div className="lancar-cab">
           <h3 className="titulo lancar-titulo">Nova despesa</h3>
           <Link to="/perfil" className="link lancar-gerenciar">Gerenciar categorias</Link>
@@ -197,7 +277,6 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
             aria-label="Descrição"
             value={descDespesa}
             onChange={(e) => setDescDespesa(e.target.value)}
-            required
           />
           <select
             className="input"
@@ -215,34 +294,67 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
             type="number"
             step="0.01"
             min="0"
-            placeholder="Valor (R$)"
-            aria-label="Valor"
+            placeholder="Valor total (R$)"
+            aria-label="Valor total"
             value={valorDespesa}
             onChange={(e) => setValorDespesa(e.target.value)}
-            required
           />
-          <label className="switch">
-            <input type="checkbox" checked={parcelar} onChange={(e) => setParcelar(e.target.checked)} />
-            <span className="switch-track" />
-            <span className="switch-texto">Parcelar</span>
-          </label>
-          <button type="submit" className="btn btn-primary"><Icone nome="mais" tamanho={16} /> Adicionar</button>
+          <button type="submit" className="btn btn-primary" disabled={salvando}><Icone nome="mais" tamanho={16} /> {salvando ? 'Salvando…' : 'Adicionar'}</button>
         </div>
 
-        {!parcelar && (
-          <div className="lancar-parcelas-campos">
-            <label className="label" htmlFor="data-pagamento">Data do pagamento</label>
-            <input
-              id="data-pagamento"
-              className="input"
-              type="date"
-              value={dataPagamento}
-              onChange={(e) => setDataPagamento(e.target.value)}
-              required
-            />
-            <span className="muted">É o mês em que a despesa entra no fluxo de caixa.</span>
+        <div className="lancar-pagamento">
+          <div className="lancar-forma" role="radiogroup" aria-label="Forma de pagamento">
+            <button type="button" role="radio" aria-checked={!parcelar} onClick={() => setParcelar(false)}>À vista</button>
+            <button type="button" role="radio" aria-checked={parcelar} onClick={() => setParcelar(true)}>Parcelado</button>
           </div>
-        )}
+
+          {!parcelar ? (
+            <div className="lancar-parcelas-campos">
+              <label className="label" htmlFor="venc-avista">Vencimento</label>
+              <input id="venc-avista" className="input" type="date" value={vencimento} onChange={(e) => setVencimento(e.target.value)} />
+            </div>
+          ) : (
+            <>
+              <label className="switch">
+                <input type="checkbox" checked={comEntrada} onChange={(e) => setComEntrada(e.target.checked)} />
+                <span className="switch-track" />
+                <span className="switch-texto">Com entrada</span>
+              </label>
+
+              {comEntrada && (
+                <div className="lancar-parcelas-campos">
+                  <label className="label" htmlFor="valor-entrada">Entrada</label>
+                  <input
+                    id="valor-entrada"
+                    className="input lancar-entrada"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="R$"
+                    value={valorEntrada}
+                    onChange={(e) => setValorEntrada(e.target.value)}
+                  />
+                  <label className="label" htmlFor="data-entrada">em</label>
+                  <input id="data-entrada" className="input" type="date" value={dataEntrada} onChange={(e) => setDataEntrada(e.target.value)} />
+                </div>
+              )}
+
+              <div className="lancar-parcelas-campos">
+                <label className="label" htmlFor="num-parcelas">{comEntrada ? 'Restante em' : 'Parcelas'}</label>
+                <input
+                  id="num-parcelas"
+                  className="input"
+                  type="number"
+                  min={comEntrada ? 1 : 2}
+                  value={numParcelas}
+                  onChange={(e) => setNumParcelas(e.target.value)}
+                />
+                <label className="label" htmlFor="primeiro-venc">1º vencimento</label>
+                <input id="primeiro-venc" className="input" type="date" value={vencimento} onChange={(e) => setVencimento(e.target.value)} />
+              </div>
+            </>
+          )}
+        </div>
 
         {temRateio && (
           <div className="lancar-parcelas-campos">
@@ -256,36 +368,15 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
           </div>
         )}
 
-        <div className={`lancar-parcelas ${parcelar ? 'aberto' : ''}`}>
-          <div>
-            <div className="lancar-parcelas-campos">
-              <label className="label" htmlFor="num-parcelas">Parcelas</label>
-              <input
-                id="num-parcelas"
-                className="input"
-                type="number"
-                min="2"
-                value={numParcelas}
-                onChange={(e) => setNumParcelas(Number(e.target.value))}
-                tabIndex={parcelar ? 0 : -1}
-              />
-              <label className="label" htmlFor="primeiro-venc">1º vencimento</label>
-              <input
-                id="primeiro-venc"
-                className="input"
-                type="date"
-                value={primeiroVencimento}
-                onChange={(e) => setPrimeiroVencimento(e.target.value)}
-                tabIndex={parcelar ? 0 : -1}
-              />
-              {valorDespesa > 0 && numParcelas >= 2 && (
-                <span className="muted">
-                  {numParcelas}× de {moeda(Math.round((Number(valorDespesa) / numParcelas) * 100) / 100)}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+        {previaParcelas && (
+          <p className="lancar-previa muted">
+            {comEntrada && entrada > 0 && <>Entrada de {moeda(entrada)} + </>}
+            {qtdParcelas}× de {moeda(previaParcelas[0])}
+            {previaParcelas.at(-1) !== previaParcelas[0] && <> (última de {moeda(previaParcelas.at(-1))})</>}
+          </p>
+        )}
+
+        {erroLancar && <p className="erro-msg">{erroLancar}</p>}
       </form>
 
       <section className="painel extrato">
@@ -296,7 +387,7 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
           </span>
         </div>
 
-        {carregando ? (
+        {carregando && despesas.length === 0 ? (
           <p className="muted painel-vazio">Carregando…</p>
         ) : despesas.length === 0 ? (
           <div className="painel-vazio">
@@ -311,6 +402,8 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
                 despesa={d}
                 indice={i}
                 aoExcluir={setConfirmandoExclusao}
+                aoPagar={(despesa, parcela) => setPagando({ despesa, parcela })}
+                aoDesfazer={setDesfazendo}
                 pagador={temRateio ? pagadorDaDespesa(d, participantes)?.nome : null}
                 aoDividir={temRateio ? setDividindo : null}
               />
@@ -330,6 +423,25 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
           aoSalvar={recarregar}
         />
       )}
+
+      {pagando && (
+        <ModalPagamento
+          despesa={pagando.despesa}
+          parcela={pagando.parcela}
+          pagadores={pagadoresConhecidos(despesas)}
+          aoFechar={() => setPagando(null)}
+          aoSalvar={recarregar}
+        />
+      )}
+
+      <ModalConfirmacao
+        aberto={!!desfazendo}
+        titulo="Desmarcar pagamento?"
+        mensagem="O pagamento volta a ficar pendente e a informação de quem pagou é apagada."
+        textoConfirmar="Desmarcar"
+        aoConfirmar={confirmarDesfazer}
+        aoCancelar={() => setDesfazendo(null)}
+      />
 
       <ModalConfirmacao
         aberto={!!confirmandoExclusao}
