@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useCategorias } from '../hooks/useCategorias'
+import Dropdown from './Dropdown'
 import ModalConfirmacao from './ModalConfirmacao'
 import ModalConvidado from './ModalConvidado'
 import { PainelCategorias } from './GerenciarCategorias'
@@ -25,7 +26,8 @@ const FILTROS = {
   ENVIADO: { plural: 'Enviados', conta: 'enviados', teste: foiEnviado },
   NAO_ENVIADO: { plural: 'Não enviados', conta: 'naoEnviados', teste: (c) => !foiEnviado(c) },
 }
-const FILTROS_STATUS = ['CONFIRMADO', 'PENDENTE', 'RECUSADO']
+const OPCOES_POR_PAGINA = [10, 20, 50, 100]
+const FILTROS_STATUS =['CONFIRMADO', 'PENDENTE', 'RECUSADO']
 const FILTROS_ENVIO = ['ENVIADO', 'NAO_ENVIADO']
 
 function textoAcompanhantes(c) {
@@ -39,6 +41,10 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
   const grupos = useCategorias('grupo_convidado', eventoId)
   const [filtro, setFiltro] = useState(null)
   const [busca, setBusca] = useState('')
+  const [filtroGrupo, setFiltroGrupo] = useState('TODOS') // 'TODOS' | 'SEM' | id do grupo
+  const [filtroAcomp, setFiltroAcomp] = useState('TODOS') // 'TODOS' | 'COM' | 'SEM'
+  const [porPagina, setPorPagina] = useState(10)
+  const [paginaEscolhida, setPaginaEscolhida] = useState({ chave: '', n: 1 })
   const [copiado, setCopiado] = useState(null)
   const [modal, setModal] = useState(null) // null | 'novo' | convidado
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(null)
@@ -46,8 +52,30 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
   const resumo = resumoConvidados(convidados)
   const percentual = resumo.total ? Math.round((resumo.confirmados / resumo.total) * 100) : 0
   const filtrados = filtro ? convidados.filter(FILTROS[filtro].teste) : convidados
-  const lista = buscarConvidados(filtrados, busca)
   const grupoPorId = Object.fromEntries(grupos.categorias.map((g) => [g.id, g]))
+  const lista = buscarConvidados(filtrados, busca)
+    .filter((c) => filtroGrupo === 'TODOS' || (filtroGrupo === 'SEM' ? !grupoPorId[c.grupo_id] : c.grupo_id === filtroGrupo))
+    .filter((c) => filtroAcomp === 'TODOS' || (filtroAcomp === 'COM') === (acompanhantesPermitidos(c) > 0))
+  const opcoesGrupo = [
+    { valor: 'TODOS', rotulo: 'Todos os grupos' },
+    ...grupos.categorias.map((g) => ({ valor: g.id, rotulo: g.nome, cor: g.cor })),
+    { valor: 'SEM', rotulo: 'Sem grupo' },
+  ]
+  const opcoesAcomp = [
+    { valor: 'TODOS', rotulo: 'Todos' },
+    { valor: 'COM', rotulo: 'Com acompanhantes' },
+    { valor: 'SEM', rotulo: 'Convite individual' },
+  ]
+  const filtrando = filtroGrupo !== 'TODOS' || filtroAcomp !== 'TODOS'
+
+  // Paginação. A página vale só para a combinação filtro + busca + tamanho em que
+  // foi escolhida; mudar qualquer um deles volta para a primeira.
+  const chavePagina = `${filtro}|${busca}|${filtroGrupo}|${filtroAcomp}|${porPagina}`
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / porPagina))
+  const paginaAtual = Math.min(paginaEscolhida.chave === chavePagina ? paginaEscolhida.n : 1, totalPaginas)
+  const inicio = (paginaAtual - 1) * porPagina
+  const visiveis = lista.slice(inicio, inicio + porPagina)
+  const irParaPagina = (n) => setPaginaEscolhida({ chave: chavePagina, n })
 
   async function confirmarExclusao() {
     if (!confirmandoExclusao) return
@@ -167,6 +195,22 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
           </button>
         </div>
 
+        <div className="conv-filtros" role="group" aria-label="Filtrar lista">
+          <div className="conv-filtro">
+            <span>Grupo</span>
+            <Dropdown valor={filtroGrupo} opcoes={opcoesGrupo} aoMudar={setFiltroGrupo} rotulo="Filtrar por grupo" />
+          </div>
+          <div className="conv-filtro">
+            <span>Acompanhantes</span>
+            <Dropdown valor={filtroAcomp} opcoes={opcoesAcomp} aoMudar={setFiltroAcomp} rotulo="Filtrar por acompanhantes" />
+          </div>
+          {filtrando && (
+            <button className="link" onClick={() => { setFiltroGrupo('TODOS'); setFiltroAcomp('TODOS') }}>
+              Limpar filtros
+            </button>
+          )}
+        </div>
+
         {carregando ? (
           <p className="muted painel-vazio">Carregando…</p>
         ) : lista.length === 0 ? (
@@ -177,7 +221,7 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
                 ? 'Ninguém na lista ainda. Adicione o primeiro convidado.'
                 : busca.trim()
                   ? `Ninguém encontrado para "${busca.trim()}".`
-                  : 'Ninguém com esse status.'}
+                  : 'Ninguém com esses filtros.'}
             </p>
           </div>
         ) : (
@@ -190,7 +234,7 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
               <span>Status</span>
               <span />
             </li>
-            {lista.map((c, i) => {
+            {visiveis.map((c, i) => {
               const acomp = textoAcompanhantes(c)
               const grupo = grupoPorId[c.grupo_id]
               return (
@@ -234,6 +278,33 @@ function AbaConvidados({ eventoId, convidados, carregando, recarregar }) {
               )
             })}
           </ul>
+        )}
+
+        {!carregando && lista.length > 0 && (
+          <nav className="conv-paginacao" aria-label="Paginação dos convidados">
+            <div className="conv-pag-tamanho">
+              <span>Exibir</span>
+              <Dropdown
+                valor={porPagina}
+                opcoes={OPCOES_POR_PAGINA.map((n) => ({ valor: n, rotulo: String(n) }))}
+                aoMudar={setPorPagina}
+                rotulo="Convidados por página"
+              />
+              <span>por página</span>
+            </div>
+            <span className="conv-pag-faixa muted">
+              {inicio + 1}–{Math.min(inicio + porPagina, lista.length)} de {lista.length}
+            </span>
+            <div className="conv-pag-botoes">
+              <button className="btn btn-ghost btn-sm" disabled={paginaAtual <= 1} onClick={() => irParaPagina(paginaAtual - 1)}>
+                Anterior
+              </button>
+              <span className="conv-pag-atual">Página {paginaAtual} de {totalPaginas}</span>
+              <button className="btn btn-ghost btn-sm" disabled={paginaAtual >= totalPaginas} onClick={() => irParaPagina(paginaAtual + 1)}>
+                Próxima
+              </button>
+            </div>
+          </nav>
         )}
       </section>
 

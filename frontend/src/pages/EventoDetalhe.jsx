@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useTarefas } from '../hooks/useTarefas'
 import { useConvidados } from '../hooks/useConvidados'
@@ -42,7 +42,8 @@ function Contagem({ dataInicio }) {
 
 function EventoDetalhe() {
   const { id } = useParams()
-  const [aba, setAba] = useState('checklist')
+  const location = useLocation()
+  const [aba, setAba] = useState(location.state?.aba ?? 'checklist')
   const [evento, setEvento] = useState(null)
   const [editando, setEditando] = useState(false)
 

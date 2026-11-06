@@ -169,6 +169,11 @@
 .conv-busca input { flex: 1; min-width: 0; border: none; background: none; outline: none; font-family: var(--font); font-size: 13.5px; color: var(--text); }
 .conv-busca input::placeholder { color: var(--text-3); }
 .conv-ferramentas .btn { margin-left: auto; flex-shrink: 0; }
+.conv-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 22px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-2); }
+.conv-filtro { display: inline-flex; align-items: center; gap: 8px; }
+.conv-filtros .dropdown-btn { border-radius: 999px; padding-left: 16px; padding-right: 14px; }
+.conv-filtros .link { margin-left: auto; }
+@media (max-width: 640px) { .conv-filtros { padding: 10px 16px; } .conv-filtros .link { margin-left: 0; } }
 
 /* Modal do convidado */
 .conv-campos { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 12px; }
@@ -177,9 +182,18 @@
 .conv-enviado { margin-bottom: 4px; }
 
 .conv-lista { list-style: none; }
+
+.conv-paginacao { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding: 18px 24px 20px; margin-top: 8px; border-top: 1px solid var(--border); font-size: 13.5px; }
+.conv-pag-tamanho { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); }
+.conv-pag-botoes { display: inline-flex; align-items: center; gap: 10px; }
+.conv-pag-atual { color: var(--text-2); white-space: nowrap; }
+@media (max-width: 640px) {
+  .conv-paginacao { justify-content: center; }
+}
 .conv-linha {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 100px 86px 96px 134px;
+  grid-template-columns: 34px minmax(0, 1fr) 100px 124px 112px 134px;
+  column-gap: 16px;
   align-items: center;
   gap: 12px;
   padding: 12px 22px;
@@ -195,7 +209,7 @@
 .conv-nome strong { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conv-nome span { font-size: 12.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.conv-cab { padding-top: 10px; padding-bottom: 10px; font-size: 11.5px; font-weight: 600; color: var(--text-3); animation: none; }
+.conv-cab { padding-top: 12px; padding-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--text-3); animation: none; }
 .conv-cab:hover { background: none; }
 .conv-grupo { min-width: 0; font-size: 12.5px; }
 .conv-grupo .selo-cat { max-width: 100%; }

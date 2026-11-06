@@ -246,7 +246,7 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
               <div className="medidor-fill" style={{ width: `${pagamentos.percentual}%` }} />
             </div>
             <div className="medidor-legenda">
-              <span><strong className="num">{pagamentos.percentual.toFixed(0)}%</strong> das despesas pago</span>
+              <span><strong className="num">{pagamentos.percentual.toFixed(0)}%</strong> das despesas pagas</span>
               {pagamentos.proxima && (
                 <span>Próximo: <strong className="num">{moeda(pagamentos.proxima.valor)}</strong> em {dataMedia(pagamentos.proxima.vencimento)}</span>
               )}

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useEventos } from '../hooks/useEventos'
 import LayoutApp from '../components/LayoutApp'
 import ModalCriarEvento from '../components/ModalCriarEvento'
+import PainelVencimentos from '../components/PainelVencimentos'
 import EventoLinha from '../components/EventoLinha'
 import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
@@ -104,6 +105,8 @@ function Dashboard() {
               </span>
             </Link>
           )}
+
+          <PainelVencimentos />
 
           <div className="dash-grade">
             <section className="rv" style={{ '--d': 3 }}>

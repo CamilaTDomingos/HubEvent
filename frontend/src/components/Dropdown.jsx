@@ -31,9 +31,24 @@ function Dropdown({ id, valor, opcoes, aoMudar, placeholder = 'Selecione', rotul
 
   useLayoutEffect(() => {
     if (!aberto) return undefined
+    const FOLGA = 6 // distância do gatilho
+    const MARGEM = 12 // distância da borda da janela
     const medir = () => {
       const r = raiz.current.getBoundingClientRect()
-      setPos({ top: r.bottom + 6, left: r.left, width: r.width })
+      // scrollHeight: altura completa da lista, mesmo com max-height aplicado.
+      const altura = menu.current?.scrollHeight ?? 0
+      const abaixo = window.innerHeight - r.bottom - FOLGA - MARGEM
+      const acima = r.top - FOLGA - MARGEM
+      // Abre para cima só quando não cabe embaixo e há mais espaço em cima.
+      const paraCima = altura > abaixo && acima > abaixo
+      const espaco = paraCima ? acima : abaixo
+      const alturaFinal = Math.min(altura || espaco, espaco)
+      setPos({
+        top: paraCima ? r.top - FOLGA - alturaFinal : r.bottom + FOLGA,
+        left: r.left,
+        width: r.width,
+        maxHeight: Math.max(espaco, 96),
+      })
     }
     medir()
     window.addEventListener('resize', medir)
@@ -55,7 +70,8 @@ function Dropdown({ id, valor, opcoes, aoMudar, placeholder = 'Selecione', rotul
       className="dropdown-menu"
       role="listbox"
       aria-label={rotulo}
-      style={pos ? { top: pos.top, left: pos.left, minWidth: pos.width } : undefined}
+      // Antes da primeira medição a lista fica invisível, só para ter altura.
+      style={pos ? { top: pos.top, left: pos.left, minWidth: pos.width, maxHeight: Math.min(pos.maxHeight, 260) } : { top: 0, left: 0, visibility: 'hidden' }}
     >
       {opcoes.map((o) => (
         <button
@@ -91,7 +107,7 @@ function Dropdown({ id, valor, opcoes, aoMudar, placeholder = 'Selecione', rotul
         <span className="dropdown-texto">{selecionada ? selecionada.rotulo : placeholder}</span>
         <span className="dropdown-seta" aria-hidden="true">▾</span>
       </button>
-      {aberto && pos && createPortal(lista, document.body)}
+      {aberto && createPortal(lista, document.body)}
     </div>
   )
 }

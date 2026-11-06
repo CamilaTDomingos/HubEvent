@@ -1,0 +1,27 @@
+.venc { margin-bottom: clamp(40px, 5vw, 56px); }
+.venc .secao-cab { flex-wrap: wrap; gap: 12px; }
+.venc-alerta { margin-left: 10px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: rgba(198, 40, 40, .12); color: #c62828; vertical-align: middle; }
+
+.venc-filtros { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; }
+.venc-filtros button { border: 0; background: none; padding: 5px 12px; border-radius: 999px; font: inherit; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
+.venc-filtros button.ativo { background: var(--em-dim); color: var(--em-2); }
+
+.venc-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.venc-item { --cor: var(--text-3); display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-left: 3px solid var(--cor); border-radius: var(--r); text-decoration: none; color: inherit; transition: box-shadow .25s var(--ease), transform .25s var(--ease); }
+.venc-item:hover { box-shadow: var(--sh3); transform: translateY(-2px); }
+.venc-item.atrasado { --cor: #c62828; }
+.venc-item.urgente { --cor: #ef6c00; }
+.venc-item.semana { --cor: #f9a825; }
+.venc-item.normal { --cor: var(--em); }
+
+.venc-icone { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; color: var(--cor); background: color-mix(in srgb, var(--cor) 14%, transparent); }
+.venc-texto { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.venc-texto strong { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.venc-texto small { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.venc-quando { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; text-align: right; }
+.venc-valor { font-size: 14px; font-weight: 500; }
+.venc-data { font-size: 12px; color: var(--cor); }
+
+@media (max-width: 860px) {
+  .venc-lista { grid-template-columns: 1fr; }
+}
