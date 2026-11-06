@@ -26,7 +26,19 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir, aoPagar, aoDesfazer, pag
 
   return (
     <li className="desp" style={{ '--i': indice }}>
-      <div className="desp-linha">
+      <div
+        className="desp-linha clicavel"
+        role="button"
+        tabIndex={0}
+        aria-expanded={expandido}
+        onClick={() => setExpandido(!expandido)}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault()
+            setExpandido(!expandido)
+          }
+        }}
+      >
         <span className="desp-cor" style={{ background: despesa.cor || COR_SEM_CATEGORIA }} aria-hidden="true" />
         <div className="desp-desc">
           <strong>{despesa.descricao}</strong>
@@ -37,9 +49,9 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir, aoPagar, aoDesfazer, pag
           </span>
         </div>
         <div className="desp-forma">
-          <button className={`desp-parcelado ${expandido ? 'aberto' : ''}`} aria-expanded={expandido} onClick={() => setExpandido(!expandido)}>
+          <span className={`desp-parcelado ${expandido ? 'aberto' : ''}`}>
             {formaDePagamento(parcelas)} <Icone nome="chevron" tamanho={14} />
-          </button>
+          </span>
         </div>
         <div className="desp-valor">
           <span className="num">{moeda(despesa.valor_total)}</span>
@@ -47,7 +59,7 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir, aoPagar, aoDesfazer, pag
             {quitada ? 'Pago' : valorPago > 0 ? `Faltam ${moeda(falta)}` : 'A pagar'}
           </span>
         </div>
-        <span className="desp-acoes">
+        <span className="desp-acoes" onClick={(e) => e.stopPropagation()}>
           {aoDividir && (
             <button className="btn-icone desp-acao" onClick={() => aoDividir(despesa)} title="Quem pagou e divisão" aria-label={`Dividir ${despesa.descricao}`}>
               <Icone nome="usuarios" tamanho={16} />

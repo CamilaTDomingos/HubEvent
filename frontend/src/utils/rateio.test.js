@@ -165,3 +165,49 @@ test('só o organizador: ninguém deve nada', () => {
   assert.equal(saldos(r).a, 0)
   assert.deepEqual(r.acertos, [])
 })
+
+test('rateio por parcela: só a parcela paga conta, creditada a quem a pagou', () => {
+  // Despesa de 300 em 3 parcelas de 100; só a primeira foi paga, por Bruno.
+  const despesas = [{
+    id: 'd1', valor_total: 300, divisao: 'IGUAL', pago_por_id: 'a',
+    parcela: [
+      { valor: 100, pago: true, pago_por_id: 'b' },
+      { valor: 100, pago: false },
+      { valor: 100, pago: false },
+    ],
+  }]
+  const r = calcularRateio({ despesas, participantes })
+  // Pago: 100, parte de cada um: ~33,33. Bruno pagou tudo; os outros devem a ele.
+  assert.equal(r.pessoas.reduce((s, p) => s + p.saldo, 0), 0)
+  assert.deepEqual(saldos(r), { a: -3334, b: 6667, c: -3333 })
+})
+
+test('rateio por parcela: pagadores diferentes na mesma despesa', () => {
+  const despesas = [{
+    id: 'd1', valor_total: 300, divisao: 'IGUAL',
+    parcela: [
+      { valor: 150, pago: true, pago_por_id: 'a' },
+      { valor: 150, pago: true, pago_por_id: 'b' },
+    ],
+  }]
+  const r = calcularRateio({ despesas, participantes })
+  assert.deepEqual(saldos(r), { a: 5000, b: 5000, c: -10000 })
+})
+
+test('rateio por parcela: sem nenhuma parcela paga o saldo é zero', () => {
+  const despesas = [{ id: 'd1', valor_total: 300, parcela: [{ valor: 300, pago: false }] }]
+  const r = calcularRateio({ despesas, participantes })
+  assert.deepEqual(saldos(r), { a: 0, b: 0, c: 0 })
+})
+
+test('rateio por parcela: parcela paga por alguém de fora não entra no saldo', () => {
+  const despesas = [{
+    id: 'd1', valor_total: 300, divisao: 'IGUAL',
+    parcela: [
+      { valor: 100, pago: true, pago_externo: true, pago_por: 'Pais da noiva' },
+      { valor: 200, pago: true, pago_por_id: 'a' },
+    ],
+  }]
+  // Só os 200 pagos por Amanda são divididos: ~66,67 para cada um.
+  assert.deepEqual(saldos(calcularRateio({ despesas, participantes })), { a: 13333, b: -6667, c: -6666 })
+})

@@ -1,4 +1,4 @@
-import { somarMeses } from './datas'
+import { vencimentoDaParcela } from './datas'
 
 // Divide um valor em `n` partes em centavos; a última absorve a sobra
 // do arredondamento para que a soma bata exatamente com o total.
@@ -10,7 +10,7 @@ export function dividir(total, n) {
 
 // Monta as linhas da tabela parcela de uma despesa nova.
 // À vista: um pagamento só. Parcelado: entrada opcional + o restante em parcelas.
-export function montarPagamentos({ valor, parcelar, comEntrada, valorEntrada, dataEntrada, numParcelas, vencimento }) {
+export function montarPagamentos({ valor, parcelar, comEntrada, valorEntrada, dataEntrada, numParcelas, vencimento, periodicidade = 'MENSAL' }) {
   // `entrada` sempre explícito: num insert em lote, chave ausente vira null e quebra o NOT NULL.
   if (!parcelar) return [{ numero: 1, valor, vencimento, entrada: false }]
 
@@ -21,7 +21,7 @@ export function montarPagamentos({ valor, parcelar, comEntrada, valorEntrada, da
     restante = Math.round((valor - valorEntrada) * 100) / 100
   }
   dividir(restante, numParcelas).forEach((v, i) => {
-    pagamentos.push({ numero: pagamentos.length + 1, valor: v, vencimento: somarMeses(vencimento, i), entrada: false })
+    pagamentos.push({ numero: pagamentos.length + 1, valor: v, vencimento: vencimentoDaParcela(vencimento, periodicidade, i), entrada: false })
   })
   return pagamentos
 }
@@ -50,10 +50,4 @@ export function resumoPagamentos(despesas) {
     porPagador: Object.entries(porPagador).sort((a, b) => b[1] - a[1]),
     proxima,
   }
-}
-
-// Nomes já usados em "quem pagou", para sugerir no modal.
-export function pagadoresConhecidos(despesas) {
-  const nomes = despesas.flatMap((d) => (d.parcela ?? []).map((p) => p.pago_por?.trim()).filter(Boolean))
-  return [...new Set(nomes)].sort((a, b) => a.localeCompare(b, 'pt-BR'))
 }

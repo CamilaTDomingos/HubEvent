@@ -235,6 +235,7 @@ CREATE TABLE despesa (
     pago BOOLEAN NOT NULL DEFAULT FALSE,
     parcelado BOOLEAN NOT NULL DEFAULT FALSE,
     vencimento DATE, -- data do pagamento da despesa à vista; parcelada usa a tabela parcela
+    pago_externo BOOLEAN NOT NULL DEFAULT FALSE, -- paga por alguém de fora do rateio (só o nome em pago_por)
     pago_por_id UUID, -- participante que pagou; NULL = o organizador
     divisao VARCHAR(10) NOT NULL DEFAULT 'IGUAL', -- IGUAL entre todos, ou VALOR/PERCENTUAL em cota_despesa
     criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -259,6 +260,8 @@ CREATE TABLE parcela (
     pago_em TIMESTAMPTZ,
     entrada BOOLEAN NOT NULL DEFAULT FALSE,
     pago_por VARCHAR(120),
+    pago_por_id UUID, -- participante que pagou esta parcela; NULL = o organizador
+    CONSTRAINT fk_parcela_pago_por FOREIGN KEY (pago_por_id) REFERENCES participante_rateio(id),
     CONSTRAINT fk_parcela_despesa FOREIGN KEY (despesa_id) REFERENCES despesa(id) ON DELETE CASCADE,
     CONSTRAINT chk_parcela_numero CHECK (numero > 0),
     CONSTRAINT chk_parcela_valor CHECK (valor >= 0)
@@ -351,6 +354,7 @@ CREATE INDEX idx_despesa_evento ON despesa(evento_id);
 CREATE INDEX idx_despesa_categoria ON despesa(categoria_id);
 CREATE INDEX idx_categoria_despesa_usuario ON categoria_despesa(usuario_id);
 CREATE INDEX idx_parcela_despesa ON parcela(despesa_id);
+CREATE INDEX idx_parcela_pago_por ON parcela(pago_por_id);
 CREATE INDEX idx_despesa_pago_por ON despesa(pago_por_id, evento_id);
 CREATE INDEX idx_participante_evento ON participante_rateio(evento_id);
 CREATE UNIQUE INDEX uq_participante_organizador ON participante_rateio(evento_id) WHERE organizador;

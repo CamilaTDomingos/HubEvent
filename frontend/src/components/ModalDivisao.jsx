@@ -9,7 +9,6 @@ import {
   dividirIgual,
   percentuaisParaCentavos,
   conferirDivisao,
-  pagadorDaDespesa,
 } from '../utils/rateio'
 import Icone from './Icone'
 
@@ -23,7 +22,7 @@ function porcentagem(pontos) {
   return `${(pontos / 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 }
 
-// Quem pagou a despesa e como ela se divide entre os participantes (RF03).
+// Como a despesa se divide entre os participantes (RF03).
 // Montado só enquanto está aberto, então o estado parte sempre da despesa certa.
 function ModalDivisao({ despesa, participantes, cotas, aoFechar, aoSalvar }) {
   const total = paraCentavos(despesa.valor_total)
@@ -31,7 +30,6 @@ function ModalDivisao({ despesa, participantes, cotas, aoFechar, aoSalvar }) {
   const cotasDaDespesa = cotas.filter((c) => c.despesa_id === despesa.id)
   const modoSalvo = despesa.divisao !== 'IGUAL' && cotasDaDespesa.length ? despesa.divisao : 'IGUAL'
 
-  const [pagoPor, setPagoPor] = useState(pagadorDaDespesa(despesa, participantes)?.id ?? '')
   const [modo, setModo] = useState(modoSalvo)
   const [entradas, setEntradas] = useState(() => {
     if (modoSalvo === 'IGUAL') return {}
@@ -74,7 +72,7 @@ function ModalDivisao({ despesa, participantes, cotas, aoFechar, aoSalvar }) {
     setSalvando(true)
     const { error } = await supabase.rpc('definir_rateio_despesa', {
       p_despesa: despesa.id,
-      p_pago_por: pagoPor || null,
+      p_pago_por: despesa.pago_por_id ?? null, // quem pagou agora é registrado em cada parcela
       p_divisao: divisao,
       p_cotas: cotasNovas,
     })
@@ -108,15 +106,6 @@ function ModalDivisao({ despesa, participantes, cotas, aoFechar, aoSalvar }) {
       <form className="popup popup-divisao" onSubmit={handleSalvar} role="dialog" aria-modal="true" aria-labelledby="divisao-titulo">
         <h2 id="divisao-titulo" className="popup-title titulo">Dividir <em>despesa</em></h2>
         <p className="popup-sub">{despesa.descricao} · {moeda(despesa.valor_total)}</p>
-
-        <div className="field">
-          <label htmlFor="divisao-pago-por">Quem pagou</label>
-          <select id="divisao-pago-por" value={pagoPor} onChange={(e) => setPagoPor(e.target.value)}>
-            {participantes.map((p) => (
-              <option key={p.id} value={p.id}>{p.nome}{p.organizador ? ' (você)' : ''}</option>
-            ))}
-          </select>
-        </div>
 
         <div className="field">
           <span className="label" id="divisao-modo">Como dividir</span>

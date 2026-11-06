@@ -80,16 +80,62 @@ export function pagadorDaDespesa(despesa, participantes) {
   return participantes.find((p) => p.id === despesa.pago_por_id) ?? organizador ?? null
 }
 
+// Quem pagou uma parcela: o participante gravado nela; sem registro
+// (parcela antiga), vale o da despesa e, por fim, o organizador.
+export function pagadorDaParcela(parcela, despesa, participantes) {
+  const organizador = participantes.find((p) => p.organizador) ?? participantes[0]
+  return (
+    participantes.find((p) => p.id === parcela.pago_por_id) ??
+    participantes.find((p) => p.id === despesa.pago_por_id) ??
+    organizador ??
+    null
+  )
+}
+
+// Reduz as partes (que somam o total) para somarem `alvo`, mantendo a
+// proporção; os centavos que sobram vão para os maiores restos.
+function reduzirPartes(partes, alvo) {
+  const total = Object.values(partes).reduce((s, v) => s + v, 0)
+  if (!total) return {}
+  const linhas = Object.entries(partes).map(([id, v], ordem) => ({
+    id, ordem, base: Math.floor((v * alvo) / total), resto: (v * alvo) % total,
+  }))
+  let faltam = alvo - linhas.reduce((s, l) => s + l.base, 0)
+  const resultado = Object.fromEntries(linhas.map((l) => [l.id, l.base]))
+  const porResto = [...linhas].sort((a, b) => b.resto - a.resto || a.ordem - b.ordem)
+  for (let i = 0; faltam > 0 && porResto.length; i = (i + 1) % porResto.length, faltam--) {
+    resultado[porResto[i].id] += 1
+  }
+  return resultado
+}
+
 // Saldo de cada participante: pagou − parte + acertos que fez − acertos que recebeu.
+// Só entra no saldo o que já foi pago: cada parcela paga credita quem pagou e a
+// parte de cada um é reduzida na mesma proporção (parcela pendente não conta).
+// Despesa sem parcelas (dados antigos) conta inteira, paga por quem a despesa indica.
 // Positivo: tem a receber. Negativo: tem a pagar.
 export function calcularRateio({ despesas, participantes, cotas = [], pagamentos = [] }) {
   const pessoas = new Map(participantes.map((p) => [p.id, { participante: p, pagou: 0, parte: 0, enviou: 0, recebeu: 0 }]))
   const cotasPorDespesa = cotas.reduce((mapa, c) => mapa.set(c.despesa_id, [...(mapa.get(c.despesa_id) ?? []), c]), new Map())
 
   for (const d of despesas) {
-    const pagador = pagadorDaDespesa(d, participantes)
-    if (pagador) pessoas.get(pagador.id).pagou += paraCentavos(d.valor_total)
-    const partes = partesDaDespesa(d, participantes, cotasPorDespesa.get(d.id))
+    const total = paraCentavos(d.valor_total)
+    let partes = partesDaDespesa(d, participantes, cotasPorDespesa.get(d.id))
+    const parcelas = d.parcela ?? []
+    if (parcelas.length) {
+      let pago = 0
+      // Parcela paga por alguém de fora do rateio não entra na conta.
+      for (const parcela of parcelas.filter((x) => x.pago && !x.pago_externo)) {
+        const valor = paraCentavos(parcela.valor)
+        const pagador = pagadorDaParcela(parcela, d, participantes)
+        if (pagador) pessoas.get(pagador.id).pagou += valor
+        pago += valor
+      }
+      if (pago !== total) partes = reduzirPartes(partes, pago)
+    } else {
+      const pagador = pagadorDaDespesa(d, participantes)
+      if (pagador) pessoas.get(pagador.id).pagou += total
+    }
     for (const [id, valor] of Object.entries(partes)) {
       if (pessoas.has(id)) pessoas.get(id).parte += valor
     }
@@ -133,7 +179,7 @@ export function simplificarAcertos(saldos) {
 // igualmente ele some e os outros passam a dividir.
 export function motivoParaNaoRemover(participante, { despesas, cotas, pagamentos }) {
   if (participante.organizador) return 'O organizador sempre participa do rateio.'
-  if (despesas.some((d) => d.pago_por_id === participante.id)) return `${participante.nome} pagou alguma despesa. Troque quem pagou antes de remover.`
+  if (despesas.some((d) => d.pago_por_id === participante.id || d.parcela?.some((p) => p.pago_por_id === participante.id))) return `${participante.nome} pagou alguma despesa ou parcela. Desfaça esses pagamentos antes de remover.`
   if (cotas.some((c) => c.participante_id === participante.id)) return `${participante.nome} tem parte numa divisão personalizada. Ajuste a divisão antes de remover.`
   if (pagamentos.some((p) => p.de_id === participante.id || p.para_id === participante.id)) return `${participante.nome} tem acertos registrados. Desfaça os acertos antes de remover.`
   return null

@@ -363,8 +363,7 @@
 .lancar-titulo { font-size: 17px; }
 .lancar-gerenciar { font-size: 12.5px; }
 .lancar .input { background: var(--card); }
-.lancar-campos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 10px; align-items: center; }
-
+.lancar-campos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: 10px; align-items: center; }
 .lancar-pagamento { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 22px; padding-top: 14px; }
 .lancar-forma { display: inline-flex; padding: 3px; border-radius: 20px; background: var(--card); border: 1px solid var(--border); }
 .lancar-forma button {
@@ -409,7 +408,11 @@
   padding: 13px 22px;
   transition: background 0.2s;
 }
+.desp-linha:hover .desp-parcelado { border-color: var(--em-border); color: var(--em); }
 .desp-linha:hover { background: #fbfcfd; }
+.desp-linha.clicavel { cursor: pointer; }
+.desp-linha.clicavel:focus-visible { outline: 2px solid var(--em); outline-offset: -2px; }
+.lancar-aviso { color: #b97d17; }
 .desp-cor { width: 8px; height: 8px; border-radius: 50%; }
 .desp-desc { display: flex; flex-direction: column; min-width: 0; }
 .desp-desc strong { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -582,7 +585,7 @@
 .rateio-saldo.pos, .rateio-saldo.pos strong { color: var(--em-2); }
 .rateio-saldo.neg, .rateio-saldo.neg strong { color: var(--red); }
 .rateio-adicionar { display: flex; gap: 8px; margin-top: 14px; }
-.rateio-adicionar .input { flex: 1; min-width: 0; padding: 8px 12px; font-size: 13.5px; }
+.rateio-adicionar .input { flex: 0 1 200px; min-width: 0; padding: 8px 12px; font-size: 13.5px; }
 .rateio-adicionar .btn { flex-shrink: 0; }
 .acerto { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--text-2); }
 .acerto:last-child { border-bottom: none; }

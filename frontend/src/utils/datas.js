@@ -57,6 +57,21 @@ export function somarMeses(iso, meses) {
   return dataISO(new Date(ano, mes - 1 + meses, Math.min(diaDoMes, ultimoDia)))
 }
 
+// Soma dias a uma data "AAAA-MM-DD".
+export function somarDias(iso, dias) {
+  const [ano, mes, diaDoMes] = iso.split('-').map(Number)
+  return dataISO(new Date(ano, mes - 1, diaDoMes + dias))
+}
+
+export const PERIODICIDADES = { MENSAL: 'Mês', QUINZENAL: 'Quinzena', SEMANAL: 'Semana' }
+
+// Vencimento da parcela de índice `i` (0 = a primeira) a partir da data inicial.
+export function vencimentoDaParcela(inicio, periodicidade, i) {
+  if (periodicidade === 'QUINZENAL') return somarDias(inicio, 14 * i)
+  if (periodicidade === 'SEMANAL') return somarDias(inicio, 7 * i)
+  return somarMeses(inicio, i)
+}
+
 export const dia = (v) => formatar(v, { day: '2-digit' })
 export const mesCurto = (v) => formatar(v, { month: 'short' }).replace('.', '')
 export const semanaCurta = (v) => formatar(v, { weekday: 'short' }).replace('.', '')

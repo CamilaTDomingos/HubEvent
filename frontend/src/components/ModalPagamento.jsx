@@ -1,11 +1,16 @@
+import Dropdown from './Dropdown'
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { moeda, hojeISO } from '../utils/datas'
 
 // Marca um pagamento como pago, registrando quem pagou e quando.
 // Sem `parcela` (despesa antiga, sem pagamentos), cria o pagamento único.
-function ModalPagamento({ despesa, parcela, pagadores, aoFechar, aoSalvar }) {
+const EXTERNO = '__externo__'
+
+function ModalPagamento({ despesa, parcela, participantes = [], aoFechar, aoSalvar }) {
+  // Vazio = organizador (mesma regra do rateio); EXTERNO = alguém de fora do rateio.
   const [pagoPor, setPagoPor] = useState('')
+  const [nomeExterno, setNomeExterno] = useState('')
   const [data, setData] = useState(hojeISO())
   const [erro, setErro] = useState(null)
   const [salvando, setSalvando] = useState(false)
@@ -15,6 +20,10 @@ function ModalPagamento({ despesa, parcela, pagadores, aoFechar, aoSalvar }) {
     ? despesa.descricao
     : parcela.entrada ? `Entrada · ${despesa.descricao}` : `Parcela ${parcela.numero} · ${despesa.descricao}`
 
+  const externo = pagoPor === EXTERNO
+  const organizador = participantes.find((p) => p.organizador) ?? participantes[0]
+  const pagador = externo ? null : (participantes.find((p) => p.id === pagoPor) ?? organizador)
+
   async function handleSalvar(e) {
     e.preventDefault()
     if (!data) {
@@ -22,12 +31,17 @@ function ModalPagamento({ despesa, parcela, pagadores, aoFechar, aoSalvar }) {
       return
     }
 
+    if (externo && !nomeExterno.trim()) {
+      setErro('Informe o nome de quem pagou.')
+      return
+    }
+
     const dados = {
       pago: true,
       pago_em: new Date(`${data}T12:00:00`).toISOString(),
-      // Só envia a coluna quando preenchida: assim marcar como pago
-      // continua funcionando antes da migração.
-      ...(pagoPor.trim() && { pago_por: pagoPor.trim() }),
+      ...(externo
+        ? { pago_externo: true, pago_por: nomeExterno.trim() }
+        : pagador && { pago_externo: false, pago_por_id: pagador.id, pago_por: pagador.nome }),
     }
 
     setSalvando(true)
@@ -58,21 +72,33 @@ function ModalPagamento({ despesa, parcela, pagadores, aoFechar, aoSalvar }) {
         <p className="popup-sub">{rotulo}: <strong className="num">{moeda(valor)}</strong></p>
 
         <div className="field">
-          <label htmlFor="pagamento-quem">Quem pagou <span className="muted">(opcional)</span></label>
-          <input
+          <label htmlFor="pagamento-quem">Quem pagou</label>
+          <Dropdown
             id="pagamento-quem"
-            type="text"
-            list="pagadores-conhecidos"
-            placeholder="Ex.: Ana, pais da noiva…"
-            maxLength={120}
-            value={pagoPor}
-            onChange={(e) => setPagoPor(e.target.value)}
+            valor={externo ? EXTERNO : (pagador?.id ?? '')}
+            aoMudar={setPagoPor}
             autoFocus
+            opcoes={[
+              ...participantes.map((p) => ({ valor: p.id, rotulo: `${p.nome}${p.organizador ? ' (você)' : ''}` })),
+              { valor: EXTERNO, rotulo: 'Outra pessoa (fora do rateio)' },
+            ]}
           />
-          <datalist id="pagadores-conhecidos">
-            {pagadores.map((nome) => <option key={nome} value={nome} />)}
-          </datalist>
         </div>
+        {externo && (
+          <div className="field">
+            <label htmlFor="pagamento-externo">Nome</label>
+            <input
+              id="pagamento-externo"
+              type="text"
+              placeholder="Ex.: pais da noiva"
+              maxLength={120}
+              value={nomeExterno}
+              onChange={(e) => setNomeExterno(e.target.value)}
+              autoFocus
+            />
+            <p className="muted">Esse valor não entra na divisão entre os participantes.</p>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="pagamento-data">Pago em</label>
           <input id="pagamento-data" type="date" value={data} onChange={(e) => setData(e.target.value)} />

@@ -1,3 +1,4 @@
+import Dropdown from './Dropdown'
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { MAX_ACOMPANHANTES, acompanhantesConfirmados } from '../utils/convidados'
@@ -74,10 +75,12 @@ function ModalConvidado({ convidado, eventoId, grupos, aoFechar, aoSalvar }) {
         <div className="conv-campos">
           <div className="field">
             <label htmlFor="conv-grupo">Grupo</label>
-            <select id="conv-grupo" value={grupoId} onChange={(e) => setGrupoId(e.target.value)}>
-              <option value="">Sem grupo</option>
-              {grupos.map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}
-            </select>
+            <Dropdown
+              id="conv-grupo"
+              valor={grupoId}
+              aoMudar={setGrupoId}
+              opcoes={[{ valor: '', rotulo: 'Sem grupo' }, ...grupos.map((g) => ({ valor: g.id, rotulo: g.nome }))]}
+            />
           </div>
           <div className="field">
             <label htmlFor="conv-acomp">Acompanhantes</label>

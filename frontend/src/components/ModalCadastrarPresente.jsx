@@ -1,3 +1,4 @@
+import Dropdown from './Dropdown'
 import { useState } from 'react'
 import { CATEGORIAS_PRESENTE } from '../utils/categorias'
 import { comprimirImagem } from '../utils/imagem'
@@ -172,12 +173,12 @@ function ModalCadastrarPresente({ aberto, presente = null, aoFechar, aoSalvar })
 
         <div className="field">
           <label htmlFor="pres-cat">Categoria</label>
-          <select id="pres-cat" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-            <option value="">Sem categoria</option>
-            {CATEGORIAS_PRESENTE.map((c) => (
-              <option key={c.nome}>{c.nome}</option>
-            ))}
-          </select>
+          <Dropdown
+            id="pres-cat"
+            valor={categoria}
+            aoMudar={setCategoria}
+            opcoes={[{ valor: '', rotulo: 'Sem categoria' }, ...CATEGORIAS_PRESENTE.map((c) => ({ valor: c.nome, rotulo: c.nome }))]}
+          />
         </div>
 
         <div className="field">
