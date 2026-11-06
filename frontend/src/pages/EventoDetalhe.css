@@ -9,6 +9,7 @@
 }
 .ev-topo-selo { width: 56px; height: 56px; background: var(--em-dim); color: var(--em); align-self: start; margin-top: 4px; }
 .ev-topo-texto .eyebrow { margin-bottom: 4px; }
+.ev-editar { margin: 12px 0 0 -12px; }
 .ev-topo h1 { font-size: clamp(26px, 3.2vw, 34px); margin-bottom: 10px; overflow-wrap: anywhere; }
 
 .contagem {

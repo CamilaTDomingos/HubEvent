@@ -13,6 +13,7 @@ import AbaConvidados from '../components/AbaConvidados'
 import AbaFinanceiro from '../components/AbaFinanceiro'
 import AbaPresentes from '../components/AbaPresentes'
 import AssistenteIA from '../components/AssistenteIA'
+import ModalEditarEvento from '../components/ModalEditarEvento'
 import Icone from '../components/Icone'
 import Carregando from '../components/Carregando'
 import { tipoEvento } from '../utils/categorias'
@@ -43,6 +44,7 @@ function EventoDetalhe() {
   const { id } = useParams()
   const [aba, setAba] = useState('checklist')
   const [evento, setEvento] = useState(null)
+  const [editando, setEditando] = useState(false)
 
   const tarefas = useTarefas(id)
   const convidados = useConvidados(id)
@@ -86,6 +88,9 @@ function EventoDetalhe() {
             {horario && <li><Icone nome="relogio" tamanho={15} />{horario}</li>}
             {evento.local && <li><Icone nome="local" tamanho={15} />{evento.local}</li>}
           </ul>
+          <button type="button" className="btn btn-ghost btn-sm ev-editar" onClick={() => setEditando(true)}>
+            <Icone nome="editar" tamanho={14} /> Editar evento
+          </button>
         </div>
         <Contagem dataInicio={evento.data_inicio} />
       </header>
@@ -149,6 +154,14 @@ function EventoDetalhe() {
       </div>
 
       <AssistenteIA eventoId={id} aoAdicionarTarefas={tarefas.recarregar} />
+
+      {editando && (
+        <ModalEditarEvento
+          evento={evento}
+          aoFechar={() => setEditando(false)}
+          aoSalvar={(atualizado) => setEvento((atual) => ({ ...atual, ...atualizado }))}
+        />
+      )}
     </LayoutApp>
   )
 }
