@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { nomeDoUsuario } from '../utils/datas'
 import { iniciais } from '../utils/categorias'
 import Icone from './Icone'
+import LogoSimbolo from './LogoSimbolo'
 
 function Navegacao() {
   const { usuario } = useAuth()
@@ -17,7 +18,7 @@ function Navegacao() {
     <header className="mast">
       <div className="mast-inner">
         <Link to="/dashboard" className="marca" aria-label="HubEvent, início">
-          <span className="marca-simbolo"><Icone nome="brilho" tamanho={15} traco={1.8} /></span>
+          <span className="marca-simbolo"><LogoSimbolo tamanho={30} /></span>
           <span className="marca-texto">HubEvent</span>
         </Link>
 

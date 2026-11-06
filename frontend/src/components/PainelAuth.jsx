@@ -1,4 +1,5 @@
 import Icone from './Icone'
+import LogoSimbolo from './LogoSimbolo'
 
 // Lado institucional das telas de acesso: mensagem + uma prévia do produto.
 function PainelAuth({ titulo, texto }) {
@@ -8,7 +9,7 @@ function PainelAuth({ titulo, texto }) {
       <div className="auth-deco d2" aria-hidden="true" />
 
       <div className="marca auth-marca">
-        <span className="marca-simbolo"><Icone nome="brilho" tamanho={15} traco={1.8} /></span>
+        <span className="marca-simbolo"><LogoSimbolo tamanho={30} /></span>
         HubEvent
       </div>
 

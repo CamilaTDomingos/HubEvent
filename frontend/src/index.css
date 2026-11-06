@@ -323,14 +323,12 @@ select.input,
 .marca-simbolo {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--em);
-  color: #fff;
+  width: 30px;
+  height: 30px;
+  color: var(--em);
   transition: transform 0.35s var(--ease);
 }
-.marca:hover .marca-simbolo { transform: rotate(-8deg); }
+.marca:hover .marca-simbolo { transform: rotate(-6deg); }
 
 .mast-espaco { flex: 1; }
 
