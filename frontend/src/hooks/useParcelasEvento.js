@@ -1,29 +1,30 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
-export function useParcelas(despesaId) {
+// Todas as parcelas das despesas de um evento, para o fluxo de caixa.
+// `despesas` entra como dependência: lançar ou excluir uma despesa refaz a busca.
+export function useParcelasEvento(eventoId, despesas) {
   const [parcelas, setParcelas] = useState([])
   const [carregando, setCarregando] = useState(true)
 
   const buscarParcelas = useCallback(async () => {
-    if (!despesaId) return
+    if (!eventoId) return
     setCarregando(true)
 
     const { data, error } = await supabase
       .from('parcela')
-      .select('*')
-      .eq('despesa_id', despesaId)
-      .order('numero', { ascending: true })
+      .select('despesa_id, valor, vencimento, pago, despesa!inner(evento_id)')
+      .eq('despesa.evento_id', eventoId)
+      .order('vencimento', { ascending: true })
 
     if (!error) setParcelas(data)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCarregando(false)
-  }, [despesaId])
+  }, [eventoId])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     buscarParcelas()
-  }, [buscarParcelas])
+  }, [buscarParcelas, despesas])
 
   return { parcelas, carregando, recarregar: buscarParcelas }
 }

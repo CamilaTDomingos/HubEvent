@@ -12,14 +12,16 @@ export function useDespesas(eventoId) {
 
     const { data, error } = await supabase
       .from('despesa')
-      .select('*')
+      .select('*, categoria_despesa(id, nome, cor), parcela(*)')
       .eq('evento_id', eventoId)
       .order('criado_em', { ascending: false })
+      .order('numero', { referencedTable: 'parcela', ascending: true })
 
     if (error) {
       setErro(error.message)
     } else {
-      setDespesas(data)
+      // A categoria vem da tabela categoria_despesa; a coluna de texto antiga é ignorada.
+      setDespesas(data.map(({ categoria_despesa: cat, ...d }) => ({ ...d, categoria: cat?.nome ?? null, cor: cat?.cor ?? null })))
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCarregando(false)

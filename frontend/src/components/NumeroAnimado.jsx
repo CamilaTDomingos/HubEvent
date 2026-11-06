@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react'
 
-function NumeroAnimado({ valor, prefixo = '' }) {
+function NumeroAnimado({ valor, prefixo = '', casas = 2, duracao = 700 }) {
   const [exibido, setExibido] = useState(0)
 
   useEffect(() => {
-    const duracao = 700
     const inicio = performance.now()
+    let frame
 
     function passo(agora) {
       const progresso = Math.min((agora - inicio) / duracao, 1)
       const suavizado = 1 - Math.pow(1 - progresso, 3)
       setExibido(valor * suavizado)
 
-      if (progresso < 1) requestAnimationFrame(passo)
+      if (progresso < 1) frame = requestAnimationFrame(passo)
     }
 
-    const frame = requestAnimationFrame(passo)
+    frame = requestAnimationFrame(passo)
     return () => cancelAnimationFrame(frame)
-  }, [valor])
+  }, [valor, duracao])
 
   return (
-    <span>
+    <span className="num">
       {prefixo}
-      {exibido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      {exibido.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas })}
     </span>
   )
 }

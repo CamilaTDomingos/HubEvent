@@ -1,82 +1,126 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { useParcelas } from '../hooks/useParcelas'
+import { COR_SEM_CATEGORIA } from '../utils/categorias'
+import { moeda, dataMedia, diasAte } from '../utils/datas'
+import Icone from './Icone'
 
-function LinhaDespesa({ despesa, aoExcluir }) {
+const TEXTO_DIVISAO = { VALOR: 'valores próprios', PERCENTUAL: 'por porcentagem' }
+
+function formaDePagamento(parcelas) {
+  const temEntrada = parcelas.some((p) => p.entrada)
+  const qtd = parcelas.filter((p) => !p.entrada).length
+  if (temEntrada) return `Entrada + ${qtd}×`
+  if (qtd > 1) return `${qtd}× parcelado`
+  return 'À vista'
+}
+
+// `pagador` e `aoDividir` só chegam quando o evento tem rateio (mais de um participante).
+function LinhaDespesa({ despesa, indice = 0, aoExcluir, aoPagar, aoDesfazer, pagador, aoDividir }) {
   const [expandido, setExpandido] = useState(false)
-  const { parcelas, carregando, recarregar } = useParcelas(expandido ? despesa.id : null)
 
-  const temParcelas = despesa.parcelado
-
-  async function togglePago(parcela) {
-    const { error } = await supabase
-      .from('parcela')
-      .update({
-        pago: !parcela.pago,
-        pago_em: !parcela.pago ? new Date().toISOString() : null,
-      })
-      .eq('id', parcela.id)
-
-    if (!error) recarregar()
-  }
+  const parcelas = despesa.parcela ?? []
+  const pagas = parcelas.filter((p) => p.pago)
+  const valorPago = pagas.reduce((soma, p) => soma + Number(p.valor), 0)
+  const falta = Math.max(Number(despesa.valor_total) - valorPago, 0)
+  const quitada = parcelas.length > 0 && pagas.length === parcelas.length
+  const temEntrada = parcelas.some((p) => p.entrada)
 
   return (
-    <>
-      <tr>
-        <td>{despesa.descricao}</td>
-        <td>{despesa.categoria || '—'}</td>
-        <td>R$ {Number(despesa.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-        <td>
-          {temParcelas ? (
-            <button
-              onClick={() => setExpandido(!expandido)}
-              style={{ background: 'none', border: 'none', color: 'var(--em)', cursor: 'pointer', fontSize: 12 }}
-            >
-              {expandido ? 'Ocultar parcelas' : 'Ver parcelas'}
+    <li className="desp" style={{ '--i': indice }}>
+      <div
+        className="desp-linha clicavel"
+        role="button"
+        tabIndex={0}
+        aria-expanded={expandido}
+        onClick={() => setExpandido(!expandido)}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault()
+            setExpandido(!expandido)
+          }
+        }}
+      >
+        <span className="desp-cor" style={{ background: despesa.cor || COR_SEM_CATEGORIA }} aria-hidden="true" />
+        <div className="desp-desc">
+          <strong>{despesa.descricao}</strong>
+          <span>
+            {despesa.categoria || 'Sem categoria'}
+            {pagador && ` · pago por ${pagador}`}
+            {pagador && TEXTO_DIVISAO[despesa.divisao] && `, dividida em ${TEXTO_DIVISAO[despesa.divisao]}`}
+          </span>
+        </div>
+        <div className="desp-forma">
+          <span className={`desp-parcelado ${expandido ? 'aberto' : ''}`}>
+            {formaDePagamento(parcelas)} <Icone nome="chevron" tamanho={14} />
+          </span>
+        </div>
+        <div className="desp-valor">
+          <span className="num">{moeda(despesa.valor_total)}</span>
+          <span className={`desp-status ${quitada ? 'ok' : ''}`}>
+            {quitada ? 'Pago' : valorPago > 0 ? `Faltam ${moeda(falta)}` : 'A pagar'}
+          </span>
+        </div>
+        <span className="desp-acoes" onClick={(e) => e.stopPropagation()}>
+          {aoDividir && (
+            <button className="btn-icone desp-acao" onClick={() => aoDividir(despesa)} title="Quem pagou e divisão" aria-label={`Dividir ${despesa.descricao}`}>
+              <Icone nome="usuarios" tamanho={16} />
             </button>
-          ) : (
-            <span style={{ fontSize: 12, color: 'var(--text-3)' }}>À vista</span>
           )}
-        </td>
-        <td>
-          <button
-            onClick={() => aoExcluir(despesa.id)}
-            style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 12 }}
-          >
-            Excluir
+          <button className="btn-icone perigo desp-acao" onClick={() => aoExcluir(despesa.id)} title="Excluir" aria-label={`Excluir ${despesa.descricao}`}>
+            <Icone nome="lixeira" tamanho={16} />
           </button>
-        </td>
-      </tr>
+        </span>
+      </div>
 
       {expandido && (
-        <tr>
-          <td colSpan={5} style={{ background: 'var(--bg-2)', padding: '12px 16px' }}>
-            {carregando ? (
-              <p style={{ fontSize: 12 }}>Carregando parcelas...</p>
+        <div className="parcelas">
+          {parcelas.length > 1 && (
+            <div className="parcelas-progresso">
+              <span>{pagas.length} de {parcelas.length} pagamentos feitos</span>
+              <span className="parcelas-barra">
+                <span style={{ width: `${(pagas.length / parcelas.length) * 100}%` }} />
+              </span>
+            </div>
+          )}
+          <div className="parcelas-lista">
+            {parcelas.length === 0 ? (
+              <button className="parcela" onClick={() => aoPagar(despesa, null)}>
+                <span className="parcela-check" aria-hidden="true">1</span>
+                <span className="parcela-info">
+                  <strong className="num">{moeda(despesa.valor_total)}</strong>
+                  <span>Marcar como pago</span>
+                </span>
+              </button>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {parcelas.map((p) => (
-                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
-                    <input
-                      type="checkbox"
-                      checked={p.pago}
-                      onChange={() => togglePago(p)}
-                      style={{ accentColor: 'var(--em)' }}
-                    />
-                    <span>Parcela {p.numero}</span>
-                    <span>R$ {Number(p.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    <span style={{ color: 'var(--text-3)' }}>
-                      Vencimento: {new Date(p.vencimento).toLocaleDateString('pt-BR')}
+              parcelas.map((p) => {
+                const atrasada = !p.pago && diasAte(p.vencimento) < 0
+                const numero = temEntrada ? p.numero - 1 : p.numero
+                return (
+                  <button
+                    key={p.id}
+                    className={`parcela ${p.pago ? 'paga' : ''} ${atrasada ? 'atrasada' : ''}`}
+                    aria-pressed={p.pago}
+                    title={p.pago ? 'Desmarcar pagamento' : 'Registrar pagamento'}
+                    onClick={() => (p.pago ? aoDesfazer(p) : aoPagar(despesa, p))}
+                  >
+                    <span className="parcela-check" aria-hidden="true">
+                      {p.pago ? <Icone nome="check" tamanho={13} traco={2.2} /> : p.entrada ? 'E' : numero}
                     </span>
-                    {p.pago && <span className="badge badge-ok">Pago</span>}
-                  </div>
-                ))}
-              </div>
+                    <span className="parcela-info">
+                      <strong className="num">{moeda(p.valor)}{p.entrada && <em> · entrada</em>}</strong>
+                      <span>
+                        {p.pago
+                          ? `Pago${p.pago_por ? ` por ${p.pago_por}` : ''}${p.pago_em ? ` · ${dataMedia(p.pago_em)}` : ''}${p.ratear === false ? ' · não rateado' : ''}`
+                          : `${atrasada ? 'Venceu' : 'Vence'} ${dataMedia(p.vencimento)}`}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })
             )}
-          </td>
-        </tr>
+          </div>
+        </div>
       )}
-    </>
+    </li>
   )
 }
 

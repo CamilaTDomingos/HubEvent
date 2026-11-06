@@ -1,0 +1,119 @@
+/* ---------- Categorias de tarefa ---------- */
+
+.selo-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 180px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--cat) 13%, transparent);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.selo-cat::before { content: ''; flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--cat); }
+
+.seletor-cor { display: flex; flex-wrap: wrap; gap: 8px; }
+.cor-amostra {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--cat, var(--bg-2));
+  background-clip: padding-box;
+  color: transparent;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), box-shadow 0.2s, opacity 0.2s;
+}
+.cor-amostra:hover { transform: scale(1.1); }
+.cor-amostra[aria-checked='true'], .cor-amostra.sel { color: #fff; box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--cat); }
+.cor-amostra.usada:not([aria-checked='true']) { opacity: 0.3; }
+.cor-livre { border: 1.5px dashed var(--border-2); color: var(--text-3); }
+.cor-livre.sel { border-color: transparent; }
+.cor-livre input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.cor-livre:has(input:focus-visible) { outline: 2px solid var(--em); outline-offset: 2px; }
+
+/* Gerenciador (perfil) */
+.cat-painel { overflow: hidden; }
+.cat-lista { list-style: none; }
+.cat-erro { padding: 18px 22px; margin: 0; }
+.cat-vazio { padding: 18px 22px; font-size: 13.5px; color: var(--text-3); border-bottom: 1px solid var(--border); }
+.cat-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.cat-linha:hover { background: #fbfcfd; }
+.cat-linha:hover .conv-acoes, .cat-linha:focus-within .conv-acoes { opacity: 1; }
+.cat-linha.editando { display: block; padding: 16px 22px; background: var(--bg-2); }
+
+.cat-form { display: flex; flex-direction: column; gap: 12px; }
+.cat-form-linha { display: flex; align-items: center; gap: 12px; }
+.cat-form-linha .input { flex: 1; min-width: 0; background: var(--card); }
+.cat-form .erro-msg { margin: 0; }
+.cat-form-acoes { display: flex; justify-content: flex-end; gap: 8px; }
+
+.cat-nova {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 22px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-3);
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
+}
+.cat-nova-icone { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px dashed var(--border-2); transition: border-color 0.2s; }
+.cat-nova:hover { background: #fbfcfd; color: var(--em); }
+.cat-nova:hover .cat-nova-icone { border-color: var(--em); }
+
+@media (max-width: 640px) {
+  .cat-linha, .cat-linha.editando, .cat-nova { padding-left: 16px; padding-right: 16px; }
+  .cat-form-linha { flex-direction: column; align-items: stretch; }
+  .cat-form-linha .selo-cat { align-self: flex-start; }
+}
+
+/* Escolha da categoria no modal de tarefa */
+.cat-campo { border: none; }
+.cat-campo .label { margin-bottom: 8px; }
+.modal-cat-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+.modal-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 20px;
+  background: var(--card);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-2);
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.modal-cat:hover { border-color: var(--cat, var(--em-border)); color: var(--text); }
+.modal-cat[aria-checked='true'] {
+  border-color: var(--cat, var(--em));
+  background: color-mix(in srgb, var(--cat, var(--em)) 12%, transparent);
+  color: var(--text);
+  font-weight: 500;
+}
+.modal-cat-ponto { width: 8px; height: 8px; border-radius: 50%; background: var(--cat); }
+.modal-cat-vazio { font-size: 13.5px; }
+.modal-cat-vazio .link { color: var(--em); font-weight: 500; }

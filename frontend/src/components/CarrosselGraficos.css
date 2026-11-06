@@ -1,0 +1,68 @@
+.carrossel { margin-bottom: 28px; container-type: inline-size; }
+.carrossel-faixa {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  /* espaço para a sombra dos painéis não ser cortada */
+  padding: 2px;
+  margin: -2px;
+}
+.carrossel-faixa::-webkit-scrollbar { display: none; }
+.carrossel-slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; padding: 2px; box-sizing: border-box; }
+.carrossel .painel { margin-bottom: 0; height: 100%; }
+
+/* Espaço largo: os gráficos dividem a linha, sem carrossel. */
+@container (min-width: 900px) {
+  .carrossel-faixa { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; overflow: visible; scroll-snap-type: none; }
+  .carrossel-slide { flex: none; }
+}
+
+.carrossel-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; }
+.carrossel-seta {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-2);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, opacity 0.2s;
+}
+.carrossel-seta .icone { transform: rotate(180deg); }
+.carrossel-seta.prox .icone { transform: none; }
+.carrossel-seta:hover:not(:disabled) { border-color: var(--em-border); color: var(--em); }
+.carrossel-seta:disabled { opacity: 0.35; cursor: default; }
+.carrossel-bolinhas { display: flex; align-items: center; gap: 8px; }
+.carrossel-bolinhas button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--border-2);
+  cursor: pointer;
+  transition: width 0.25s var(--ease), background 0.2s;
+}
+.carrossel-bolinhas button.sel { width: 22px; background: var(--em); }
+
+/* Gráfico de barras: quanto cada pessoa já pagou */
+.pagou-corpo { padding: 14px 22px 20px; }
+.pagou-lista { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.pagou-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: 13.5px; }
+.pagou-nome { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pagou-valor { font-weight: 600; white-space: nowrap; }
+.pagou-valor span { margin-left: 8px; font-weight: 400; font-size: 12px; color: var(--text-3); }
+.pagou-trilho { height: 10px; border-radius: 10px; background: var(--bg-2); overflow: hidden; }
+.pagou-barra {
+  height: 100%;
+  border-radius: 10px;
+  background: var(--em);
+  transform-origin: left;
+  animation: pagou-crescer 700ms var(--ease) both;
+}
+@keyframes pagou-crescer { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .pagou-barra { animation: none; } }
