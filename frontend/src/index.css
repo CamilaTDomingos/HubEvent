@@ -336,6 +336,8 @@ select.input,
 
 .mast-user { display: flex; align-items: center; gap: 10px; }
 .mast-user-nome { font-size: 13.5px; font-weight: 500; }
+.mast-user-link { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+.mast-user-link:hover .mast-user-nome { text-decoration: underline; }
 
 @media (max-width: 640px) {
   .mast-user-nome, .marca-texto { display: none; }

@@ -24,8 +24,10 @@ function Navegacao() {
         <span className="mast-espaco" />
 
         <div className="mast-user">
-          <span className="avatar" aria-hidden="true">{iniciais(nome)}</span>
-          <span className="mast-user-nome">{nome}</span>
+          <Link to="/perfil" className="mast-user-link" title="Meu perfil" aria-label="Meu perfil">
+            <span className="avatar" aria-hidden="true">{iniciais(nome)}</span>
+            <span className="mast-user-nome">{nome}</span>
+          </Link>
           <button className="btn-icone" onClick={handleLogout} title="Sair" aria-label="Sair">
             <Icone nome="sair" />
           </button>

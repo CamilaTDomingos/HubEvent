@@ -14,8 +14,8 @@ export const CONTATOS = [
     chave: 'whatsapp',
     titulo: 'WhatsApp',
     descricao: 'Atendimento rápido pelo celular.',
-    valor: '(11) 90000-0000', // TODO: número real do WhatsApp
-    href: 'https://wa.me/5511900000000',
+    valor: '(27) 99784-2067', // TODO: número real do WhatsApp
+    href: 'https://wa.me/5527997842067',
     icone: 'conversa',
   },
 ]
