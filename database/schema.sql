@@ -235,6 +235,7 @@ CREATE TABLE despesa (
     pago BOOLEAN NOT NULL DEFAULT FALSE,
     parcelado BOOLEAN NOT NULL DEFAULT FALSE,
     vencimento DATE, -- data do pagamento da despesa à vista; parcelada usa a tabela parcela
+    ratear BOOLEAN NOT NULL DEFAULT TRUE, -- FALSE: pagamento fora da divisão do rateio
     pago_externo BOOLEAN NOT NULL DEFAULT FALSE, -- paga por alguém de fora do rateio (só o nome em pago_por)
     pago_por_id UUID, -- participante que pagou; NULL = o organizador
     divisao VARCHAR(10) NOT NULL DEFAULT 'IGUAL', -- IGUAL entre todos, ou VALOR/PERCENTUAL em cota_despesa

@@ -5,6 +5,8 @@ import ModalPagamento from './ModalPagamento'
 import LinhaDespesa from './LinhaDespesa'
 import GraficoDespesas from './GraficoDespesas'
 import GraficoFluxoCaixa from './GraficoFluxoCaixa'
+import GraficoPagamentosPorPessoa from './GraficoPagamentosPorPessoa'
+import CarrosselGraficos from './CarrosselGraficos'
 import PainelRateio from './PainelRateio'
 import ModalDivisao from './ModalDivisao'
 import NumeroAnimado from './NumeroAnimado'
@@ -149,7 +151,7 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
     if (!desfazendo) return
     const { error } = await supabase
       .from('parcela')
-      .update({ pago: false, pago_em: null, ...('pago_por' in desfazendo && { pago_por: null }), ...('pago_por_id' in desfazendo && { pago_por_id: null }), ...('pago_externo' in desfazendo && { pago_externo: false }) })
+      .update({ pago: false, pago_em: null, ...('pago_por' in desfazendo && { pago_por: null }), ...('pago_por_id' in desfazendo && { pago_por_id: null }), ...('pago_externo' in desfazendo && { pago_externo: false }), ...('ratear' in desfazendo && { ratear: true }) })
       .eq('id', desfazendo.id)
     if (!error) recarregar()
     setDesfazendo(null)
@@ -249,13 +251,6 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
                 <span>Próximo: <strong className="num">{moeda(pagamentos.proxima.valor)}</strong> em {dataMedia(pagamentos.proxima.vencimento)}</span>
               )}
             </div>
-            {pagamentos.porPagador.length > 0 && (
-              <ul className="fin-pagadores" aria-label="Quanto cada um pagou">
-                {pagamentos.porPagador.map(([nome, total]) => (
-                  <li key={nome}><span>{nome}</span> <strong className="num">{moeda(total)}</strong></li>
-                ))}
-              </ul>
-            )}
           </div>
         </div>
 
@@ -265,7 +260,20 @@ function AbaFinanceiro({ evento, despesas, convidados = [], carregando, recarreg
         </div>
       </section>
 
-      <GraficoFluxoCaixa eventoId={evento?.id} despesas={despesas} orcamento={orcamento} dataEvento={evento?.data_inicio} />
+      <CarrosselGraficos
+        slides={[
+          {
+            chave: 'fluxo',
+            rotulo: 'Fluxo de caixa',
+            conteudo: <GraficoFluxoCaixa eventoId={evento?.id} despesas={despesas} orcamento={orcamento} dataEvento={evento?.data_inicio} />,
+          },
+          {
+            chave: 'pagou',
+            rotulo: 'Quanto cada um pagou',
+            conteudo: <GraficoPagamentosPorPessoa porPagador={pagamentos.porPagador} />,
+          },
+        ]}
+      />
 
       <form className="lancar" onSubmit={handleAdicionarDespesa} noValidate>
         <div className="lancar-cab">

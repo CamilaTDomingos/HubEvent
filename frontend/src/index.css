@@ -203,13 +203,15 @@ select.input,
 
 /* Interruptor */
 .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 13.5px; color: var(--text-2); }
+.switch-campo { margin-bottom: 16px; }
+.switch-campo .muted { margin-top: 8px; font-size: 12.5px; }
 .switch input { position: absolute; opacity: 0; pointer-events: none; }
 .switch-track {
   position: relative;
   width: 34px;
   height: 20px;
   border-radius: 20px;
-  background: var(--bg-3);
+  background: var(--border-2);
   flex-shrink: 0;
   transition: background 0.25s var(--ease);
 }

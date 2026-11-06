@@ -124,8 +124,8 @@ export function calcularRateio({ despesas, participantes, cotas = [], pagamentos
     const parcelas = d.parcela ?? []
     if (parcelas.length) {
       let pago = 0
-      // Parcela paga por alguém de fora do rateio não entra na conta.
-      for (const parcela of parcelas.filter((x) => x.pago && !x.pago_externo)) {
+      // Fora da conta: parcela paga por alguém de fora do rateio ou marcada para não ratear.
+      for (const parcela of parcelas.filter((x) => x.pago && !x.pago_externo && x.ratear !== false)) {
         const valor = paraCentavos(parcela.valor)
         const pagador = pagadorDaParcela(parcela, d, participantes)
         if (pagador) pessoas.get(pagador.id).pagou += valor

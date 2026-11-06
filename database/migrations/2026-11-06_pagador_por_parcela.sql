@@ -14,6 +14,9 @@ ALTER TABLE parcela ADD COLUMN IF NOT EXISTS pago_por_id UUID;
 -- e a parcela não entra no saldo de ninguém.
 ALTER TABLE parcela ADD COLUMN IF NOT EXISTS pago_externo BOOLEAN NOT NULL DEFAULT FALSE;
 
+-- FALSE: pagamento que não precisa ser rateado (fica fora do saldo de todos).
+ALTER TABLE parcela ADD COLUMN IF NOT EXISTS ratear BOOLEAN NOT NULL DEFAULT TRUE;
+
 -- Sem ON DELETE: remover quem pagou uma parcela é recusado.
 ALTER TABLE parcela DROP CONSTRAINT IF EXISTS fk_parcela_pago_por;
 ALTER TABLE parcela ADD CONSTRAINT fk_parcela_pago_por

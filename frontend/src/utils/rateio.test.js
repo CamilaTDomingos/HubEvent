@@ -211,3 +211,14 @@ test('rateio por parcela: parcela paga por alguém de fora não entra no saldo',
   // Só os 200 pagos por Amanda são divididos: ~66,67 para cada um.
   assert.deepEqual(saldos(calcularRateio({ despesas, participantes })), { a: 13333, b: -6667, c: -6666 })
 })
+
+test('rateio por parcela: parcela marcada para não ratear fica fora do saldo', () => {
+  const despesas = [{
+    id: 'd1', valor_total: 300, divisao: 'IGUAL',
+    parcela: [
+      { valor: 100, pago: true, pago_por_id: 'b', ratear: false },
+      { valor: 200, pago: true, pago_por_id: 'a', ratear: true },
+    ],
+  }]
+  assert.deepEqual(saldos(calcularRateio({ despesas, participantes })), { a: 13333, b: -6667, c: -6666 })
+})

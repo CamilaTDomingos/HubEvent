@@ -109,7 +109,7 @@ function LinhaDespesa({ despesa, indice = 0, aoExcluir, aoPagar, aoDesfazer, pag
                       <strong className="num">{moeda(p.valor)}{p.entrada && <em> · entrada</em>}</strong>
                       <span>
                         {p.pago
-                          ? `Pago${p.pago_por ? ` por ${p.pago_por}` : ''}${p.pago_em ? ` · ${dataMedia(p.pago_em)}` : ''}`
+                          ? `Pago${p.pago_por ? ` por ${p.pago_por}` : ''}${p.pago_em ? ` · ${dataMedia(p.pago_em)}` : ''}${p.ratear === false ? ' · não rateado' : ''}`
                           : `${atrasada ? 'Venceu' : 'Vence'} ${dataMedia(p.vencimento)}`}
                       </span>
                     </span>

@@ -392,9 +392,6 @@
 .fin-pag { display: flex; flex-direction: column; gap: 12px; padding-top: 22px; border-top: 1px solid var(--border); }
 .fin-numeros-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 4px; }
 .fin-pag .medidor-legenda { margin-top: 0; }
-.fin-pagadores { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
-.fin-pagadores li { display: inline-flex; gap: 8px; padding: 4px 12px; border-radius: 20px; background: var(--bg-2); font-size: 12.5px; color: var(--text-2); }
-.fin-pagadores strong { color: var(--text); font-weight: 600; }
 
 /* Lista de despesas */
 .extrato-lista { list-style: none; }

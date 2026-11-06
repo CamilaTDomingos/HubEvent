@@ -11,6 +11,7 @@ function ModalPagamento({ despesa, parcela, participantes = [], aoFechar, aoSalv
   // Vazio = organizador (mesma regra do rateio); EXTERNO = alguém de fora do rateio.
   const [pagoPor, setPagoPor] = useState('')
   const [nomeExterno, setNomeExterno] = useState('')
+  const [ratear, setRatear] = useState(true)
   const [data, setData] = useState(hojeISO())
   const [erro, setErro] = useState(null)
   const [salvando, setSalvando] = useState(false)
@@ -41,7 +42,7 @@ function ModalPagamento({ despesa, parcela, participantes = [], aoFechar, aoSalv
       pago_em: new Date(`${data}T12:00:00`).toISOString(),
       ...(externo
         ? { pago_externo: true, pago_por: nomeExterno.trim() }
-        : pagador && { pago_externo: false, pago_por_id: pagador.id, pago_por: pagador.nome }),
+        : pagador && { pago_externo: false, ratear, pago_por_id: pagador.id, pago_por: pagador.nome }),
     }
 
     setSalvando(true)
@@ -84,6 +85,16 @@ function ModalPagamento({ despesa, parcela, participantes = [], aoFechar, aoSalv
             ]}
           />
         </div>
+        {!externo && participantes.length > 1 && (
+          <div className="switch-campo">
+            <label className="switch">
+              <input type="checkbox" checked={ratear} onChange={(e) => setRatear(e.target.checked)} />
+              <span className="switch-track" />
+              <span className="switch-texto">Ratear entre os participantes</span>
+            </label>
+            {!ratear && <p className="muted">Esse pagamento fica fora da divisão: ninguém passa a dever por ele.</p>}
+          </div>
+        )}
         {externo && (
           <div className="field">
             <label htmlFor="pagamento-externo">Nome</label>
