@@ -1,7 +1,7 @@
 # LEARNING — O que foi construído no HubEvent, como e por quê
 
-Documento de apoio para a escrita do TCC. Foi montado a partir dos **50 commits** da
-branch (26/08/2026 a 15/10/2026), lendo as mensagens de commit, os arquivos alterados
+Documento de apoio para a escrita do TCC. Foi montado a partir dos **60 commits** da
+branch (26/08/2026 a 06/11/2026), lendo as mensagens de commit, os arquivos alterados
 e o código resultante. Complementa o `LEARNING_LOG.md` (diário pessoal) e o arquivo
 `FERRAMENTAS_E_CONCEITOS.md` (explicação de cada ferramenta e conceito citado aqui).
 
@@ -65,6 +65,9 @@ registro. Esse erro foi cometido e corrigido (seção 3.6) e virou o princípio 
 | 08/10 | Categorias de despesa (RF16); **fluxo de caixa** (RF21) | `50114c0`…`7cef6cf` |
 | 14/10 | **Rateio** (RF03), **assistente de IA** (RF02/RF15), **RSVP + lista inteligente** (RF04) | `efe2321`, `281db05`, `62659ea` |
 | 15/10 | **SAC** persistido no banco (RF22); consulta de migrações | `94b8d4e`, `6ab16cd` |
+| 21/10 | `LEARNING.md` e `FERRAMENTAS_E_CONCEITOS.md` criados | `575843f` |
+| 29/10 | **Financeiro reescrito em torno de pagamentos**: entrada, à vista como pagamento único | `62e7196`, `b8e8135`, `d7e9454` |
+| 06/11 | **Quem pagou cada parcela** e rateio proporcional ao pago; `Dropdown` próprio; filtros e paginação de convidados; **editar evento**; perfil com dados do usuário; **painel de vencimentos**; novo logo | `e42edbe`…`49c24a2` |
 
 ---
 
@@ -164,6 +167,12 @@ mesmo. Regras de negócio puras foram isoladas em `utils/convidados.js` e testad
 **Por quê:** o convidado não tem conta, então não há `auth.uid()` para o RLS usar. A
 solução correta é o backend servir **só o convite daquele ID**, em vez de abrir a tabela.
 
+**Evolução (06/11):** a lista do organizador ganhou **filtro por grupo** (inclui "Sem
+grupo") e **por acompanhantes** (com / convite individual), botão "Limpar filtros" e
+**paginação** (10/20/50/100 por página, faixa "1–10 de N"). A página escolhida é guardada
+junto de uma **chave** (`filtro|busca|grupo|acompanhantes|tamanho`): mudar qualquer
+critério volta à página 1 sem precisar de `useEffect` para "resetar" o estado.
+
 ### 3.5 Financeiro: orçamento, despesas, parcelas, gráficos e rateio
 
 **O que:**
@@ -197,6 +206,43 @@ solução correta é o backend servir **só o convite daquele ID**, em vez de ab
 cliente (inclusive um front adulterado) passa por ela. Bibliotecas de gráfico seriam
 exagero para dois gráficos simples e aumentariam o *bundle*. A animação só existe onde
 responde a dado real, para não virar decoração.
+
+**Evolução do financeiro (29/10 a 06/11):**
+- **Tudo vira "pagamento" na tabela `parcela`.** Antes, despesa à vista tinha só
+  `despesa.pago`. Agora a despesa à vista é **um pagamento único** e a parcelada pode ter
+  **entrada** (`parcela.entrada`) + o restante dividido em parcelas, com periodicidade
+  **mensal, quinzenal ou semanal**. A montagem fica em `utils/pagamentos.js`
+  (`montarPagamentos`, `dividir`) e a interface em `ModalPagamento`. A migração
+  `2026-10-21_pagamentos_financeiro.sql` cria os pagamentos únicos das despesas à vista já
+  existentes (`INSERT … SELECT … WHERE NOT EXISTS`), sem perder dados antigos.
+- **Quem pagou é registrado por parcela**, não por despesa (`2026-11-06_pagador_por_parcela.sql`):
+  `pago_por_id` (FK para `participante_rateio`, sem `ON DELETE`, então remover quem pagou é
+  recusado), `pago_por` (nome, para o extrato) e `pago_externo` (pago por alguém de fora
+  do rateio, como os pais da noiva). A migração é **idempotente** (`IF NOT EXISTS`, dentro
+  de `BEGIN/COMMIT`) e preenche as parcelas antigas com o pagador da despesa.
+- **Opção "ratear" / "não ratear"** por pagamento: o que não deve ser dividido fica fora do
+  saldo de todos.
+- **Rateio proporcional ao que já foi pago** (`calcularRateio`): só parcela **paga** entra
+  no saldo; cada uma credita quem a pagou e a parte de cada participante é **reduzida na
+  mesma proporção** (`reduzirPartes`, de novo com o método do maior resto, para a soma
+  fechar em centavos). Despesas antigas, sem parcelas, continuam contando inteiras.
+  `pagadorDaParcela` tem a ordem de fallback: pagador da parcela → da despesa → organizador.
+  `motivoParaNaoRemover` também considera quem pagou parcelas.
+- **Resumo de pagamentos** (`resumoPagamentos`): total pago, quanto falta, percentual,
+  pago por pessoa e próxima parcela. Alimenta o `GraficoPagamentosPorPessoa` e o
+  `CarrosselGraficos`, que mostra os gráficos **lado a lado** se houver largura (≥ 900 px,
+  medida com `ResizeObserver`) e como **carrossel** (`scroll-snap`, setas e bolinhas) se não.
+- **Datas:** `somarDias` e `vencimentoDaParcela` entram em `utils/datas.js`; `dataISO` e
+  `hojeISO` usam o **fuso local** (`toISOString` erraria o dia à noite).
+- Cinco testes novos em `rateio.test.js` cobrem: só a parcela paga conta, pagadores
+  diferentes na mesma despesa, nenhuma parcela paga = saldo zero, pagamento externo e
+  pagamento não rateado.
+
+**Por quê:** o dinheiro real sai em datas e por pessoas diferentes; modelar cada pagamento
+reflete isso e deixa o saldo do rateio justo ("quem já pagou quanto"), em vez de creditar
+a despesa inteira a uma pessoa antes de ela ser paga. Um bug real apareceu na entrada: num
+`insert` em lote, a chave `entrada` ausente virava `null` e violava o `NOT NULL`
+(`d7e9454`), por isso o campo agora é sempre explícito.
 
 ### 3.6 Segurança: a brecha do RLS e as correções posteriores
 
@@ -326,13 +372,40 @@ renderizado em **portal** (`createPortal`) para não ficar atrás de contêinere
 `sticky`, e correção de `animation-fill-mode` que deixava um `transform` residual
 deslocando modais (um `transform` cria um novo contexto para elementos `fixed`).
 
+### 3.12 Atualizações de 06/11: edição de evento, vencimentos, perfil e identidade
+
+**Editar evento** (`ModalEditarEvento`): altera nome, tipo, data, horário e local de um
+evento já criado, aberto a partir do `EventoDetalhe`. É renderizado só quando abre, então os
+campos já nascem preenchidos (`useState` inicial) sem `useEffect`. Data e hora são separadas
+no **fuso local**; `00:00` é tratado como "sem horário".
+
+**Painel de vencimentos** (`PainelVencimentos` + `useVencimentos`, no Dashboard): reúne,
+de **todos** os eventos do usuário, parcelas não pagas e tarefas não concluídas que estão
+**atrasadas ou vencem em 30 dias**, ordenadas por data (`diasAte`, `rotuloContagem`: "é
+hoje", "amanhã", "há 3 dias"). Cada item leva à aba certa do evento (financeiro ou
+checklist). Duas consultas em paralelo (`Promise.all`) e `despesa!inner(... evento(nome))`
+trazem o nome do evento num só pedido; o `RLS` garante que só vêm dados do próprio usuário.
+O `ativo` no `useEffect` evita atualizar estado depois que o componente desmontou.
+
+**Perfil:** nova coluna com `DadosUsuario` (nome e sobrenome via `supabase.auth.updateUser`,
+guardados em `user_metadata`; o e-mail aparece desabilitado para não mexer no login) e
+avatar com iniciais. O botão salvar só habilita se algo mudou.
+
+**`Dropdown` próprio:** substitui o `<select>` nativo (categorias, grupos, filtros,
+paginação) para ter cor da categoria e o visual do sistema, com teclado e rótulo
+acessível (`aria-label`).
+
+**Identidade visual:** novo `LogoSimbolo` (SVG: calendário com brilhinhos), usado na
+navegação e no painel de login/cadastro e no favicon. Usa `currentColor`, então a cor vem do
+contexto e muda com a paleta sem editar o SVG.
+
 ---
 
 ## 4. Testes e qualidade
 
 | Tipo | Onde | Como roda |
 |---|---|---|
-| Unitários (front) | `utils/rateio.test.js`, `convidados.test.js`, `sac.test.js` | `npm test` em `frontend/` (`node --test`) |
+| Unitários (front) | `utils/rateio.test.js` (inclui rateio por parcela), `convidados.test.js`, `sac.test.js` | `npm test` em `frontend/` (`node --test`) |
 | Rotas (back) | `rsvp.routes.test.js`, `assistente.routes.test.js` (Supabase e Gemini simulados) | `npm test` em `backend/` |
 | Banco | `database/testes/*.sql` | SQL Editor do Supabase; desfaz tudo ao final |
 | Estática | ESLint (`eslint-plugin-react-hooks`, `react-refresh`) | `npm run lint` |
@@ -362,6 +435,12 @@ Os testes se concentram em **regra de negócio** (dinheiro, limites, validaçõe
    confirmação) reduz código e inconsistência.
 9. **Reverter uma direção de design é normal** quando ela não serve ao produto.
 10. **Acessibilidade conta:** tooltip por teclado, tabela oculta para leitor de tela.
+11. **Modele o fato real, não o atalho.** Guardar "quem pagou" na despesa inteira era
+    simples, mas errado; passar para a parcela exigiu migração, mas deu um saldo justo.
+12. **Migrações precisam preservar dados antigos** e poder rodar de novo (`IF NOT EXISTS`,
+    `INSERT … WHERE NOT EXISTS`, transação).
+13. **Datas são fonte de bugs:** `"2026-11-14"` é lido como UTC e volta um dia; `toISOString`
+    erra o dia à noite; `setMonth` transborda. Tudo isso foi centralizado em `datas.js`.
 
 ---
 
@@ -374,6 +453,11 @@ Os testes se concentram em **regra de negócio** (dinheiro, limites, validaçõe
 - O front de RSVP depende de `VITE_API_URL`; não há deploy configurado nos commits.
 - O backend usa `cors()` aberto — adequado em desenvolvimento, deve ser restringido em
   produção.
+- **Divergência a conferir:** o `schema.sql` lista `ratear` e `pago_externo` em `despesa`,
+  mas a migração `2026-11-06_pagador_por_parcela.sql` cria essas colunas em `parcela` (que é
+  onde o código as lê). O `schema.sql` deve ser corrigido para refletir o banco.
+- Parcelas de pagamentos antigos sem `pago_por_id` assumem o organizador como pagador.
+- O painel de vencimentos não tem teste automatizado (só os cálculos de rateio têm).
 - A criação de eventos com "módulos" desligáveis foi adiada no início (não havia coluna
   no banco) e só entrou depois, junto com `evento.modulos`.
 
